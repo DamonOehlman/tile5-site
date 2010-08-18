@@ -1,25 +1,45 @@
-{% extends 'sidelab/main.html' %}
+{% extends 'base.html' %}
 
-{% block title %}Tile5 - HTML5 Opensource Tiling and Mapping Javascript Library{% endblock %}
-{% block h1%}Tile5 Javascript Library{% endblock %}
-{% block image %}<img src="/media/img/tile5-frame.png" alt="Tile5 Opensource Mapping and Tiling" />{% endblock %}
+{% block title %}Tile5{% endblock %}
+{% block h1%}HTML5 Mapping{% endblock %}
 
-{% block inner %}
-<h2>HTML5 Tiling and Mapping</h2>
+{% block content %}
 <p>
-Tile5 is a javascript library that provides the tools to build
-HTML5 tiling display mobile applications - that give their native 
-counterparts a run for their money.  If you are looking to build a 
-tile-based application (such as a mapping application) for a mobile
-platform that uses a HTML5 compatible browser, then please give Tile5 a go.
+Tile5 is an opensource (MIT licensed) javascript library that 
+provides a tile-based mapping solution designed to rival a native
+mobile mapping experience.
 </p>
-<h3><a href="demos/">Demos</a></h3>
+<p><a href="demos/">Enough - Show Me Demos</a></p>
+<h2>Cross Device Compatible</h2>
 <p>
-Demos for Tile5 are available on the <a href="demos/">demo page</a>.
+Our primary target was to provide a compelling experience for iPhone users, 
+and we are currently working on Android support with the intention of supporting
+all "Class A" rated devices (as per the <a href="http://jquerymobile.com/gbs/">jQuery Mobile GBS Chart</a>).
 </p>
-<h3>Downloads</h3>
+<p><a href="/device-support">Device Support Details</a></p>
+<h2>Multiple Map Providers</h2>
 <p>
-The library can be downloaded from the <a href="http://github.com/sidelab/tile5">github repository</a>, 
-and there are now alpha releases available in the <a href="http://github.com/sidelab/tile5/tree/master/dist">dists</a> folder.
+Tile5 has been built from the ground-up to be a vendor neutral implementation. The cross-product 
+of map providers and mobile devices is just crazy, and our goal was to make Tile5 "shine no matter what you're made of".
+</p>
+<p><a href="/map-providers">Supported Map Providers</a></p>
+<h2>What about Desktop Browsers</h2>
+<p>
+Sure, if you have a nice snazzy new HTML5 browser then you should find things work.  We'll work on
+putting together a compatibility chart sometime soon.
+</p>
+<h2>Get the Source</h2>
+<p>
+The source for Tile5 is maintained on Github, and released under the MIT license:
+</p>
+<p><a href="http://github.com/sidelab/tile5">http://github.com/sidelab/tile5</a></p>
+<h2>Documentation</h2>
+<p>A first draft of the documentation is <a href="/docs/">available here</a>. Stay tuned for updates.</p>
+<h2>Commercial Support</h2>
+<p>
+Tile5 is an initiative of cross-platform mobile development firm, <a href="http://www.sidelab.com/">Sidelab</a>. If you 
+would like assistance with developing a Tile5 implemented solution, please feel free 
+to <a href="http://www.sidelab.com/contact">contact Sidelab</a>.  Remember though, Tile 5 is licensed under the MIT
+license so you are free to use it however you please.
 </p>
 {% endblock %}

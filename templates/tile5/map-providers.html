@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Map Providers{% endblock %}
+{% block h1%}Map Providers{% endblock %}
+
+{% block extra-includes %}
+<script>
+$(".yes").html("Y").addClass("status");
+$(".planned").html("P").addClass("status");
+$(".investigate").html("TBD").addClass("status");
+$(".na").addClass("status");
+</script>
+{% endblock %}
+
+{% block content %}
+<table>
+<thead>
+	<tr>
+	<th>Provider</th>
+	<th>Map Tiles</th>
+	<th>Geocode</th>
+	<th>Routing</th>
+	</tr>
+</thead>
+<tr>
+	<td><a href="http://decarta.com/">deCarta</td></td>
+	<td class="yes"></td>
+	<td class="yes"></td>
+	<td class="yes"></td>
+</tr>
+<tr>
+	<td><a href="http://cloudmade.com/">Cloudmade</a></td>
+	<td class="yes"></td>
+	<td class="planned"></td>
+	<td class="planned"></td>
+</tr>
+<tr>
+	<td><a href="http://openstreetmap.org/">OSM</a></td>
+	<td class="yes"></td>
+	<td class="investigate"></td>
+	<td class="investigate"></td>
+</tr>
+<tr>
+	<td><a href="http://maps.google.com/">Google</a></td>
+	<td class="na"><a href="http://code.google.com/p/gmaps-api-issues/issues/detail?id=1396">N/A</a></td>
+	<td class="investigate"></td>
+	<td class="investigate"></td>
+</table>
+<p>
+The table above lists the status of the various operations that 
+are supported in Tile5 and their implementation status in the library
+for a particular map provider.
+</p>
+<p>
+The ability to display annotations is core to the library so once tiles
+for a particular provider can be displayed, annotations are implemented 
+as well.
+</p>
+<h2>Other Map Providers</h2>
+<p>
+<a href="http://www.sidelab.com/">Sidelab</a> are always happy to investigate implementing 
+additional map providers based on client needs or provider sponsorship.  Tile5 has been
+built from the ground up to support this so in general, this can be done with relative ease.
+</p>
+<h2>NOTE:</h2>
+<p>
+Additionally, while Tile5 allows you to mix and match provider functions, be 
+aware that this may violate the provider terms of service.
+</p>
+{% endblock %}

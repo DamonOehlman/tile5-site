@@ -1,0 +1,136 @@
+<style type="text/css">
+#sidebar {
+	background: white;
+	width: 28%;
+	float: left;
+}
+
+#sidebar h3 {
+	background: #333333;
+	color: white;
+	padding: 8px;
+	clear: left;
+}
+
+#sidebar ul {
+	margin: 0;
+	padding: 0;
+}
+
+#sidebar ul li {
+	padding: 8px;
+}
+
+#sidebar ul li.active {
+	padding-left: 24px;
+	background: url(/media/img/flag.png) 3px 8px no-repeat;
+}
+
+#sidebar ul > li:nth-child(2n) {
+	background-color: #F8F8F8;
+}
+
+#demo-main {
+	border-left: 1px solid #333333;
+	float: left;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+ul#modes {
+	background: #dde9af;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+}
+
+ul#modes li {
+	background: #cdde87;
+	border-right: 1px solid #bcd35f;
+	float: left;
+	text-align: center;
+	padding: 8px;
+	width: 90px;
+}
+
+ul#modes li.active {
+	background: #dde9af;
+}
+
+ul#modes li:hover {
+	background: #eef4d7;
+}
+
+ul#modes li a {
+	color: black;
+	text-decoration: none;
+}
+
+ul#modes li.active a {
+	font-weight: bold;
+}
+
+.mode {
+	border-top: 1px solid #333333;
+	display: none;
+	clear: both;
+}
+
+#code {
+	clear: both;
+	border-top: 1px solid #333333;
+	background: #3F3F3F;
+}
+
+#code pre {
+	padding: 8px 8px 8px 24px;
+	margin: 0;
+}
+
+#code pre, #code-content {
+	color: #F8F8F8;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	user-select: text;
+}
+
+#code h4 {
+	color: white;
+	margin: 0;
+	padding: 8px 0 0 24px;
+}
+
+</style>
+<div id="sidebar">
+	<h3>Map Providers</h3>
+	<ul id="providers">
+	</ul>
+	<h3>Available Demos</h3>
+	<ul id="samples">
+	</ul>
+	<h3>Test GEO Datasets</h3>
+	<ul id="datasets">
+	</ul>
+</div>
+<div id="demo-main">
+	<ul id="modes">
+		<li id="mode_mapCanvas" class="active"><a href="#mapCanvas">MAP</a></li>
+		<li id="mode_code"><a href="#code">CODE</a></li>
+	</ul>
+	<canvas id="mapCanvas" class="mode"></canvas>
+	<div id="code" class="mode">
+		<h4>Map Initialization (All Samples)</h4>
+		<pre id="initialization" class="brush: js; toolbar: false;">
+	    var map = new TILE5.Geo.UI.Tiler({
+	        container: "mapCanvas",
+	        autoSize: false,
+	        provider: getActiveProvider()
+	    });
+		</pre>
+		
+		<h4 id="sampletitle">Sample Code</h4>
+		<span id="code-marker"></span>
+	</div>
+</div>

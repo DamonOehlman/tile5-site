@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Device Support{% endblock %}
+{% block h1%}Device Support{% endblock %}
+
+{% block extra-includes %}
+<script>
+$(".yes").html("YES").addClass("status");
+$(".untested").html("UNTESTED").addClass("status");
+$(".inprogress").html("IN PROGRESS").addClass("status");
+$(".investigate").html("TBD").addClass("status");
+$(".planned").html("PLANNED").addClass("status");
+$(".likely").html("LIKELY").addClass("status");
+</script>
+{% endblock %}
+
+{% block content %}
+<table id="devices">
+<thead>
+	<tr>
+	<th>OS</th>
+	<th>Ver.</th>
+	<th><a href="http://jquerymobile.com/gbs/">GBS</a></th>
+	<th>Supported</th>
+	</tr>
+</thead>
+<!-- iphone support -->
+<tr>
+	<td rowspan="3">iOS</td>
+	<td>2.x</td>
+	<td>B</td>
+	<td class="investigate"></td>
+</tr>
+<tr>
+	<td>3.x</td>
+	<td>A</td>
+	<td class="yes"></td>
+</tr>
+<tr>
+	<td>4.x</td>
+	<td>A</td>
+	<td class="yes"></td>
+</tr>
+<!-- android support -->
+<tr>
+	<td rowspan="4">Android</td>
+	<td>1.5</td>
+	<td>A</td>
+	<td class="inprogress"></td>
+</tr>
+<tr>
+	<td>1.6</td>
+	<td>A</td>
+	<td class="inprogress"></td>
+</tr>
+<tr>
+	<td>2.1</td>
+	<td>A</td>
+	<td class="inprogress"></td>
+</tr>
+<tr>
+	<td>2.2</td>
+	<td>A</td>
+	<td class="inprogress"></td>
+</tr>
+<!-- blackberry -->
+<tr>
+	<td rowspan="3">Blackberry</td>
+	<td>4.x</td>
+	<td>B</td>
+	<td class="investigate"></td>
+</tr>
+<tr>
+	<td>5.x</td>
+	<td>B</td>
+	<td class="investigate"></td>
+</tr>
+<tr>
+	<td>6.x</td>
+	<td>A</td>
+	<td class="planned"></td>
+</tr>
+<!-- palm webOS -->
+<tr>
+	<td>webOS</td>
+	<td>1.4.1</td>
+	<td>A</td>
+	<td class="likely"></td>
+</tr>
+<!-- symbian -->
+<tr>
+	<td>Symbian</td>
+	<td>3.0</td>
+	<td>A</td>
+	<td class="likely"></td>
+</tr>
+<tr>
+	<td>Symbian S60</td>
+	<td>5.0</td>
+	<td>A</td>
+	<td class="likely"></td>
+</tr>
+<!-- bada -->
+<tr>
+	<td>bada</td>
+	<td>1.x</td>
+	<td>A</td>
+	<td class="likely"></td>
+</tr>
+<!-- MeeGo -->
+<tr>
+	<td>MeeGo</td>
+	<td>1.x</td>
+	<td>A</td>
+	<td class="likely"></td>
+</tr>
+<!-- windows mobile -->
+<tr>
+	<td>Win Mobile</td>
+	<td>7.x</td>
+	<td>B</td>
+	<td class="investigate"></td>
+</tr>
+</table>
+{% endblock %}

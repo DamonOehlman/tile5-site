@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}deCarta T5{% endblock %}
+{% block h1 %}deCarta Demo{% endblock %}
+
+{% block extra-includes %}
+<script src="/media/js/tile5/dist/tile5.js?v=1"></script>
+<script src="/media/js/tile5/dist/tile5.decarta.js?v=1"></script>
+<script src="/media/js/init.js?v=1"></script>
+<script src="/media/js/init.decarta.js?v=1"></script>
+{% endblock %}
+
+{% block content %}
+<canvas id="mapCanvas"><canvas>
+{% endblock %}

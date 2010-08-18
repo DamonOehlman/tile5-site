@@ -13,12 +13,10 @@
 # limitations under the License.
 
 from django.conf.urls.defaults import *
-from sidelab import views as sidelab_views
-from social_auth.urls import urlpatterns as auth_patterns
-from linkedin_cv import views as linkedin_views
+from tile5 import views as tile5_views
 
-urlpatterns = auth_patterns + patterns('',
-    (r'^MJ12_FAD7BA2F940521B01DE13B79912B256D\.txt$', sidelab_views.empty_file),
+urlpatterns = patterns('',
+    (r'^MJ12_FAD7BA2F940521B01DE13B79912B256D\.txt$', tile5_views.empty_file),
     (r'^favicon\.ico$', 'django.views.generic.simple.redirect_to', {'url': '/media/img/favicon.ico'}),
-    (r'^.*', sidelab_views.main),
+    (r'^.*', tile5_views.main),
 )

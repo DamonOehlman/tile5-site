@@ -79,25 +79,17 @@ EMAIL_HOST = ''
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
     'django.template.loaders.app_directories.load_template_source',
-#     'django.template.loaders.eggs.load_template_source',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-#    'django.contrib.auth.middleware.AuthenticationMiddleware',
-#    'appengine_django.auth.middleware.AuthenticationMiddleware',
-    'social_auth.middleware.SocialAuthenticationMiddleware',
-#    'django.middleware.doc.XViewMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.auth',
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
-#    'django.core.context_processors.media',  # 0.97 only.
-#    'django.core.context_processors.request',
-    'social_auth.context_processors.social',
 )
 
 ROOT_URLCONF = 'urls'
@@ -114,7 +106,7 @@ LOGIN_REDIRECT_URL = '/'
 
 INSTALLED_APPS = (
      'appengine_django',
-     'sidelab',
+     'tile5',
      'django.contrib.auth',
      'django.contrib.sessions',
 #      'django.contrib.admin',
@@ -122,7 +114,6 @@ INSTALLED_APPS = (
      'django.contrib.flatpages',
      'django.contrib.redirects',
 #     'django.contrib.sites',
-     'social_auth',     
 #    'django.contrib.auth',
 #    'django.contrib.contenttypes',
 #    'django.contrib.sessions',
