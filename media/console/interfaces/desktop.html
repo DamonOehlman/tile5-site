@@ -43,7 +43,6 @@ ul#modes {
 	list-style: none;
 	padding: 0;
 	margin: 0;
-	width: 100%;
 }
 
 ul#modes li {
@@ -84,6 +83,38 @@ ul#modes li.active a {
 	background: #3F3F3F;
 }
 
+/* provider capabilities styling */
+
+ul#caps {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	font-size: 0.8em;
+}
+
+ul#caps li {
+	float: right;
+	margin: 0;
+	padding: 10px;
+	width: 70px;
+	color: #999999;
+}
+
+ul#caps li.heading {
+	font-weight: bold;
+	width: auto;
+}
+
+ul#caps li.yes {
+	color: green;
+}
+
+ul#caps li.no {
+	color: red;
+}
+
+/* code styling */
+
 #code pre {
 	padding: 8px 8px 8px 24px;
 	margin: 0;
@@ -102,7 +133,16 @@ ul#modes li.active a {
 	padding: 8px 0 0 24px;
 }
 
+#mapCanvas {
+	background: url(/media/img/tile5-map-bg.png);
+}
+
 </style>
+<ul id="share">
+	<li><a target="_blank" href="http://twitter.com/?status=Playing around with opensource HTML5 mapping @ http://www.tile5.org/demos/"><img src="/media/img/share/twitter.png" alt="Share on Twitter"></a></li>
+	<li><a href="http://www.delicious.com/save" onclick="window.open('http://www.delicious.com/save?v=5&noui&jump=close&url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title), 'delicious','toolbar=no,width=550,height=550'); return false;"><img src="/media/img/share/delicious.png" alt="Bookmark on Delicious"></a></li>
+	<li><a href="http://reddit.com/submit" onclick="window.location = 'http://reddit.com/submit?url=' + encodeURIComponent(window.location); return false"><img src="/media/img/share/reddit.png" alt="Share on Reddit" /></a></li>
+</ul>
 <div id="sidebar">
 	<h3>Map Providers</h3>
 	<ul id="providers">
@@ -118,6 +158,12 @@ ul#modes li.active a {
 	<ul id="modes">
 		<li id="mode_mapCanvas" class="active"><a href="#mapCanvas">MAP</a></li>
 		<li id="mode_code"><a href="#code">CODE</a></li>
+		<li id="mode_about"><a href="#about">ABOUT</a></li>
+	</ul>
+	<ul id="caps">
+		<li id="route" class="capability">Routing</li>
+		<li id="geocode" class="capability">Geocoding</li>
+		<li class="heading"><a href="/map-providers">Provider Status:</a></li>
 	</ul>
 	<canvas id="mapCanvas" class="mode"></canvas>
 	<div id="code" class="mode">
@@ -132,5 +178,7 @@ ul#modes li.active a {
 		
 		<h4 id="sampletitle">Sample Code</h4>
 		<span id="code-marker"></span>
+	</div>
+	<div id="about" class="mode">
 	</div>
 </div>

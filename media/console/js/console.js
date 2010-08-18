@@ -3,7 +3,10 @@ CONSOLE = (function() {
         activeProvider,
         activeSample,
         activeDataset,
+        activeCapabilities = {},
+        activeMode,
         lastDatasetIndex,
+        resizeTimeout = 0,
         // define providers
         providers = {
             decarta: {
@@ -21,10 +24,10 @@ CONSOLE = (function() {
             desktop: {
                 layout: "desktop",
                 init: function() {
-                    var mainContent = $("#demo-main"),
-                        mapCanvas = $("#mapCanvas");
-                    
+                    var mainContent = $("#demo-main");
                     mainContent.height($(window).height() - mainContent.offset().top - $("footer").outerHeight());
+                    
+                    $("h1").html("Tile5 Desktop / iPad Demo Interface");
                 }
             },
             
@@ -32,6 +35,14 @@ CONSOLE = (function() {
                 layout: "mobile",
                 init: function() {
                     
+                }
+            },
+            
+            oldbrowser: {
+                layout: "oldbrowser",
+                init: function() {
+                    var mainContent = $("#sad");
+                    mainContent.height($(window).height() - mainContent.offset().top - $("footer").outerHeight());
                 }
             }
         };
@@ -47,7 +58,7 @@ CONSOLE = (function() {
             $.ajax({
                 url: "/media/console/interfaces/" + iface.layout + ".html?ticks=" + new Date().getTime(),
                 success: function(data) {
-                    $("#main").html(data);
+                    $("#console").html(data);
                     
                     // initialise the layout
                     iface.init();
@@ -63,26 +74,34 @@ CONSOLE = (function() {
     
     /* mode management */
     
-    function changeMode(modeId) {
-        $("#modes li").removeClass("active");
-        $("#mode_" + modeId).addClass("active");
-        
-        var modeElement = $("#" + modeId).get(0),
+    function sizePageElements() {
+        var modeElement = $("#" + activeMode).get(0),
             modeWindowWidth = $(window).width() - $("#sidebar").outerWidth() - 1,
             modeWindowHeight = $("#demo-main").height()  - $("#modes li").outerHeight() - 1;
         
-        $(".mode").hide();
-
         if (modeElement && (modeElement.tagName.toUpperCase() == "CANVAS")) {
             $(modeElement).attr("width", modeWindowWidth).attr("height", modeWindowHeight);
             
-            $(modeElement).fadeIn("normal", function() {
+            if (map) {
+                map.repaint();
                 GRUNT.WaterCooler.say("view.wake", { id: "" });
-            });
+            } // if
         } // if
         else if (modeElement) {
-            $(modeElement).css("width", modeWindowWidth).css("height", modeWindowWidth).fadeIn();
+            $(modeElement).css("width", modeWindowWidth).css("height", modeWindowHeight);
         } // if..else
+    } // sizePageElements
+    
+    function changeMode(modeId) {
+        activeMode = modeId;
+        $("#modes li").removeClass("active");
+        $("#mode_" + modeId).addClass("active");
+
+        $(".mode").hide();
+
+        sizePageElements();
+        
+        $("#" + modeId).fadeIn("normal");
     } // changeMode
     
     function handleModeUpdates() {
@@ -113,8 +132,10 @@ CONSOLE = (function() {
             $("#providers li").removeClass("active");
 
             if (providers[providerId]) {
+                activeSample = null;
                 var mainContent = $("#demo-main");
 
+                updateCapabilityStatus(providerId);
                 $("#provider_" + providerId).addClass("active");
 
                 if (map) {
@@ -125,14 +146,33 @@ CONSOLE = (function() {
                 map = new TILE5.Geo.UI.Tiler({
                     container: "mapCanvas",
                     autoSize: false,
+                    crosshair: false,
                     provider: getActiveProvider()
                 });
                 
-                runCodeSample(map, activeSample);
+                loadSamples();
+                runCodeSample(map, "0");
                 // map.gotoPosition(TILE5.Geo.P.parse("-27.468 153.028"), 10);
             } // if
         }
     } // changeProvider
+    
+    function updateCapabilityStatus(providerId) {
+        $("#caps .capability").each(function() {
+            var engine = null;
+            try {
+                engine = TILE5.Geo.getEngine(this.id, providerId);
+            } 
+            catch (e) {}
+            
+            // update the capability status
+            activeCapabilities[this.id] = engine && (engine.id == providerId);
+            
+            // update the display
+            $(this).removeClass("yes").removeClass("no");
+            $(this).addClass(activeCapabilities[this.id] ? "yes" : "no");
+        });
+    } // updateCapabilityStatus
     
     function displayProviders() {
         var listHtml = "";
@@ -183,30 +223,35 @@ CONSOLE = (function() {
     
     /* code sample selection, etc */
     
-    function findSampleInstance(sampleId) {
-        for (var ii = CONSOLE.Catalog.length; ii--; ) {
-            if (CONSOLE.Catalog[ii].id == sampleId) {
-                return CONSOLE.Catalog[ii];
-            } // if
-        } // for
-        
-        return null;
+    function findSampleInstance(index) {
+        return index < CONSOLE.Catalog.length ? CONSOLE.Catalog[index] : null;
     } // findSampleInstance
     
     function runCodeSample(map, sampleId) {
+        var sample;
+        
+        // if the active sample is already defined, then see if we need to clean it up
+        if (activeSample) {
+            sample = findSampleInstance(activeSample);
+            if (sample && sample.cleanup) {
+                sample.cleanup(map);
+            } // if
+        } // if
+        
         // update the active sample
         activeSample = sampleId;
-        
+
+        $("#samples li").removeClass("active");
         if (activeSample) {
             $("#sample_" + activeSample).addClass("active");
-            
-            var sample = findSampleInstance(activeSample);
+
+            sample = findSampleInstance(activeSample);
             if (sample && sample.code) {
                 sample.code(map);
-                
+
                 updateCodeBox(sample.code);
             } // if
-            
+
             $("#sampletitle").html(sample.title + " Sample Code");
         } // if
     } // runCodeSample
@@ -236,13 +281,23 @@ CONSOLE = (function() {
         var listHtml = "";
         
         for (var ii = 0; ii < CONSOLE.Catalog.length; ii++) {
-            var sample = CONSOLE.Catalog[ii];
+            var sample = CONSOLE.Catalog[ii],
+                metRequirements = true;
+                
+            if (sample.requires) {
+                for (var jj = 0; jj < sample.requires.length; jj++) {
+                    metRequirements = metRequirements && activeCapabilities[sample.requires[jj]];
+                } // for
+            } // if
             
-            listHtml += "<li id='sample_" + sample.id +"'><a href='#" + sample.id + "'>" + sample.title + "</a></li>";
+            if (metRequirements) {
+                listHtml += "<li id='sample_" + ii +"'><a href='#" + ii + "'>" + sample.title + "</a></li>";
+            } // if
         } // for
         
         $("#samples").html(listHtml).find("a").click(function() {
             runCodeSample(map, this.href.replace(/^.*\#(.*)$/, "$1"));
+            return false;
         });
     } // loadSamples
     
@@ -258,24 +313,32 @@ CONSOLE = (function() {
     };
     
     $(document).ready(function() {
-        buildInterface(screen.width > 480 ? "desktop" : "mobile", function() {
-            // now do the work on activating the interface
-            displayProviders();
+        if (Modernizr.canvas) {
+            buildInterface(screen.width > 480 ? "desktop" : "mobile", function() {
+                // now do the work on activating the interface
+                displayProviders();
             
-            // if we have a sample catalog set the sample to the first sample
-            if (CONSOLE.Catalog && (CONSOLE.Catalog.length > 0)) {
-                activeSample = CONSOLE.Catalog[0].id;
-            } // if
+                // set the initial provider to decarta
+                loadDatasets();
+                changeMode("mapCanvas");
+                changeProvider("decarta");
             
-            // set the initial provider to decarta
-            loadSamples();
-            loadDatasets();
-            changeMode("mapCanvas");
-            changeProvider("cloudmade");
+                // update mode listeners
+                handleModeUpdates();
             
-            // update mode listeners
-            handleModeUpdates();
-        });
+                $(window).bind("resize", function() {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(function() {
+                        sizePageElements();
+                    }, 50);
+                });
+            });
+        }
+        else {
+            buildInterface("oldbrowser", function() {
+                
+            });
+        }
     });
     
     /*

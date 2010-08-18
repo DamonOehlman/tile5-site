@@ -223,6 +223,7 @@ footer {
     padding: 8px;
     text-align: center;
     clear: both;
+    z-index: 100;
 }
 
 div#main {
@@ -313,6 +314,22 @@ td.planned {
 
 td.na {
     background: #e9afaf;
+}
+
+/* sharing is good */
+
+ul#share {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+}
+
+ul#share li {
+    float: right;
+    margin-left: 8px;
 }
 
 /* 
