@@ -17,6 +17,11 @@ CONSOLE = (function() {
             cloudmade: {
                 title: 'Cloudmade',
                 instance: new TILE5.Geo.Cloudmade.MapProvider({ apikey: "7960daaf55f84bfdb166014d0b9f8d41" })
+            },
+            
+            bing: {
+                title: 'Bing',
+                instance: new TILE5.Geo.Bing.MapProvider({apikey: "AgZHtHdj6xF41EcwYw2Yo0y1kDICGOLJ2ATmDGMFTUX-lSBqssPHcx50lx65oOly"})
             }
         },
         // define interfaces
@@ -338,7 +343,11 @@ CONSOLE = (function() {
             buildInterface("oldbrowser", function() {
                 
             });
-        }
+        } // if..else
+        
+        // preload some images
+        TILE5.Resources.loadImage("/media/img/pins/pin-158935-1-24.png");
+        TILE5.Resources.loadImage("/media/img/pins/pin-158935-1-noshadow-24.png");
     });
     
     /*

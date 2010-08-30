@@ -1,5 +1,6 @@
 CONSOLE.Catalog = (function() {
-    var catalog = [];
+    var catalog = [],
+        callbackIds = {};
     
     catalog.push({
         title: "Simple Map",
@@ -32,6 +33,40 @@ CONSOLE.Catalog = (function() {
         },
         
         cleanup: function(map) {
+            map.annotations.clear();
+            map.repaint();
+        }
+    });
+    
+    catalog.push({
+        title: "Touch Pin",
+        code: function(map) {
+            // bind to the geo tap event of the map
+            var cid = map.bind("geotap", function(absXY, relXY, touchPos, touchBounds) {
+                // create the new annotation
+                var annotation = new TILE5.Geo.UI.ImageAnnotation({
+                    imageUrl: "/media/img/pins/pin-158935-1-24.png",
+                    animatingImageUrl: "/media/img/pins/pin-158935-1-noshadow-24.png",
+                    imageAnchor: new TILE5.Vector(8, 24),
+                    pos: touchPos,
+                    tweenIn: TILE5.Animation.Easing.Bounce.Out,
+                    animationSpeed: 1000
+                });
+
+                // add an annotation at the center position
+                map.annotations.add(annotation);                
+            });
+            
+            // save the callback id so we can unbind the event later
+            callbackIds["geotap"] = cid;
+        },
+        
+        cleanup: function(map) {
+            for (var evtName in callbackIds) {
+                map.unbind(evtName, callbackIds[evtName]);
+            } // for
+            
+            callbackIds = {};
             map.annotations.clear();
             map.repaint();
         }
