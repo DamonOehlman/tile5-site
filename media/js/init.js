@@ -25,7 +25,7 @@ TILE5DEMO = (function() {
     
     // check for native device request in the url
     if ((/native/i).test(window.location.href)) {
-        GRUNT.WaterCooler.addPipe(function(message, args) {
+        GRUNT.addPipe(function(message, args) {
             comms.push("tile5://" + message + "/");
         });
     } // if

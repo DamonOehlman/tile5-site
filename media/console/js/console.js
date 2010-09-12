@@ -1,58 +1,97 @@
 CONSOLE = (function() {
-    var map, 
+    
+    /* define providers */
+    
+    var providers = {
+        decarta: {
+            title: 'deCarta',
+            createInstance: function() {
+                return new T5.Geo.Decarta.MapProvider();
+            }
+        },
+    
+        cloudmade: {
+            title: 'Cloudmade',
+            createInstance: function() {
+                return new T5.Geo.Cloudmade.MapProvider({
+                    apikey: "7960daaf55f84bfdb166014d0b9f8d41"
+                });
+            }
+        },
+        
+        bing: {
+            title: 'Bing (Road)',
+            createInstance: function() {
+                return new T5.Geo.Bing.MapProvider({
+                    apikey: "AgZHtHdj6xF41EcwYw2Yo0y1kDICGOLJ2ATmDGMFTUX-lSBqssPHcx50lx65oOly",
+                    style: "Road"
+                });
+            }
+        },
+        
+        bingAerial: {
+            title: 'Bing (Aerial)',
+            createInstance: function() {
+                return new T5.Geo.Bing.MapProvider({
+                    apikey: "AgZHtHdj6xF41EcwYw2Yo0y1kDICGOLJ2ATmDGMFTUX-lSBqssPHcx50lx65oOly",
+                    style: "AerialWithLabels"
+                });
+            }
+        },
+        
+        nearmap: {
+            title: 'nearmap (AU only)',
+            createInstance: function() {
+                return new T5.Geo.NearMap.MapProvider();
+            }
+        }
+    };
+    
+    /* define interfaces */
+    
+    var interfaces = {
+        desktop: {
+            layout: "desktop",
+            init: function() {
+                var mainContent = $("#demo-main");
+                mainContent.height($(window).height() - mainContent.offset().top - $("footer").outerHeight());
+                
+                $("h1").html("Tile5 Desktop / iPad Demo Interface");
+            }
+        },
+        
+        mobile: {
+            layout: "mobile",
+            init: function() {
+                
+            }
+        },
+        
+        oldbrowser: {
+            layout: "oldbrowser",
+            init: function() {
+                var mainContent = $("#sad");
+                mainContent.height($(window).height() - mainContent.offset().top - $("footer").outerHeight());
+            }
+        }
+    };
+    
+    /* other variable definitions */
+    
+    var map,
         activeProvider,
         activeSample,
         activeDataset,
         activeCapabilities = {},
         activeMode,
         lastDatasetIndex,
-        resizeTimeout = 0,
-        // define providers
-        providers = {
-            decarta: {
-                title: 'deCarta',
-                instance: new TILE5.Geo.Decarta.MapProvider()
-            },
-        
-            cloudmade: {
-                title: 'Cloudmade',
-                instance: new TILE5.Geo.Cloudmade.MapProvider({ apikey: "7960daaf55f84bfdb166014d0b9f8d41" })
-            },
-            
-            bing: {
-                title: 'Bing',
-                instance: new TILE5.Geo.Bing.MapProvider({apikey: "AgZHtHdj6xF41EcwYw2Yo0y1kDICGOLJ2ATmDGMFTUX-lSBqssPHcx50lx65oOly"})
-            }
-        },
-        // define interfaces
-        interfaces = {
-            desktop: {
-                layout: "desktop",
-                init: function() {
-                    var mainContent = $("#demo-main");
-                    mainContent.height($(window).height() - mainContent.offset().top - $("footer").outerHeight());
-                    
-                    $("h1").html("Tile5 Desktop / iPad Demo Interface");
-                }
-            },
-            
-            mobile: {
-                layout: "mobile",
-                init: function() {
-                    
-                }
-            },
-            
-            oldbrowser: {
-                layout: "oldbrowser",
-                init: function() {
-                    var mainContent = $("#sad");
-                    mainContent.height($(window).height() - mainContent.offset().top - $("footer").outerHeight());
-                }
-            }
-        };
+        resizeTimeout = 0;
        
     function getActiveProvider() {
+        if (! providers[activeProvider].instance) {
+            providers[activeProvider].instance = providers[activeProvider].createInstance();
+        } // if
+        
         return providers[activeProvider].instance;
     } // getActiveProvider
         
@@ -83,13 +122,13 @@ CONSOLE = (function() {
         var modeElement = $("#" + activeMode).get(0),
             modeWindowWidth = $(window).width() - $("#sidebar").outerWidth() - 1,
             modeWindowHeight = $("#demo-main").height()  - $("#modes li").outerHeight() - 1;
-        
+            
         if (modeElement && (modeElement.tagName.toUpperCase() == "CANVAS")) {
             $(modeElement).attr("width", modeWindowWidth).attr("height", modeWindowHeight);
             
             if (map) {
                 map.repaint();
-                GRUNT.WaterCooler.say("view.wake", { id: "" });
+                GT.say("view.wake", { id: "" });
             } // if
         } // if
         else if (modeElement) {
@@ -105,6 +144,13 @@ CONSOLE = (function() {
         $(".mode").hide();
 
         sizePageElements();
+        
+        if (modeId == "mapCanvas") {
+            $(".slider").show();
+        }
+        else {
+            $(".slider").fadeOut();
+        }
         
         $("#" + modeId).fadeIn("normal");
     } // changeMode
@@ -130,8 +176,25 @@ CONSOLE = (function() {
         } // if
     } // checkProviderChange
     
+    function createMap() {
+        // create the provider
+        var mapProvider = getActiveProvider();
+        
+        // create the map
+        map = new T5.Map({
+            container: "mapCanvas",
+            autoSize: false,
+            crosshair: false,
+            panAnimationDuration: 600,
+            panAnimationEasing: T5.easing('sine.out'),
+            provider: mapProvider
+        });
+    } // createMap
+    
     function changeProvider(providerId) {
         if (providerId != activeProvider) {
+            var initMap = (! map);
+            
             activeProvider = providerId;
 
             $("#providers li").removeClass("active");
@@ -142,31 +205,65 @@ CONSOLE = (function() {
 
                 updateCapabilityStatus(providerId);
                 $("#provider_" + providerId).addClass("active");
-
-                if (map) {
-                    map.cleanup();
-                } // if
-
-                // update the map
-                map = new TILE5.Geo.UI.Tiler({
-                    container: "mapCanvas",
-                    autoSize: false,
-                    crosshair: false,
-                    provider: getActiveProvider()
-                });
                 
                 loadSamples();
-                runCodeSample(map, "0");
-                // map.gotoPosition(TILE5.Geo.P.parse("-27.468 153.028"), 10);
+
+                if (initMap) {
+                    createMap();
+                    
+                    map.bind("zoomLevelChange", function(zoomLevel) {
+                        var zoomRange = map.provider().getZoomRange();
+
+                        var rangeApi = $("#zoom").data("rangeinput"),
+                            rangeConfig = rangeApi.getConf();
+
+                        // update the zoom parameters
+                        rangeConfig.min = zoomRange.min;
+                        rangeConfig.max = zoomRange.max;
+
+                        // set the value
+                        if (zoomLevel !== rangeApi.getValue()) {
+                            rangeApi.setValue(zoomLevel);
+                        } // if
+                    });
+                    
+                    runCodeSample(map, "0");
+                }
+                else {
+                    var provider = getActiveProvider();
+                    if (provider) {
+                        var centerPos = map.getCenterPosition();
+                        
+                        map.provider(provider);
+                        map.gotoPosition(centerPos, map.getZoomLevel());
+                    }
+                } // if..else
+                
+                if (map) {
+                    map.annotations.clear();
+                    map.repaint();
+                } // if
+
+                setTimeout(updateProviderInformation, 1000);
             } // if
         }
     } // changeProvider
+    
+    function updateProviderInformation() {
+        // if we do have a current 
+        var currentProvider = getActiveProvider(),
+            logoUrl = currentProvider ? currentProvider.getLogoUrl() : null,
+            copyrightText = currentProvider ? currentProvider.getCopyright() : "";
+            
+        $("#providerLogo").get(0).src = logoUrl ? logoUrl : "/media/img/tile5-flat.png";
+        $("#copyright").html(copyrightText);
+    } // updateProviderInformation
     
     function updateCapabilityStatus(providerId) {
         $("#caps .capability").each(function() {
             var engine = null;
             try {
-                engine = TILE5.Geo.getEngine(this.id, providerId);
+                engine = T5.Geo.getEngine(this.id, providerId);
             } 
             catch (e) {}
             
@@ -209,9 +306,10 @@ CONSOLE = (function() {
         
         $("#datasets").html(listHtml).find("a").click(function() {
             selectDataset(this.href.replace(/^.*\#(\d+)$/, "$1"));
+            return false;
         });
         
-        selectDataset(1);
+        selectDataset(0);
     } // loadDatasets
     
     function selectDataset(index) {
@@ -221,7 +319,7 @@ CONSOLE = (function() {
         $("#dataset_" + (index ? index : 0)).addClass("active");
         
         if (map && (index !== lastDatasetIndex)) {
-            runCodeSample(map, activeSample);
+            runCodeSample(map, "0");
             lastDatasetIndex = index;
         } // if
     } // selectDataset
@@ -270,7 +368,7 @@ CONSOLE = (function() {
         while (matches) {
             var posData = getPositionData(parseInt(matches[1], 10));
             if (posData) {
-                codeString = codeString.replace(matches[0], "TILE5.Geo.P.parse(\"" + posData.latlng + "\") /* " + posData.title + " */");
+                codeString = codeString.replace(matches[0], "T5.Geo.P.parse(\"" + posData.latlng + "\") /* " + posData.title + " */");
             } // if
             
             matches = /CONSOLE\.getPosition\((\d)+\)/.exec(codeString);
@@ -278,6 +376,15 @@ CONSOLE = (function() {
         
         $("#code-content").remove();
         $("#code-marker").after("<pre id='code-content' class='brush: js; toolbar: false;'>" + codeString + "</pre>");
+
+        var mapInitCode = createMap.toString(),
+            initProviderCode = providers[activeProvider].createInstance.toString();
+            
+        initProviderCode = initProviderCode.replace(/^function.*?\{\n\s*return?/, "").replace(/\;\s*\}.*$/, "");
+        mapInitCode = mapInitCode.replace("getActiveProvider()", initProviderCode);
+        
+        $("#init-content").remove();
+        $("#init-marker").after("<pre id='init-content' class='brush: js; toolbar: false;'>" + mapInitCode + "</pre>");
         
         SyntaxHighlighter.highlight();
     } // updateCodeBox
@@ -310,10 +417,14 @@ CONSOLE = (function() {
         getPosition: function(index) {
             var posData = getPositionData(index);
             if (posData) {
-                return TILE5.Geo.P.parse(posData.latlng);
+                return T5.Geo.P.parse(posData.latlng);
             } // if
             
             return null;
+        },
+        
+        getMap: function() {
+            return map;
         }
     };
     
@@ -322,11 +433,18 @@ CONSOLE = (function() {
             buildInterface(screen.width > 480 ? "desktop" : "mobile", function() {
                 // now do the work on activating the interface
                 displayProviders();
+                
+                $("#zoom").rangeinput();
+                $("#zoom").change(function(evt, value) {
+                    map.setZoomLevel(value);
+                });
             
                 // set the initial provider to decarta
                 loadDatasets();
                 changeMode("mapCanvas");
-                changeProvider("decarta");
+
+                // set the initial provider
+                changeProvider(document.location.hash ? document.location.hash.slice(1) : "decarta");
             
                 // update mode listeners
                 handleModeUpdates();
@@ -346,15 +464,15 @@ CONSOLE = (function() {
         } // if..else
         
         // preload some images
-        TILE5.Resources.loadImage("/media/img/pins/pin-158935-1-24.png");
-        TILE5.Resources.loadImage("/media/img/pins/pin-158935-1-noshadow-24.png");
+        T5.Images.load("/media/img/pins/pin-158935-1-24.png");
+        T5.Images.load("/media/img/pins/pin-158935-1-noshadow-24.png");
     });
     
     /*
     NOTE: these details are the account details for me (Damon Oehlman) on the decarta devzone.
     For your own API key, simply register at http://devzone.decarta.com/
     */
-    TILE5.Geo.Decarta.applyConfig({
+    T5.Geo.Decarta.applyConfig({
         server: "http://ws.decarta.com/openls",
         clientName: "racq-do",
         clientPassword: "mz5ff3",

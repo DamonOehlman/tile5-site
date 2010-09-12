@@ -36,6 +36,7 @@
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
+	width: 70%;
 }
 
 ul#modes {
@@ -115,6 +116,10 @@ ul#caps li.no {
 
 /* code styling */
 
+#code {
+	overflow: hide;
+}
+
 #code pre {
 	padding: 8px 8px 8px 24px;
 	margin: 0;
@@ -133,10 +138,50 @@ ul#caps li.no {
 	padding: 8px 0 0 24px;
 }
 
+img#providerLogo {
+	position: absolute;
+	top: 90px;
+	right: 8px;
+}
+
 #mapCanvas {
 	background: url(/media/img/tile5-map-bg.png);
 }
 
+#copyright {
+	background: white;
+	font-size: 0.8em;
+	padding: 12px 8px;
+}
+
+/* slider style overrides */
+
+/* height is now larger than width  */
+.slider {
+	position: absolute;
+	top: 100px;
+	left: 30%;
+	height:120px;
+	width:6px;
+	margin:0 0 0 0px;
+}
+
+.range {
+	display: none;
+}
+
+/* tweak drag handle position */
+.handle {
+	top:0;
+	left:-6px;
+}
+
+/* position progressbar on the bottom edge */
+.progress {
+	width:9px; 
+	position:absolute;
+	bottom:0;	
+}
 </style>
 <ul id="share">
 	<li><a target="_blank" href="http://twitter.com/?status=Playing around with opensource HTML5 mapping @ http://www.tile5.org/demos/"><img src="/media/img/share/twitter.png" alt="Share on Twitter"></a></li>
@@ -147,6 +192,7 @@ ul#caps li.no {
 	<h3>Map Providers</h3>
 	<ul id="providers">
 	</ul>
+	<div id="copyright"></div>
 	<h3>Available Demos</h3>
 	<ul id="samples">
 	</ul>
@@ -165,19 +211,15 @@ ul#caps li.no {
 		<li id="geocode" class="capability">Geocoding</li>
 		<li class="heading"><a href="/map-providers">Provider Status:</a></li>
 	</ul>
+	<input type="range" id="zoom" min="1" max="25" value="3" /> 
 	<canvas id="mapCanvas" class="mode"></canvas>
+	<img id="providerLogo" />
 	<div id="code" class="mode">
-		<h4>Map Initialization (All Samples)</h4>
-		<pre id="initialization" class="brush: js; toolbar: false;">
-	    var map = new TILE5.Geo.UI.Tiler({
-	        container: "mapCanvas",
-	        autoSize: false,
-	        provider: getActiveProvider()
-	    });
-		</pre>
-		
 		<h4 id="sampletitle">Sample Code</h4>
 		<span id="code-marker"></span>
+
+		<h4>Map Initialization (All Samples)</h4>
+		<span id="init-marker"></span>
 	</div>
 	<div id="about" class="mode">
 	</div>

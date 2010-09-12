@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Download{% endblock %}
+{% block h1%}{% endblock %}
+
+{% block content %}
+<p>
+The first beta release of Tile5 is now available.  Still lacking examples
+and solid documentation, this release is probably only for the really eager
+amongst you - but if you are interested please feel free.
+</p>
+<ul class='downloads'>
+	<li><a href="http://github.com/downloads/sidelab/tile5/tile5-0.9.zip">tile5-0.9.zip</a><span class='date'>2010-09-12</span></li>
+</ul>
+<p>
+Each distribution contains the following files:
+</p>
+<ul class='files'>
+	<li>
+		<strong>tile5.js</strong><br />
+		The uncompressed source of the Tile5 library that includes the mapping and 
+		geospatial functionality.  No map providers are included in this library, but 
+		they are included in the distribution separately.
+	</li>
+	<li>
+		<strong>tile5.min.js</strong><br />
+		Minified version of the tile5.js file.
+	</li>
+	<li>
+		<strong>tile5.lite.js</strong><br />
+		The uncompressed source of the Tile5 library, without mapping functionality (as
+		used in the <a href="/photogrid">Flickr Photogrid Demo</a>).  This library allow
+		you to build generic tiling interfaces, including with touch support, device 
+		detection and animation and easing effects.
+	</li>
+	<li>
+		<strong>tile5.lite.min.js</strong><br />
+		The minified version of the tile5.lite.js file.
+	</li>
+	<li>
+		<strong>tile5.%mapprovider%.js</strong><br />
+		A collection of different map providers that can be used with the full version
+		of the Tile5 library.
+	</li>
+</ul>
+{% endblock %}

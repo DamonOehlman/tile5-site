@@ -1,9 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'headerless.html' %}
 
 {% block title %}deCarta T5{% endblock %}
 {% block h1 %}deCarta Demo{% endblock %}
 
 {% block extra-includes %}
+<style type="text/css">
+#mapCanvas {
+	background: url(/media/img/tile5-map-bg.png);
+}
+</style>
 <script src="/media/js/tile5/dist/tile5.js?v=1"></script>
 <script src="/media/js/tile5/dist/tile5.decarta.js?v=1"></script>
 <script src="/media/js/init.js?v=1"></script>

@@ -1,0 +1,88 @@
+body {
+    background: #323232;
+}
+
+#toolbar {
+    background: #323232;
+    padding: 8px;
+}
+
+#searchbox {
+    width: 310px;
+    margin: 0 5px 0 0;
+    float: left;
+}
+
+#searchbox input {
+    width: 240px;
+    margin: 3px 0px;
+}
+
+#searchbox button {
+    float: right;
+}
+
+#browser {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	float: left;
+    background: #323232;
+}
+
+#details {
+    -webkit-border-image: url(/media/img/flickr-image-border.png) 10 stretch stretch;
+    -moz-border-image: url(/media/img/flickr-image-border.png) 10 stretch stretch;
+    border-width: 10px;
+    background: #323232;
+    float: left;
+}
+
+#details h5 {
+    text-align: center;
+    margin: 10px 0 5px 0;
+}
+
+#details h5 a {
+    color: white;
+    text-decoration: none;
+}
+
+#details h5 a:hover {
+}
+
+#details img {
+    overflow: hidden;
+}
+
+#options {
+    display: none;
+    padding: 20px;
+    color: white;
+}
+
+#options h2 {
+    color: white;
+    border-bottom: 1px solid white;
+    margin: 0 0 10px 0;
+    padding: 0 0 4px 0;
+}
+
+#options label {
+    float: left;
+    width: 200px;
+}
+
+#options .actions {
+    margin: 10px 0 0 0;
+}
+
+#status {
+    position: absolute;
+    right: 10px;
+    top:104px;
+    background: #000000 url(./ajax-loader.gif) 8px 10px no-repeat;
+    color: white;
+    padding: 8px 8px 8px 36px;
+    -webkit-border-radius: 4px; -moz-border-radius: 4px;
+}

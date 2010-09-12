@@ -17,10 +17,13 @@ var map = null;
 $(document).ready(function() {
     TILE5DEMO.sizeCanvas();
     
+    var provider = new TILE5.Geo.Decarta.MapProvider();
+    provider.setZoomRange(3, 17);
+    
     map = new TILE5.Geo.UI.Tiler({
         container: "mapCanvas",
         autoSize: false,
-        provider: new TILE5.Geo.Decarta.MapProvider()
+        provider: provider
     });
     
     map.gotoPosition(TILE5.Geo.P.parse("-27.468 153.028"), 10);

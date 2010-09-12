@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}HTML5 Mapping{% endblock %}
+{% block h1%}HTML5 Mapping{% endblock %}
+
+{% block content %}
+<p>
+The objective of the Tile5 mapping library is simple: <strong>Offer
+cross-device HTML5 mapping that feels <em>as good as</em> a native device 
+implementation on any device that supports HTML5.</strong>
+</p>
+<p>
+This objective is not one that will be realised overnight, but as
+the quality and power of mobile devices improves so to will Tile5.  Right now,
+the performance and features of Tile5 HTML5 mapping on an iPhone 3GS 
+(or greater) offers a comparable experience to those of the native maps.
+</p>
+<h2>Multiple Map Providers</h2>
+<p>
+Tile5 has been built from the ground-up to be a vendor neutral implementation. With the number 
+of map provider and mobile device combinations being very high, a native device implementation for each
+provider is unsustainable.
+</p>
+<p>
+This was one of the primary design decisions for choosing a technology
+such as HTML5, and it was important to also ensure that Tile5 provided suitable extension points for
+"plugging in" as many mapping providers as possible.  We believe this will providing a sustainable solution
+for businesses interested in implementing location based services.
+</p>
+<p><a href="/map-providers">Supported Map Providers</a></p>
+{% endblock %}

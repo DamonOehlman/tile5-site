@@ -2,6 +2,7 @@ CONSOLE.Datasets = (function() {
     var datasets = [];
     
     datasets.push({
+        id: "au",
         title: "Australia",
         positions: [
             { title: "Brisbane", latlng: "-27.468 153.028" },
@@ -10,6 +11,7 @@ CONSOLE.Datasets = (function() {
     });
     
     datasets.push({
+        id: "us-west",
         title: "US (West Coast)",
         positions: [
             { title: "deCarta HQ", latlng: "37.337647 -121.889749" },

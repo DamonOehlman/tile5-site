@@ -1,0 +1,64 @@
+{% extends 'demos.html' %}
+
+{% block title %}Tile5 Photogrid{% endblock %}
+{% block h1 %}Tile5 Photogrid{% endblock %}
+
+{% block extra-includes %}
+<link type="text/css" rel="stylesheet" href="/media/demos/photogrid/style.css?v=3"/>
+
+<!-- include lawnchair -->
+<script src="/media/js/lawnchair/adaptors/LawnchairAdaptorHelpers.js"></script>
+<script src="/media/js/lawnchair/adaptors/WebkitSQLiteAdaptor.js"></script>
+<script src="/media/js/lawnchair/adaptors/DOMStorageAdaptor.js"></script>
+<script src="/media/js/lawnchair/Lawnchair.js"></script>
+
+<!-- include tile5 -->
+<script src="/media/js/tile5/dist/tile5.lite.min.js?v=15"></script>
+
+<!-- include demo console files -->
+<script src="/media/demos/photogrid/script.js?v=4"></script>
+<script src="/media/demos/photogrid/plugins.js?v=4"></script>
+{% endblock %}
+
+{% block content %}
+<ul id="share">
+	<li><a target="_blank" href="http://twitter.com/?status=Search photos differently with the Tile5 Photogrid powered by Flickr"><img src="/media/img/share/twitter.png" alt="Share on Twitter"></a></li>
+	<li><a href="http://www.delicious.com/save" onclick="window.open('http://www.delicious.com/save?v=5&noui&jump=close&url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title), 'delicious','toolbar=no,width=550,height=550'); return false;"><img src="/media/img/share/delicious.png" alt="Bookmark on Delicious"></a></li>
+	<li><a href="http://reddit.com/submit" onclick="window.location = 'http://reddit.com/submit?url=' + encodeURIComponent(window.location); return false"><img src="/media/img/share/reddit.png" alt="Share on Reddit" /></a></li>
+</ul>
+<div id="toolbar">
+	<div id="searchbox">
+	<input type="search" id="searchtext" placeholder="Search..." />
+	<button id="runsearch">Search</button>
+	</div>
+	<div id="actions">
+	<button id="searchopts">Search Options</button>
+	<button id="load">Load Faves</button>
+	<button id="fav" disabled="disabled" class="add">Favorite</button>
+	</div>
+	<div id="status"></div>
+</div>
+<div id="browser">
+<canvas id="photos" width="320" height="460"></canvas>
+</div>
+<div id="details">
+	<!-- <h5 class="image-title"></h5> -->
+	<div id="current">
+		<a id="image-url" href="#" title="" target="_blank"><img /></a>
+	</div>
+	<div id="options">
+		<h2>Photogrid Search Options</h2>
+		<div class="fields">
+			<input type="checkbox" id="is_commons" />
+			<label for="is_commons">Commons Project</label><br />
+			
+			<input type="checkbox" id="is_getty" />
+			<label for="is_gety">Getty Images</label>
+		</div>
+		<div class="actions">
+		<button id="options-save" style="width: 100px;">Save</button>
+		<button id="options-cancel"style="width: 100px;">Cancel</button>
+		</div>
+	</div>
+</div>
+{% endblock %}

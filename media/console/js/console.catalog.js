@@ -16,15 +16,15 @@ CONSOLE.Catalog = (function() {
             map.annotations.clear();
             
             // find the current center of the map
-            var centerPos = TILE5.Geo.B.getCenter(map.getBoundingBox());
+            var centerPos = T5.Geo.B.getCenter(map.getBoundingBox());
             
             // create the new annotation
-            var annotation = new TILE5.Geo.UI.ImageAnnotation({
+            var annotation = new T5.Geo.UI.ImageAnnotation({
                 imageUrl: "/media/img/pins/pin-158935-1-24.png",
                 animatingImageUrl: "/media/img/pins/pin-158935-1-noshadow-24.png",
-                imageAnchor: new TILE5.Vector(8, 24),
+                imageAnchor: new T5.Vector(8, 24),
                 pos: centerPos,
-                tweenIn: TILE5.Animation.Easing.Bounce.Out,
+                tweenIn: T5.easing('bounce.out'),
                 animationSpeed: 1000
             });
             
@@ -44,12 +44,12 @@ CONSOLE.Catalog = (function() {
             // bind to the geo tap event of the map
             var cid = map.bind("geotap", function(absXY, relXY, touchPos, touchBounds) {
                 // create the new annotation
-                var annotation = new TILE5.Geo.UI.ImageAnnotation({
+                var annotation = new T5.Geo.UI.ImageAnnotation({
                     imageUrl: "/media/img/pins/pin-158935-1-24.png",
                     animatingImageUrl: "/media/img/pins/pin-158935-1-noshadow-24.png",
-                    imageAnchor: new TILE5.Vector(8, 24),
+                    imageAnchor: new T5.Vector(8, 24),
                     pos: touchPos,
-                    tweenIn: TILE5.Animation.Easing.Bounce.Out,
+                    tweenIn: T5.easing('bounce.out'),
                     animationSpeed: 1000
                 });
 
@@ -73,10 +73,17 @@ CONSOLE.Catalog = (function() {
     });
     
     catalog.push({
+        title: "Locate Me",
+        code: function(map) {
+            map.locate();
+        }
+    });
+    
+    catalog.push({
         title: "A - B Route",
         requires: ["route"],
         code: function(map) {
-            TILE5.Geo.Routing.calculate({
+            T5.Geo.Routing.calculate({
                 waypoints: [
                     CONSOLE.getPosition(0), 
                     CONSOLE.getPosition(1) 
