@@ -15,7 +15,7 @@
     
     new T5.Dispatcher.Action({
         id: 'rando',
-        title: 'Show Random',
+        title: 'Random',
         execute: function(photogrid, tiler, tileGrid) {
             var selectedTile = null,
                 counter = 0;

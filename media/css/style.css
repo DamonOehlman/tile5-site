@@ -202,7 +202,7 @@ button {  width: auto; overflow: visible; }
  */
 
 body {
-    font: 1.0em Georgia, Sans-Serif;
+    font: 1.0em "Helvetica Neue", Helvetica, Sans;
     background: #aca793;
 }
 
@@ -210,14 +210,11 @@ body {
     float: right;
 }
 
-a, a:visited { 
-    color: #006680;
-}
-
 header {
-    font: 1.0em Georgia, Sans-Serif;
+    background: url(/media/img/tile5-logo.png) no-repeat center top;
     text-align: center;
-    margin: 12px 0 0 0;
+    margin: 8px 0 0 0;
+    padding: 80px 0 0 0;
 }
 
 header a, header a:visited {
@@ -231,7 +228,7 @@ header a:hover {
 }
 
 footer {
-    width: 500px;
+    width: 580px;
     margin: 6px auto 10px auto;
     text-align: justify;
     font-size: 0.8em;
@@ -246,16 +243,31 @@ div.logo {
     text-align: center;
 }
 
-div#main {
-    background: white;
+#main {
+    background: #c8c4b7;
     padding: 0px;
     margin: 5px auto 10px auto;
     -webkit-border-image: url(/media/img/tile5-border.png) 16 stretch stretch;
     -moz-border-image: url(/media/img/tile5-border.png) 16 stretch stretch;
     border-image: url(/media/img/tile5-border.png) 16 stretch stretch;
     border: 16px;
-    width: 500px;
-    line-height: 1.6em;
+    width: 580px;
+    line-height: 1.7em;
+}
+
+#main a, #main a:visited {
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    background: rgba(50, 50, 50, 0.3);
+    color: white;
+    text-decoration: none;
+    padding: 2px 10px 3px 10px;
+}
+
+#main a:hover, #main a:active {
+    color: #333333;
+    text-shadow: 0px 0px 1px rgba(30, 30, 30, 0.5);
+    background: rgba(130, 130, 130, 0.3);
 }
 
 #main.error p {
@@ -263,6 +275,16 @@ div#main {
     color: red;
     font-weight: bold;
     text-align: center;
+}
+
+#main ul {
+    list-style-type: none;
+    margin: 0;
+}
+
+#main ul li {
+    background: url(/media/img/icons/asterisk.png) no-repeat 4px 9px;
+    padding: 4px 0 4px 26px;
 }
 
 h1 {
@@ -274,15 +296,21 @@ h1 {
 
 div#main h1 {
     color: white;
-    margin: 0 0 10px 0;
-    font: bold 1.3em Georgia, Sans-Serif;
+    margin: 0 0 6px 0;
+    font: bold 1.5em;
     text-shadow: 0 1px 1px #333333;
 }
 
 h2 {
-    margin: 0 0 4px 4px;
-    font: bold 1.15em Georgia, Sans-Serif;
-    letter-spacing: 1px;
+    margin: 0 0 0 6px;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(50, 50, 50, 0.5);
+}
+
+h3 {
+    margin: 0 0 0 6px;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(50, 50, 50, 0.5);
 }
 
 p {
@@ -322,19 +350,69 @@ a.twitter-link, a.twitter-link:visited {
     border-width: 7px;
     display: block;
     margin: 4px 0 0 0;
-    padding: 4px 0 0 0;
+    padding: 3px 0 4px 0;
     text-align: center;
-    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.8em;
+    color: #333333;
     font-weight: bold;
     text-decoration: none;
-    text-shadow: 1px 1px 1px #333333;
 }
 
 a.twitter-link:hover, a.twitter-link:active {
-    -webkit-border-image: url(/media/img/tile5-button-hover.png) 7 stretch stretch;
-    -moz-border-image: url(/media/img/tile5-button-hover.png) 7 stretch stretch;
-    color: #333333;
-    text-shadow: none;
+    color: white;
+}
+
+/* top menu styling */
+
+ul#topmenu {
+    list-style-type: none;
+    border: 0;
+    margin: -17px auto 10px auto;
+    position: absolute;
+    top: -50px;
+    text-align: center;
+    height: 24px;
+}
+
+ul#topmenu li {
+    background: none;
+    margin: 0;
+    padding: 0;
+    float: left;
+}
+
+ul#topmenu li a, ul#apinav li a:visited, ul#apinav li a:hover, ul#apinav li a:active {
+    width: 90px;
+    padding: 2px 5px;
+    color: black;
+    display: block;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, rgba(200, 200, 200, 0.3)), color-stop(0.5, rgba(170, 170, 170, 0.8)), color-stop(0.5, rgba(170, 170, 170, 0.8)), color-stop(1.0, #BBBBBB));
+    -webkit-box-shadow: 0px 1px 2px #333333;
+    -moz-box-shadow: 0px 1px 2px #333333;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    text-transform: uppercase;
+    font-size: 0.8em;
+}
+
+ul#topmenu li a:hover {
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, rgba(171, 200, 55, 0.1)), color-stop(0.5, rgba(171, 200, 55, 0.7)));
+}
+
+ul#topmenu li a:active {
+    background: #333333;
+}
+
+ul#topmenu li:first-child a {
+    -webkit-border-bottom-left-radius: 8px;
+    -moz-border-bottom-left-radius: 8px;
+}
+
+ul#topmenu li:last-child a {
+    -webkit-border-bottom-right-radius: 8px;
+    -moz-border-bottom-left-radius: 8px;
 }
 
 /* device support grid */
@@ -412,6 +490,31 @@ button {
     padding: 6px;
 }
 
+/* jodoc documentation */
+
+#apidoc h1 {
+    clear: both;
+}
+
+#apidoc a.index {
+    background: #333333;
+    color: white;
+    text-decoration: none;
+    float: right;
+    -webkit-border-radius: 4px
+    -moz-border-radius: 4px
+}
+
+#apidoc #index {
+    text-align: center;
+    font-size: 0.85em;
+}
+
+#apidoc #index a {
+    margin: 0 10px 5px 0;
+    word-wrap: none;
+}
+
 /* 
  * print styles
  * inlined to avoid required HTTP connection www.phpied.com/delay-loading-your-print-css/ 
@@ -461,10 +564,21 @@ button {
       width: 290px;
   }
   
+  #forkme {
+      display: none;
+  }
+  
   header a, header a:visited {
       color: white;
       text-decoration: none;
       margin: 0 3px;
+  }  
+  
+  #main h2 a, #main h2 a:visited, #main h2 a:active {
+      background: none;
+      padding: 0;
+      -webkit-border-radius: 0;
+      -moz-border-radius: 0;
   }  
   
   footer {

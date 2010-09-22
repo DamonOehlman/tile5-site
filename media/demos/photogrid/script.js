@@ -6,9 +6,9 @@ T5.Photogrid = (function() {
         METHOD_RECENT = 'flickr.photos.getRecent',
         METHOD_GETINFO = 'flickr.photos.getInfo',
         METHOD_GET_INTERESTING = 'flickr.interestingness.getList',
-        FLICKR_TILE_SIZE = 80,
+        FLICKR_TILE_SIZE = 75,
         MIN_QUEUE_LENGTH = 100,
-        IMAGES_PER_REQUEST = 250,
+        IMAGES_PER_REQUEST = 150,
         
         // initialise the search options
         DEFAULT_SEARCH_OPTIONS = {};
@@ -123,9 +123,14 @@ T5.Photogrid = (function() {
     } // checkQueue
     
     function drawTileBorder(context, imageData) {
-        if (tileBorder) {
-            context.drawImage(tileBorder, 0, 0);
-        }
+        context.strokeStyle = "#666666";
+        context.lineWidth = 2.5;
+        
+        context.beginPath();
+        context.moveTo(0, 76);
+        context.lineTo(0, 0);
+        context.lineTo(76, 0);
+        context.stroke();
     } // drawTileBorder
     
     function getStartIndex(topLeftOffset) {
@@ -327,11 +332,13 @@ T5.Photogrid = (function() {
                 tileSize: FLICKR_TILE_SIZE,
                 width: dimensions.width, 
                 height: dimensions.height,
-                center: new T5.Vector(imagesPerSide, imagesPerSide),
+                /*
                 tileDrawArgs: {
-                    offset: new T5.Vector(2.5, 2.5),
+                    offset: new T5.Vector(1, 1),
                     postProcess: drawTileBorder
-                }
+                },
+                */
+                center: new T5.Vector(imagesPerSide, imagesPerSide)
             });
             
             tileGrid.populate(getFlickrTile);
@@ -363,16 +370,18 @@ T5.Photogrid = (function() {
     } // resetState
     
     function sizePhotoCanvas() {
-        var canvas = $("#photos").get(0),
-            availHeight = $(window).height() - canvas.offsetTop - 4;
+        var canvas = $("#photos").get(0);
         
-        canvas.height = availHeight;
-            
+        canvas.width = $("#main").width();
+        
         // initialise the images per side and per page
         imagesPerSide = Math.ceil(Math.max(canvas.height / FLICKR_TILE_SIZE, canvas.width / FLICKR_TILE_SIZE));
         
-        $("#details").width($(window).width() - canvas.width - 20);
-        $("#details").height(availHeight - 16);
+        $("#details")
+            .width($(window).width() - canvas.width - 20)
+            .height(canvas.height - 16);
+            
+        $(canvas).fadeIn();
     } // sizePhotoCanvas
     
     function updatePhotoTools() {
@@ -390,10 +399,10 @@ T5.Photogrid = (function() {
     
     function updateStatus(message) {
         if (message) {
-            $("#status").html(message).show();
+            $("#status").html(message).slideDown();
         }
         else {
-            $("#status").hide();
+            $("#status").slideUp();
         } // if..else
     } // updateStatus
     
@@ -504,9 +513,10 @@ T5.Photogrid = (function() {
         // get the registered actions
         var actions = T5.Dispatcher.getRegisteredActions();
         for (var ii = 0; ii < actions.length; ii++) {
-            $("#actions").append('<button id="' + actions[ii].id + '">' + actions[ii].getParam('title') + '</button>');
+            $("#topmenu").append('<li><a id="' + actions[ii].id + '" href="#">' + actions[ii].getParam('title') + '</a></li>');
             $('#' + actions[ii].id).click(function() {
                 T5.Dispatcher.execute(this.id, module, tiler, tileGrid);
+                return false;
             });
         } // for
         
@@ -517,7 +527,7 @@ T5.Photogrid = (function() {
             scalable: false
         });
         
-        tiler.bind("selectTile", viewTilePhoto);
+        // tiler.bind("selectTile", viewTilePhoto);
         $(window).bind("resize", sizePhotoCanvas);
         
         $("#searchtext").bind('keypress', function(evt) {
@@ -538,6 +548,7 @@ T5.Photogrid = (function() {
         $("#options-save").click(optionsSave);
         $("#options-cancel").click(optionsCancel);
         
+        /*
         currentImage = $("#current img").get(0);
         currentImage.onload = function() {
             var marginVert = Math.floor(($("#details").height() - currentImage.height) / 2),
@@ -551,6 +562,7 @@ T5.Photogrid = (function() {
             
             $("#current").fadeIn('fast');
         };
+        */
         
         if (location.hash) {
             initFromHash(unescape(location.hash.slice(1)).replace(/\+/g, ' '));
@@ -595,7 +607,7 @@ T5.Photogrid = (function() {
         },
         
         view: function(tile) {
-            viewTilePhoto(tile);
+            // viewTilePhoto(tile);
         }
     };
     

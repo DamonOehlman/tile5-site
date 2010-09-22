@@ -5,14 +5,17 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 import logging
 import os
+import re
 
 def empty_file(request):
     return HttpResponse()
     
 def main(request):
+    page_name = re.sub(r'^(.*?)(\.htm|\.html)?$', r'\1', request.path)
+    
     # find the template name
-    template_name = 'tile5' + request.path + '.html'
-    index_template_name = 'tile5' + request.path + 'index.html'
+    template_name = 'tile5' + page_name + '.html'
+    index_template_name = 'tile5' + page_name + 'index.html'
 
     abs_templatepath = os.path.abspath("templates/" + template_name)
     

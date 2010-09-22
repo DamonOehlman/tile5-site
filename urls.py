@@ -17,6 +17,8 @@ from tile5 import views as tile5_views
 
 urlpatterns = patterns('',
     (r'^MJ12_FAD7BA2F940521B01DE13B79912B256D\.txt$', tile5_views.empty_file),
+    (r'^mapping/?$', 'django.views.generic.simple.redirect_to', {'url': '/html5-mapping'}),
+    (r'^docs/api/?$', 'django.views.generic.simple.redirect_to', {'url': '/docs/api/README.mdown.html'}),
     (r'^demos/flickr.*', 'django.views.generic.simple.redirect_to', {'url': '/photogrid'}),
     (r'^favicon\.ico$', 'django.views.generic.simple.redirect_to', {'url': '/media/img/favicon.ico'}),
     (r'^.*', tile5_views.main),

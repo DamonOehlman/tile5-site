@@ -52,7 +52,7 @@ CONSOLE.Catalog = (function() {
                     tweenIn: T5.easing('bounce.out'),
                     animationSpeed: 1000
                 });
-
+                
                 // add an annotation at the center position
                 map.annotations.add(annotation);                
             });

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block extra-includes %}
+<script src="/media/js/docloader.js"></script>
+{% endblock %}
+
+{% block content %}
+<div id='apidoc'>
+	<ul id='topmenu'>
+		<li><a href='#index'>Show Index</a></li>
+	</ul>
+	<div id='index' style='display: none;'>
+	</div>
+	<div id='content'>
+	{% block api %}
+	{% endblock %}
+	</div>
+</div>
+{% endblock %}
