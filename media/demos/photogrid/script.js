@@ -1,6 +1,6 @@
 T5.Photogrid = (function() {
     var URL_BASE = 'http://api.flickr.com/services/rest/' + 
-            '?api_key=87cc8d174ba6038ed19c49498dcda86e' +
+            '?api_key=e1b6e0f0d9957c81d05c135d4a48484e' +
             '&format=json',
         METHOD_SEARCH = 'flickr.photos.search',
         METHOD_RECENT = 'flickr.photos.getRecent',
@@ -82,11 +82,13 @@ T5.Photogrid = (function() {
         userSearchOptions = {},
         topLeftOffset = new T5.Vector();
         
+    /*
     // var the faves storage
     var faves = new Lawnchair({ 
         table: 'photogridfaves',
         adaptor: /webkit/i.test(navigator.userAgent) ? 'webkit' : 'dom'
     });
+    */
     
     /* internal functions */
     
@@ -322,6 +324,7 @@ T5.Photogrid = (function() {
     } // processSearchResults
     
     function refreshGrid() {
+        if (! tiler) { return; }
         if (! tileGrid) {
             var dimensions = tiler.getDimensions();
             
@@ -390,11 +393,13 @@ T5.Photogrid = (function() {
         // reset tools to the default state
         $("#fav").html("Favorite").addClass("add").removeClass("del").removeAttr("disabled");
         
+        /*
         faves.get(selectedPhoto.id, function(r) {
             if (r) {
                 $("#fav").html("Unfavorite").addClass("del").removeClass("add");
             }
         });
+        */
     } // updatePhotoTools
     
     function updateStatus(message) {
@@ -471,31 +476,15 @@ T5.Photogrid = (function() {
         var tileIndex = tile ? tile.photoIndex : undefined;
         if (typeof tileIndex !== 'undefined') {
             selectedPhoto = assignedPhotos[tileIndex];
+            globalPhoto = selectedPhoto;
             if (selectedPhoto) {
                 var photoPage = 'http://www.flickr.com/photos/' + selectedPhoto.owner + '/' + selectedPhoto.id,
                     photoUrl = getPhotoUrl(tileIndex);
-                
-                if (currentImage.src !== photoUrl) {
-                    updateStatus("Loading photo: " + selectedPhoto.id);
-                    T5.Images.load(photoUrl, function(image) {
-                        $("#current").fadeOut('fast', function() {
-                            currentImage.src = photoUrl;
-                            if (callback) {
-                                callback();
-                            } // if
-
-                            $("#image-url")
-                                .attr("title", selectedPhoto.title ? selectedPhoto.title : 'Untitled')
-                                .attr("href", photoPage);
-
-                            // get the photo info
-                            getPhotoInfo(selectedPhoto.id);
-
-                            // update the photo tools
-                            updatePhotoTools(selectedPhoto);
-                        });
-                    });
-                }
+                    
+                $.colorbox({
+                    href: photoUrl, // '<a href="' + photoPage + '"><img src="' + photoUrl + '" /></a>',
+                    title: '<a href="' + photoPage + '">' + (selectedPhoto.title ? selectedPhoto.title : 'Untitled') + '</a>'
+                });
             } // if
         } // if
     } // handleTap
@@ -527,7 +516,7 @@ T5.Photogrid = (function() {
             scalable: false
         });
         
-        // tiler.bind("selectTile", viewTilePhoto);
+        tiler.bind("selectTile", viewTilePhoto);
         $(window).bind("resize", sizePhotoCanvas);
         
         $("#searchtext").bind('keypress', function(evt) {

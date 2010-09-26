@@ -29,7 +29,7 @@
                 
                 if (selectedTile) {
                     tiler.centerOn(selectedTile, T5.easing('quad.inout'), 1200, function() {
-                        tiler.select(selectedTile);
+                        // tiler.select(selectedTile);
                     });
                 } // if
             } // if

@@ -5,21 +5,27 @@
 
 {% block extra-styles %}
 <link type="text/css" rel="stylesheet" href="/media/demos/photogrid/style.css?v=5"/>
+<link type="text/css" rel="stylesheet" href="/media/colorbox/colorbox.css?v=1"/>
 {% endblock %}
 
 {% block extra-includes %}
 <!-- include lawnchair -->
+<!-- 
 <script src="/media/js/lawnchair/adaptors/LawnchairAdaptorHelpers.js"></script>
 <script src="/media/js/lawnchair/adaptors/WebkitSQLiteAdaptor.js"></script>
 <script src="/media/js/lawnchair/adaptors/DOMStorageAdaptor.js"></script>
 <script src="/media/js/lawnchair/Lawnchair.js"></script>
+-->
+
+<!-- include shadow box -->
+<script src="/media/colorbox/jquery.colorbox-min.js?v=1"></script>
 
 <!-- include tile5 -->
-<script src="/media/js/tile5/dist/tile5.lite.min.js?v=15"></script>
+<script src="/media/js/tile5/tile5.lite.min.js?v=16"></script>
 
 <!-- include demo console files -->
-<script src="/media/demos/photogrid/script.js?v=5"></script>
-<script src="/media/demos/photogrid/plugins.js?v=5"></script>
+<script src="/media/demos/photogrid/script.js?v=6"></script>
+<script src="/media/demos/photogrid/plugins.js?v=6"></script>
 {% endblock %}
 
 {% block content %}
