@@ -105,9 +105,46 @@ as well.
 additional map providers based on client needs or provider sponsorship.  Tile5 has been
 built from the ground up to support this so in general, this can be done with relative ease.
 </p>
-<h2>NOTE:</h2>
 <p>
-Additionally, while Tile5 allows you to mix and match provider functions, be 
-aware that this may violate the provider terms of service.
+<em><strong>NOTE:</strong> While Tile5 allows you to mix and match provider functions, be 
+aware that this may violate the provider terms of service.</em>
 </p>
+<h2><a name="requiredjs">Required Javascript Includes</a></h2>
+<p>
+The table below lists the required include files that are needed to implement
+mapping for a particular mapping provider.  While the table include links to each
+of the provider files in the master branch of the 
+<a href="http://github.com/sidelab/tile5">source</a> it is probably more advisable to use
+the versions distributed with the <a href="/download">downloads.</a>
+</p>
+<table>
+<thead>
+	<tr>
+	<th>Provider</th>
+	<th>Required Includes</th>
+	</tr>
+</thead>
+<tr>
+	<td>deCarta</td>
+	<td><a href="http://github.com/sidelab/tile5/blob/master/dist/tile5.decarta.js">tile5.decarta.js</a></td>
+</tr>
+<tr>
+	<td>Cloudmade</td>
+	<td>
+		<a href="http://github.com/sidelab/tile5/blob/master/dist/tile5.osm.js">tile5.osm.js</a>
+		<a href="http://github.com/sidelab/tile5/blob/master/dist/tile5.cloudmade.js">tile5.cloudmade.js</a>
+	</td>
+</tr>
+<tr>
+	<td>Bing</td>
+	<td><a href="http://github.com/sidelab/tile5/blob/master/dist/tile5.bing.js">tile5.bing.js</a></td>
+</tr>
+<tr>
+	<td>Nearmap</td>
+	<td>
+		<a href="http://github.com/sidelab/tile5/blob/master/dist/tile5.osm.js">tile5.osm.js</a>
+		<a href="http://github.com/sidelab/tile5/blob/master/dist/tile5.nearmap.js">tile5.nearmap.js</a>
+	</td>
+</tr>
+</table>
 {% endblock %}

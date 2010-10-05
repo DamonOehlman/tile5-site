@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block extra-includes %}
+<link href="/media/css/prettify.css" type="text/css" rel="stylesheet" />
+<script src="/media/js/prettify.js"></script>
+<script>
+$(document).ready(prettyPrint);
+</script>
+<script type="text/javascript">
+var disqus_shortname = 'tile5';
+(function () {
+  var s = document.createElement('script'); s.async = true;
+  s.src = 'http://disqus.com/forums/tile5/count.js';
+  (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());
+</script>
+{% endblock %}
+
+{% block content %}
+{% block tutorial %}
+{% endblock %}
+<h2>Comments</h2>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  (function() {
+   var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+   dsq.src = 'http://tile5.disqus.com/embed.js';
+   (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+{% endblock %}

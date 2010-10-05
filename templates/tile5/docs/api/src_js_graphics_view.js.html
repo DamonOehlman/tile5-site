@@ -1,0 +1,89 @@
+{% extends 'apidoc.html' %}
+
+{% block title %}Tile5 API Documentation{% endblock %}
+
+{% block api %}
+<h1><a name="View">View</a></h1>
+
+<p>The <a href="src_js_graphics_view.js.html#View">View</a> is the fundamental building block for tiling and 
+mapping interface.  Which this class does not implement any of 
+the logic required for tiling, it does handle the redraw logic. <br />
+Applications implementing <a href="README.mdown.html#Tile5">Tile5</a> maps will not need to be aware of 
+the implementation specifics of the <a href="src_js_graphics_view.js.html#View">View</a>, but for those interested 
+in building extensions or customizations should definitely take a look. <br />
+Additionally, it is worth being familiar with the core methods that 
+are implemented here around the layering as these are used extensively 
+when creating overlays and the like for the map implementations.</p>
+
+<h2>Constructor Parameters (Required)</h2>
+
+<ul>
+<li><p><code>container</code> </p>
+
+<h2>Constructor Parameters (Optional)</h2></li>
+<li><p><code>id</code></p></li>
+<li><code>autoSize</code></li>
+<li><code>fastDraw</code></li>
+<li><code>intertia</code></li>
+<li><code>pannable</code></li>
+<li><code>scalable</code></li>
+<li><code>panAnimationEasing</code></li>
+<li><code>panAnimationDuration</code></li>
+<li><code>pinchZoomAnimateTrigger</code></li>
+<li><p><code>adjustScaleFactor</code></p>
+
+<h2>Methods</h2></li>
+<li><p><code>centerOn(offset: Vector)</code></p></li>
+</ul>
+
+<p>Move the center of the view to the specified offset</p>
+
+<ul>
+<li><code>getDimensions()</code></li>
+</ul>
+
+<p>Return the Dimensions of the <a href="src_js_graphics_view.js.html#View">View</a></p>
+
+<ul>
+<li><p><code>getZoomCenter()</code></p></li>
+<li><p><code>getLayer(id: String)</code></p></li>
+</ul>
+
+<p>Get the <a href="src_js_graphics_viewlayer.js.html#ViewLayer">ViewLayer</a> with the specified id, return null if not found</p>
+
+<ul>
+<li><code>setLayer(id: String, value: <a href="src_js_graphics_viewlayer.js.html#ViewLayer">ViewLayer</a>)</code></li>
+</ul>
+
+<p>Either add or update the specified view layer</p>
+
+<ul>
+<li><code>eachLayer(callback: Function)</code></li>
+</ul>
+
+<p>Iterate through each of the ViewLayers and pass each to the callback function 
+supplied.</p>
+
+<ul>
+<li><p><code>clearBackground()</code></p></li>
+<li><p><code>freeze()</code></p></li>
+<li><p><code>unfreeze()</code></p></li>
+<li><p><code>scale(targetScaling, tweenFn, callback, startXY, targetXY)</code></p></li>
+<li><p><code>removeLayer(id: String)</code></p></li>
+</ul>
+
+<p>Remove the <a href="src_js_graphics_viewlayer.js.html#ViewLayer">ViewLayer</a> specified by the id</p>
+
+<ul>
+<li><code>getOffset()</code></li>
+</ul>
+
+<p>Return a Vector containing the current view offset</p>
+
+<ul>
+<li><p><code>setOffset(x: Integer, y: Integer)</code></p></li>
+<li><p><code>updateOffset(x, y, tweenFn, tweenDuration, callback)</code></p></li>
+<li><p><code>zoom(targetXY, newScaleFactor, rescaleAfter)</code></p></li>
+</ul>
+
+{% endblock %}

@@ -1,0 +1,355 @@
+{% extends 'apidoc.html' %}
+
+{% block title %}Tile5 API Documentation{% endblock %}
+
+{% block api %}
+<h1><a name="MODULE: Geo">MODULE: Geo</a></h1>
+
+<p>The Geo module contains classes and functionality to support geospatial 
+operations and calculations that are required when drawing maps, routes, etc.</p>
+
+<h2>Functions</h2>
+
+<ul>
+<li><code>getEngine(requiredCapability)</code></li>
+</ul>
+
+<p>Returns the engine that provides the required functionality.  If preferred engines are supplied
+as additional arguments, then those are looked for first</p>
+
+<ul>
+<li><code>rankGeocodeResponses(requestAddress, responseAddress, engine)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>dist2rad(distance)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>lat2pix(lat)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>lon2pix(lon)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>pix2lon(mercX)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>pix2lat</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>normalizeLon(lon)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<h1><a name="Geo.Position">Geo.Position</a></h1>
+
+<p>The position class is simply a data-storage class that is used to store 
+a latitude and longitude pair.  While this class used to contain methods 
+to support manipulation on these objects, these have been moved to the 
+<a href="src_js_geo_core.js.html#Geo.P">Geo.P</a> submodule for performance optimization reasons.</p>
+
+<h2>Properties</h2>
+
+<ul>
+<li><p>lat
+The latitude of the position</p></li>
+<li><p>lon
+The longitude of the position</p></li>
+</ul>
+
+<h2>Usage</h2>
+
+<p>Creating a new position object can be done by either specifically creating 
+a new Position object, by specifying the lat and lon as arguments:</p>
+
+<pre>
+var pos = new <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a>(-27.468, 153.028);
+</pre>
+
+<p>Alternative, the <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.P">Geo.P</a> submodule can be used to parse a 
+latitude / longitude pair from a string value</p>
+
+<pre>
+var pos = <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.P">Geo.P</a>.parse("-27.468 153.028");
+</pre>
+
+<p>The parse function supports both space-separated, and comma-separated syntaxes.    </p>
+
+<h1><a name="Geo.BoundingBox">Geo.BoundingBox</a></h1>
+
+<p>The BoundingBox class is used to store the min and max <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> 
+that represents a bounding box.  For support functions for manipulating 
+a bounding box, see the <a href="src_js_geo_core.js.html#Geo.B">Geo.B</a> submodule.</p>
+
+<h2>Properties</h2>
+
+<ul>
+<li><p>min
+The <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object representing the minimum of the bounding box. <br />
+The minimum position of the bounding box is the south-western (or 
+bottom-left) corner of the bounding box.</p></li>
+<li><p>max
+The <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object representing the maximum position of the bounding 
+box.  The maximum position is the north-eastern (or top-right) corner of 
+the bounding box.</p></li>
+</ul>
+
+<h2>Usage</h2>
+
+<p>Creating a new <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> is done by specifying either 
+a <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> objects or parsable strings to the constructor:</p>
+
+<p>Created position objects example:</p>
+
+<pre>
+var minPos = <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.P">Geo.P</a>.parse("-27.587 152.876"),
+maxPos = <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.P">Geo.P</a>.parse("-27.468 153.028"),
+bounds = new <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a>(minPos, maxPos);
+</pre>
+
+<p>Creating from latlon string pairs example (constructor arguments 
+automatically passed through the <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.P">Geo.P</a>.parse function):</p>
+
+<pre>
+var bounds = new <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a>("-27.587 152.876", "-27.468 153.028");
+</pre>
+
+<h1><a name="Geo.Address">Geo.Address</a></h1>
+
+<p>TODO</p>
+
+<h1><a name="Geo.P">Geo.P</a></h1>
+
+<p>The <a href="src_js_geo_core.js.html#Geo.P">Geo.P</a> submodule is used to perform operations on <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> objects rather 
+than have those operations bundled with the object.</p>
+
+<h2>Functions</h2>
+
+<ul>
+<li><code>calcDistance(pos1, pos2)</code></li>
+</ul>
+
+<p>Calculate the distance between two <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> objects, pos1 and pos2.  The 
+distance returned is measured in kilometers.</p>
+
+<ul>
+<li><code>copy(src)</code></li>
+</ul>
+
+<p>Create a copy of the specified <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object.</p>
+
+<ul>
+<li><code>empty(pos)</code></li>
+</ul>
+
+<p>Returns true if the <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object is empty, false if not.</p>
+
+<ul>
+<li><code>equal(pos1, pos2)</code></li>
+</ul>
+
+<p>Compares to <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> objects and returns true if they 
+have the same latitude and longitude values</p>
+
+<ul>
+<li><code>inArray(pos, testArray)</code></li>
+</ul>
+
+<p>Checks to see whether the specified <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> is contained within 
+the array of position objects passed in the testArray.</p>
+
+<ul>
+<li><code>inBounds(pos, bounds)</code></li>
+</ul>
+
+<p>Returns true if the specified <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object is within the 
+<a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> specified by the bounds argument.</p>
+
+<ul>
+<li><code>parse(object)</code></li>
+</ul>
+
+<p>This function is used to take a latitude and longitude String 
+pair (either space or comma delimited) and return a new <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> 
+value.  The function is also tolerant of being passed an existing 
+<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object as the object argument, and in these cases 
+returns a copy of the position.</p>
+
+<ul>
+<li><code>parseArray(sourceData)</code></li>
+</ul>
+
+<p>Fust like parse, but with lots of em'</p>
+
+<ul>
+<li><code>fromMercatorPixels(x, y, radsPerPixel)</code></li>
+</ul>
+
+<p>This function is used to take x and y mercator pixels values, 
+and using the value passed in the radsPerPixel value convert 
+that to a <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object.</p>
+
+<ul>
+<li><code>toMercatorPixels(pos, radsPerPixel)</code></li>
+</ul>
+
+<p>Basically, the reverse of the fromMercatorPixels function - 
+pass it a <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object and get a Vector object back 
+with x and y mercator pixel values back.</p>
+
+<ul>
+<li><code>generalize(sourceData, requiredPositions, minDist)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>toString(pos)</code></li>
+</ul>
+
+<p>Return a string representation of the <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object</p>
+
+<h1><a name="Geo.B">Geo.B</a></h1>
+
+<p>A collection of utilities that are primarily designed to help with working 
+with <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> objects.  The functions are implemented here rather 
+than with the actual object itself to ensure that the object remains lightweight.</p>
+
+<h2>Functions</h2>
+
+<ul>
+<li><code>calcSize(min, max, normalize)</code></li>
+</ul>
+
+<p>The calcSize function is used to determine the size of a <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> given 
+a minimum position (relates to the bottom-left / south-western corner) and 
+maximum position (top-right / north-eastern corner) of the bounding box. <br />
+The 3rd parameter specifies whether the size calculations should normalize the 
+calculation in cases where the bounding box crosses the 360 degree boundary.</p>
+
+<ul>
+<li><code>createBoundsFromCenter(centerPos, distance)</code></li>
+</ul>
+
+<p>This function is very useful for creating a <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> given a 
+center position and a radial distance (specified in KM) from the center 
+position.  Basically, imagine a circle is drawn around the center 
+position with a radius of distance from the center position, and then 
+a box is drawn to surround that circle.  Adapted from the <a class="external" href="http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates">functions written 
+in Java by Jan Philip Matuschek</a></p>
+
+<ul>
+<li><code>expand(bounds, amount)</code></li>
+</ul>
+
+<p>A simple function that is used to expand a <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> 
+by the specified amount (in degrees).</p>
+
+<ul>
+<li><code>forPositions(positions, padding)</code></li>
+</ul>
+
+<p>This function is very useful when you need to create a 
+<a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> to contain an array of <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a>. <br />
+The optional second parameter allows you to specify an amount of 
+padding (in degrees) to apply to the bounding box that is created.</p>
+
+<ul>
+<li><code>getCenter(bounds)</code></li>
+</ul>
+
+<p>Returns a <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> for the center position of the bounding box.</p>
+
+<ul>
+<li><code>getGeohash(bounds)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>getZoomLevel(bounds, displaySize)</code></li>
+</ul>
+
+<p>This function is used to return the zoom level (seems consistent across 
+mapping providers at this stage) that is required to properly display 
+the specified <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> given the screen dimensions (specified as 
+a Dimensions object) of the map display.</p>
+
+<p>Adapted from the following code:
+[http://groups.google.com/group/google-maps-js-api-v3/browse_thread/thread/43958790eafe037f/66e889029c555bee]</p>
+
+<ul>
+<li><code>isEmpty(bounds)</code></li>
+</ul>
+
+<p>Returns true if the specified <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> is empty.</p>
+
+<ul>
+<li><code>toString(bounds)</code></li>
+</ul>
+
+<p>Returns a string representation of a <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a></p>
+
+<h1><a name="Geo.A">Geo.A</a></h1>
+
+<p>A collection of utilities for working with <a href="src_js_geo_core.js.html#Geo.Address">Geo.Address</a> objects</p>
+
+<h2>Functions</h2>
+
+<ul>
+<li><code>buildingMatch(freeForm, numberRange, name)</code></li>
+</ul>
+
+<p>TODO</p>
+
+<ul>
+<li><code>normalize(addressText)</code></li>
+</ul>
+
+<p>Used to take an address that could be in a variety of formats
+and normalize as many details as possible.  Text is uppercased, road types are replaced, etc.</p>
+
+<ul>
+<li><code>toString(address)</code></li>
+</ul>
+
+<p>Returns a string representation of the <a href="src_js_geo_core.js.html#Geo.Address">Geo.Address</a> object</p>
+
+<p>This function is used to determine the match weight between a freeform geocoding
+request and it's structured response.</p>
+
+<h1><a name="Geo.Engine">Geo.Engine</a></h1>
+
+<p>TODO</p>
+
+<h1><a name="Geo.GeoSearchResult">Geo.GeoSearchResult</a></h1>
+
+<p>TODO</p>
+
+<h1><a name="Geo.GeoSearchAgent">Geo.GeoSearchAgent</a></h1>
+
+<p>TODO</p>
+
+<h1><a name="Geo.GeocodingAgent">Geo.GeocodingAgent</a></h1>
+
+<p>TODO</p>
+
+{% endblock %}

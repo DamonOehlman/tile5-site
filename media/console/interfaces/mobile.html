@@ -1,1 +1,85 @@
-Mobile demos interface coming soon...
+<style type="text/css">
+#mapCanvas {
+	background: url(/media/img/tile5-map-bg.png);
+}
+
+#demo-settings {
+	position: absolute;
+	right: 0px;
+	top: 60px;
+	background: rgba(200, 200, 200, 0.8);
+	-webkit-border-top-left-radius: 10px;
+	-webkit-border-bottom-left-radius: 10px;
+	-webkit-box-shadow: 0 1px 2px rgba(50, 50, 50, 0.3);
+	border: 1px solid white;
+	border-right: 0;
+	padding: 10px 5px 8px 8px;
+}
+
+#copyright {
+	height: 20px;
+	background: rgba(50, 50, 50, 0.8);
+	color: white;
+	padding: 4px;
+	font: 0.70em Arial;
+	text-align: center;
+}
+
+#copyright a {
+	color: white;
+}
+
+#demo-menu {
+	display: none;
+	padding: 10px;
+}
+
+#demo-menu h3 {
+	text-align: center;
+}
+
+#demo-menu ul {
+	list-style-type: none;
+	margin: 0;
+}
+
+#demo-menu ul li {
+	text-align: center;
+	margin: 4px;
+	-webkit-border-radius: 4px;
+	-webkit-box-shadow: 0 1px 2px rgba(50, 50, 50, 0.3);
+	border: 2px solid rgba(255, 255, 255, 0.7);
+	background: rgba(150, 150, 150, 0.4);
+	padding: 6px;
+}
+
+#demo-menu button {
+	margin: 5px 0;
+	text-align: center;
+}
+
+#demo-menu button.nav {
+	position: absolute;
+	right: 5px;
+	top: 3px;
+}
+
+</style>
+<div id="mapContainer">
+	<div id="demo-settings"><img src="/media/img/icons/gear.png"/></div>
+	<canvas id="mapCanvas" height="200" width="300"></canvas>
+	<div id="copyright"></div>
+</div>
+<div id="demo-menu">
+<button class="update nav">Update</button>
+<h3>Map Providers</h3>
+<ul id="providers">
+</ul>
+<h3>Available Demos</h3>
+<ul id="samples">
+</ul>
+<h3>Test GEO Datasets</h3>
+<ul id="datasets">
+</ul>
+<button class="update">Update</button>
+</div>

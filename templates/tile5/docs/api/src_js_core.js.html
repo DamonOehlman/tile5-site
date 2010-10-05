@@ -1,0 +1,109 @@
+{% extends 'apidoc.html' %}
+
+{% block title %}Tile5 API Documentation{% endblock %}
+
+{% block api %}
+<h1><a name="T5.Core">T5.Core</a></h1>
+
+<p>The <a href="src_js_core.js.html#T5.Core">T5.Core</a> module contains classes and functionality that support basic drawing 
+operations and math that are used in managing and drawing the graphical and tiling interfaces 
+that are provided in the <a href="README.mdown.html#Tile5">Tile5</a> library.</p>
+
+<h2>Classes</h2>
+
+<ul>
+<li><a href="src_js_core.js.html#T5.Vector">T5.Vector</a></li>
+<li><a href="src_js_core.js.html#T5.Dimensions">T5.Dimensions</a></li>
+<li><a href="src_js_core.js.html#T5.Rect">T5.Rect</a></li>
+</ul>
+
+<h2>Submodules</h2>
+
+<ul>
+<li><a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.Settings</li>
+<li><a href="src_js_core.js.html#T5.V">T5.V</a></li>
+<li><a href="src_js_core.js.html#T5.D">T5.D</a></li>
+<li><a href="src_js_core.js.html#T5.R">T5.R</a></li>
+</ul>
+
+<h1><a name="T5.Vector">T5.Vector</a></h1>
+
+<p>A vector is used to encapsulate X and Y coordinates for a point, and rather than 
+bundle it with methods it has been kept to just core data to ensure it has a 
+lightweight memory footprint.</p>
+
+<h1><a name="T5.V">T5.V</a></h1>
+
+<p>This module defines functions that are used to maintain <a href="src_js_core.js.html#T5.Vector">T5.Vector</a> objects and this
+is removed from the actual Vector class to keep the Vector object lightweight.</p>
+
+<h2>Functions</h2>
+
+<ul>
+<li><code>add(v*)</code></li>
+</ul>
+
+<p>Return a new <a href="src_js_core.js.html#T5.Vector">T5.Vector</a> that is the total sum value of all the 
+vectors passed to the function.</p>
+
+<ul>
+<li><code>diff(v1, v2)</code></li>
+</ul>
+
+<p>Return a new <a href="src_js_core.js.html#T5.Vector">T5.Vector</a> that contains the result of v1 - v2.</p>
+
+<ul>
+<li><code>copy(src)</code></li>
+</ul>
+
+<p>Return a new <a href="src_js_core.js.html#T5.Vector">T5.Vector</a> copy of the vector passed to the function </p>
+
+<ul>
+<li><code>invert(v)</code></li>
+</ul>
+
+<p>Return a new <a href="src_js_core.js.html#T5.Vector">T5.Vector</a> that contains the inverted values of the 
+vector passed to the function</p>
+
+<ul>
+<li><code>offset(vector, offsetX, offsetY)</code></li>
+</ul>
+
+<p>Return a new <a href="src_js_core.js.html#T5.Vector">T5.Vector</a> that is offset by the specified x and y offset</p>
+
+<ul>
+<li><code>distance(v*)</code></li>
+</ul>
+
+<p>Return the total euclidean distance between all the points of the
+vectors supplied to the function</p>
+
+<ul>
+<li><p><code>theta (v1, v2, distance)</code></p></li>
+<li><p><code>pointOnEdge(v1, v2, theta, delta)</code></p></li>
+<li><p><code>getRect(v*)</code></p></li>
+<li><p><code>toString(vector)</code></p></li>
+</ul>
+
+<h1><a name="T5.Rect">T5.Rect</a></h1>
+
+<p>A class used to store details pertaining to a rectangular region.</p>
+
+<h2>Constructor</h2>
+
+<p><code>new <a href="src_js_core.js.html#T5.Rect">T5.Rect</a>(x, y, width, height)</code></p>
+
+<h2>Properties</h2>
+
+<ul>
+<li>origin - the top left point of the rectangle</li>
+<li>dimensions - the width and height of the rectangle</li>
+</ul>
+
+<h1><a name="T5.R">T5.R</a></h1>
+
+<h1><a name="T5.Dimensions">T5.Dimensions</a></h1>
+
+<h1><a name="T5.D">T5.D</a></h1>
+
+{% endblock %}

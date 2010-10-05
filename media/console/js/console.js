@@ -57,13 +57,62 @@ CONSOLE = (function() {
                 mainContent.height($(window).height() - mainContent.offset().top - $("footer").outerHeight());
                 
                 $("h1").html("Tile5 Desktop / iPad Demo Interface");
+            },
+            
+            resize: function() {
+                var modeElement = $("#" + activeMode).get(0),
+                    modeWindowWidth = $(window).width() - $("#sidebar").outerWidth() - 1,
+                    modeWindowHeight = $("#demo-main").height()  - $("#modes li").outerHeight() - 1;
+
+                if (modeElement && (modeElement.tagName.toUpperCase() == "CANVAS")) {
+                    $(modeElement).attr("width", modeWindowWidth).attr("height", modeWindowHeight);
+
+                    if (map) {
+                        map.repaint();
+                        GT.say("view.wake", { id: "" });
+                    } // if
+                } // if
+                else if (modeElement) {
+                    $(modeElement).css("width", modeWindowWidth).css("height", modeWindowHeight);
+                } // if..else
             }
         },
         
         mobile: {
             layout: "mobile",
+            preInit: function() {
+            },
+            
             init: function() {
+                $('#demo-settings').click(function() {
+                    $('#mapContainer').fadeOut('fast', function() {
+                        $('#demo-menu').show();
+                    });
+                });
                 
+                $('button.update').click(function() {
+                    $('#demo-menu').fadeOut('fast', function() {
+                        $('#mapContainer').show();
+                        scrollTo(0, 0);
+                    });
+                });
+                
+                setTimeout(function() {
+                    scrollTo(0, 0);
+                }, 100);
+            },
+            
+            resize: function() {
+                var modeElement = $("#" + activeMode).get(0);
+
+                if (modeElement && (modeElement.tagName.toUpperCase() == "CANVAS")) {
+                    $(modeElement).attr("width", screen.width).attr("height", 340);
+
+                    if (map) {
+                        map.repaint();
+                        GT.say("view.wake", { id: "" });
+                    } // if
+                } // if
             }
         },
         
@@ -80,6 +129,7 @@ CONSOLE = (function() {
     
     var map,
         activeProvider,
+        activeInterface,
         activeSample,
         activeDataset,
         activeCapabilities = {},
@@ -96,16 +146,20 @@ CONSOLE = (function() {
     } // getActiveProvider
         
     function buildInterface(interfaceId, callback) {
-        var iface = interfaces[interfaceId];
+        activeInterface = interfaces[interfaceId];
         
-        if (iface) {
+        if (activeInterface) {
+            if (activeInterface.preInit) {
+                activeInterface.preInit();
+            } // if
+            
             $.ajax({
-                url: "/media/console/interfaces/" + iface.layout + ".html?ticks=" + new Date().getTime(),
+                url: "/media/console/interfaces/" + activeInterface.layout + ".html?ticks=" + new Date().getTime(),
                 success: function(data) {
                     $("#console").html(data);
                     
                     // initialise the layout
-                    iface.init();
+                    activeInterface.init();
 
                     // if teh callback is defined, then run it
                     if (callback) {
@@ -119,21 +173,9 @@ CONSOLE = (function() {
     /* mode management */
     
     function sizePageElements() {
-        var modeElement = $("#" + activeMode).get(0),
-            modeWindowWidth = $(window).width() - $("#sidebar").outerWidth() - 1,
-            modeWindowHeight = $("#demo-main").height()  - $("#modes li").outerHeight() - 1;
-            
-        if (modeElement && (modeElement.tagName.toUpperCase() == "CANVAS")) {
-            $(modeElement).attr("width", modeWindowWidth).attr("height", modeWindowHeight);
-            
-            if (map) {
-                map.repaint();
-                GT.say("view.wake", { id: "" });
-            } // if
+        if (activeInterface.resize) {
+            activeInterface.resize();
         } // if
-        else if (modeElement) {
-            $(modeElement).css("width", modeWindowWidth).css("height", modeWindowHeight);
-        } // if..else
     } // sizePageElements
     
     function changeMode(modeId) {
@@ -215,15 +257,17 @@ CONSOLE = (function() {
                         var zoomRange = map.provider().getZoomRange();
 
                         var rangeApi = $("#zoom").data("rangeinput"),
-                            rangeConfig = rangeApi.getConf();
+                            rangeConfig = rangeApi ? rangeApi.getConf() : null;
 
-                        // update the zoom parameters
-                        rangeConfig.min = zoomRange.min;
-                        rangeConfig.max = zoomRange.max;
+                        if (rangeApi) {
+                            // update the zoom parameters
+                            rangeConfig.min = zoomRange.min;
+                            rangeConfig.max = zoomRange.max;
 
-                        // set the value
-                        if (zoomLevel !== rangeApi.getValue()) {
-                            rangeApi.setValue(zoomLevel);
+                            // set the value
+                            if (zoomLevel !== rangeApi.getValue()) {
+                                rangeApi.setValue(zoomLevel);
+                            } // if
                         } // if
                     });
                     
@@ -253,9 +297,13 @@ CONSOLE = (function() {
         // if we do have a current 
         var currentProvider = getActiveProvider(),
             logoUrl = currentProvider ? currentProvider.getLogoUrl() : null,
-            copyrightText = currentProvider ? currentProvider.getCopyright() : "";
+            copyrightText = currentProvider ? currentProvider.getCopyright() : "",
+            logoImage = $('#providerLogo').get(0);
             
-        $("#providerLogo").get(0).src = logoUrl ? logoUrl : "/media/img/tile5-flat.png";
+        if (logoImage) {
+            logoImage.src = logoUrl ? logoUrl : "/media/img/tile5-flat.png";
+        } // if
+
         $("#copyright").html(copyrightText);
     } // updateProviderInformation
     

@@ -146,8 +146,8 @@ label, input[type=button], input[type=submit], button { cursor: pointer; }
 /* These selection declarations have to be separate.
    No text-shadow: twitter.com/miketaylr/status/12228805301 
    Also: hot pink. */
-::-moz-selection{ background: #FF5E99; color:#fff; text-shadow: none; }
-::selection { background:#FF5E99; color:#fff; text-shadow: none; } 
+::-moz-selection{ background: #d4a2ff; color:#fff; text-shadow: none; }
+::selection { background:#d4a2ff; color:#fff; text-shadow: none; } 
 
 /*  j.mp/webkit-tap-highlight-color */
 a:link { -webkit-tap-highlight-color: #FF5E99; } 
@@ -318,6 +318,14 @@ p {
     text-align: justify;
 }
 
+pre {
+    margin: 0 8px 10px 8px;
+    background: rgba(200, 200, 200, 0.5);
+    -webkit-border-radius: 4px;
+    font-size: 0.85em;
+    line-height: 1.4em;
+}
+
 ul {
     padding: 8px 0px;
 }
@@ -345,6 +353,7 @@ ul.files li {
 }
 
 a.twitter-link, a.twitter-link:visited {
+    clear: both;
     -webkit-border-image: url(/media/img/tile5-button.png) 7 stretch stretch;
     -moz-border-image: url(/media/img/tile5-button.png) 7 stretch stretch;
     border-width: 7px;
@@ -505,14 +514,50 @@ button {
     -moz-border-radius: 4px
 }
 
-#apidoc #index {
+#apidoc .callout {
+    display: none;
+    position: absolute;
+    background: rgba(30, 30, 30, 0.1);
+    margin: 10px 0 0 0;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-right: 0;
+    max-height: 800px;
+    overflow: scroll;
+    -webkit-border-top-left-radius: 10px;
+    -webkit-border-bottom-left-radius: 10px;
+}
+
+#apidoc .callout h3 {
+    background: rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
     text-align: center;
-    font-size: 0.85em;
+    margin: 0;
+    padding: 5px 0;
+    -webkit-border-top-left-radius: 8px;
+}
+
+#apidoc #index {
+    font-size: 0.8em;
+}
+
+#apidoc #index li {
+    background: none;
+    margin: 0 0 0 10px;
+    padding: 0;
 }
 
 #apidoc #index a {
     margin: 0 10px 5px 0;
     word-wrap: none;
+}
+
+/* disqus overrides */
+
+#dsq-content {
+}
+
+#dsq-content .dsq-options {
+    display: none;
 }
 
 /* 

@@ -1,0 +1,81 @@
+{% extends 'apidoc.html' %}
+
+{% block title %}Tile5 API Documentation{% endblock %}
+
+{% block api %}
+<h1><a name="ViewLayer">ViewLayer</a></h1>
+
+<p>In and of itself, a <a href="src_js_graphics_view.js.html#View">View</a> does nothing.  Not without a 
+<a href="src_js_graphics_viewlayer.js.html#ViewLayer">ViewLayer</a> at least.  A view is made up of one or more of these 
+layers and they are drawn in order of <em>zindex</em>.</p>
+
+<h2>Constructor Parameters</h2>
+
+<ul>
+<li><code>id</code> - the id that has been assigned to the layer, this value
+can be used when later accessing the layer from a <a href="src_js_graphics_view.js.html#View">View</a>.</li>
+<li><code>zindex</code> (default: 0) - a zindex in <a href="README.mdown.html#Tile5">Tile5</a> means the same thing it does in CSS</li>
+<li><code>supportsFastDraw</code> (default: false) - The supportsFastDraw parameter specifies 
+whether a layer will be drawn on in particular graphic states on devices that 
+require fastDraw mode to perform at an optimal level.  For instance, if a layer does 
+not support fastDraw and the <a href="src_js_graphics_view.js.html#View">View</a> is panning or scaling, the layer will not be drawn 
+so it's important when defining new layer classes to set this parameter to true if you 
+want the layer visible during these operations.  Be aware though that layers that require 
+some time to render will impact performance on slower devices.</li>
+<li><p><code>validStates</code> - the a bitmask of <a href="docs_js_DisplayState.mdown.html#DisplayState">DisplayState</a> that the layer will be drawn
+for</p>
+
+<h2>Methods</h2></li>
+<li><p><code>addToView(view)</code></p></li>
+<li><p><code>shouldDraw(displayState)</code></p></li>
+</ul>
+
+<p>Called by a <a href="src_js_graphics_view.js.html#View">View</a> that contains the layer to determine 
+whether or not the layer should be drawn for the current display state. <br />
+The default implementation of this method first checks the fastDraw status, 
+and then continues to do a bitmask operation against the validStates property 
+to see if the current display state is acceptable.</p>
+
+<ul>
+<li><code>cycle(tickCount, offset, state)</code></li>
+</ul>
+
+<p>Called in the <a href="src_js_graphics_view.js.html#View">View</a> method of the same name, each layer has an opportunity 
+to update itself in the current animation cycle before it is drawn.</p>
+
+<ul>
+<li><code>draw(context, offset, dimensions, state, view)</code></li>
+</ul>
+
+<p>The business end of layer drawing.  This method is called when a layer needs to be 
+drawn and the following parameters are passed to the method:</p>
+
+<ul>
+<li>context - the canvas context that we are drawing to</li>
+<li>offset - a Vector object containing the current virtual canvas offset</li>
+<li>dimensions - a Dimensions object specifying the actual size of the drawing surface</li>
+<li>state - the current <a href="docs_js_DisplayState.mdown.html#DisplayState">DisplayState</a> of the view</li>
+<li><p>view - a reference to the <a href="src_js_graphics_view.js.html#View">View</a></p></li>
+<li><p><code>remove()</code></p></li>
+</ul>
+
+<p>The remove method enables a view to flag that it is ready or should be removed
+from any views that it is contained in.  This was introduced specifically for
+animation layers that should only exist as long as an animation is active.</p>
+
+<ul>
+<li><code>wakeParent()</code></li>
+</ul>
+
+<p>Another method that uses the WaterCooler event system to tell the containing view 
+that it needs to wake up and redraw itself.  This method is often called when a 
+<a href="src_js_graphics_viewlayer.js.html#ViewLayer">ViewLayer</a> knows it needs to redraw but it isn't able to communicate this another way.</p>
+
+<ul>
+<li><p><code>getId()</code></p></li>
+<li><p><code>setId(string)</code></p></li>
+<li><p><code>getParent()</code></p></li>
+<li><p>`setParent(view: <a href="src_js_graphics_view.js.html#View">View</a>)</p></li>
+</ul>
+
+{% endblock %}

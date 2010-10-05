@@ -1,0 +1,14 @@
+<project name="tile5-site" default="build" basedir=".">
+	<property name="TILE5" value="../tile5-sandbox/media/tile5" />
+	
+	<target name="deploy" depends="build">
+	</target>
+	
+	<target name="build">
+		<copy todir="templates/tile5/docs/api">
+			<fileset dir="${TILE5}/dist/docs" />
+		</copy>
+		
+		<copy tofile="media/js/api_index.json" file="${TILE5}/dist/docs/_index.json" />
+	</target>
+</project>

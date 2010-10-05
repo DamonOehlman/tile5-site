@@ -6,10 +6,14 @@
 
 {% block content %}
 <div id='apidoc'>
-	<ul id='topmenu'>
-		<li><a href='#index'>Show Index</a></li>
-	</ul>
-	<div id='index' style='display: none;'>
+	<div class="lefty">
+		<a href="_content.html">TOC</a>
+		<a href="_index.html">Index</a>
+	</div>
+	<div class="callout">
+		<h3>API Index</h3>
+		<ul id='index'>
+		</ul>
 	</div>
 	<div id='content'>
 	{% block api %}

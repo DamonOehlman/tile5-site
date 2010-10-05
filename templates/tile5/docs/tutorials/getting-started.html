@@ -1,0 +1,106 @@
+{% extends 'tutorial.html' %}
+
+{% block title %}Tutorials{% endblock %}
+{% block h1%}<h1>Getting Started with Tile5</h1>{% endblock %}
+
+{% block tutorial %}
+<p>
+This tutorial is designed to help you get started with Tile5 by drawing 
+a very simple map to a HTML page.
+</p>
+<h2>Step 1: Setting up your HTML Page</h2>
+<p>
+The actual HTML required to render the map is simply a 
+HTML5 <a href="http://en.wikipedia.org/wiki/Canvas_element">canvas</a> tag.  Something
+like what is displayed below would be sufficient to get started:
+</p>
+<pre class="prettyprint">
+&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot; class=&quot;no-js&quot;&gt;
+&lt;body&gt;
+&lt;canvas id=&quot;mapCanvas&quot; width=&quot;400&quot; height=&quot;300&quot; /&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>
+<strong>NOTE:</strong> Here we give the map the id of <strong>mapCanvas</strong> rather than
+possibly the more obvious id of <strong>map</strong>.  This is because the world will explode
+if you give the canvas element the id of map - or something like that.
+</p>
+<h2>Step 2: Including Tile5 JS Library</h2>
+<p>
+When building a mapping interface you will need to include either the uncompressed
+or minified version of tile5.js whereas for those building non-mapping 
+<a href="/tiling-interfaces">tiling interfaces</a> the lite version (tile5.lite.js) will
+do the job.  As in this example we are building a HTML5 map, we will bring in the minified
+version of the full tile5 library.
+</p>
+<pre class="prettyprint">
+&lt;!-- include the tile5 script, in the head, body wherever... --&gt;
+&lt;script src=&quot;js/tile5.min.js&quot;&gt;&lt;/script&gt;
+</pre>
+<h2>Step 3: Including Map Providers JS</h2>
+<p>
+Now, depending on the <a href="/map-providers">map providers</a> that you intend on using 
+for your project you will need to include different javascript libraries to support that.
+<em>In time, we will produce an online download facility to help prepackage this into a single 
+file...</em>.  We are going to use <a href="http://cloudmade.com/">Cloudmade</a> maps for this
+example, which requires both the tile5.osm.js (as it follows the 
+<a href="http://openstreetmap.org/">OpenStreetMap</a> tile url convention) and also the tile5.cloudmade.js file.
+</p>
+<pre class="prettyprint">
+&lt;!-- include the tile5 osm libs and cloudmade (after tile5) --&gt;
+&lt;script src=&quot;js/tile5.osm.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;js/tile5.cloudmade.js&quot;&gt;&lt;/script&gt;
+</pre>
+<p>
+<strong>NOTE:</strong> It is possible to include multiple map providers and switch between them
+at runtime, however, that is a topic for another tutorial.
+</p>
+<p><em>
+For information on the required javascript files for your project, please consult the 
+<a href="/map-providers#requiredjs">map providers</a> information.</em>
+</p>
+<h2>Step 4: Initialise the Map</h2>
+<p>
+Initialising the map requires the creation of a T5.Map instance, and for it to be <em>ready</em> to 
+draw a map it requires two pieces of information.  Firstly, the canvas that is going to be used to draw 
+the map and secondly the map provider that will be used.
+</p>
+<pre class="prettyprint">
+&lt;script&gt;
+// initialise the map
+var map = new T5.Map({
+    container: 'mapCanvas',
+    provider: new T5.Geo.Cloudmade.MapProvider({
+        // demo api key, register for an API key
+        // at http://dev.cloudmade.com/
+        apikey: '7960daaf55f84bfdb166014d0b9f8d41'
+    })
+});
+&lt;/script&gt;
+</pre>
+<p>
+After this has been completed, then the the canvas is ready to draw a map, however, it has 
+no idea what location to draw.  So to have it actually draw a map, execute the gotoPosition method 
+of the T5.Map class. Insert the following code after the map has been initialized in the previously
+defined script section:
+</p>
+<pre class="prettyprint">
+// center on Brisbane, Australia at zoom level 6
+map.gotoPosition(T5.Geo.P.parse("-27.468 153.028"), 6);
+</pre>
+<p>
+And that's pretty much it.  Simply change the latitude and longitude string that is
+parsed by the T5.Geo.P.parse function to something near you and away you go.
+</p>
+<h2>Next Steps</h2>
+<ul>
+	<li>Adding Zoom Controls (coming soon)</li>
+	<li>Adding Map Annotations (coming soon)</li>
+</ul>
+<h2>Example Source Code</h2>
+<p>
+<a href="http://gist.github.com/600207">http://gist.github.com/600207</a>
+</p>
+{% endblock %}

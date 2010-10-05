@@ -28,4 +28,39 @@ such as HTML5, and it was important to also ensure that Tile5 provided suitable 
 for businesses interested in implementing location based services.
 </p>
 <p><a href="/map-providers">Supported Map Providers</a></p>
+<h2>What about OpenLayers?</h2>
+<p>
+A question that comes up every now and again, is why was Tile5 built rather than 
+getting involved with and using <a href="http://openlayers.org/">OpenLayers</a>?
+</p>
+<p>
+<a href="http://twitter.com/DamonOehlman">My</a> reasons for building
+Tile5 rather than using something like OpenLayers were the following:
+</p>
+<ul>
+	<li>The main project I was working on required serving tiles and routes from 
+		<a href="http://decarta.com/">deCarta</a> DDS and from my research no
+		DDS + OpenLayers integration seems to be publicly available.  As to why I 
+		didn't use deCarta's JS API?  Well that brings me to my next point.</li>
+	<li>Tile5 has first and foremost built for <a href="/device-compatibility-roadmap">mobile devices</a>
+		with HTML5 desktop browsers being a secondary goal.  Handling touch events (including multitouch)
+		was critical as I saw Tile5's competition as the many different native mobile 
+		mapping APIs available.  Not the established desktop JS APIs.</li>
+	<li>Because I was designing for mobile and HTML5, I had the opportunity to leave all the "bloat" 
+		(read IE6 support) that other established libraries might be subjected to behind.  Plus
+		I could focus on <a href="http://distractable.net/coding/getting-the-foundation-right/">javascript
+		performance and UX</a> over the multitude of GIS features that existing libraries support. <br />
+		<em>I wanted to rattle a sabre at the native APIs as if to say "your time will be up soon".  
+		I hope I did that.</em></li>
+</ul>
+<p>
+So you see, it's not really about choosing between Tile5 and something like 
+OpenLayers.
+</p>
+<p>If you are 
+building a web application and you have to cater for IE support, then your choice is simple - use
+<a href="http://openlayers.org/">OpenLayers</a>.  If, however, you are thinking about building a mobile app and want to make your app work on
+more than just one device and eventually get a desktop web app for free, then I don't think you can
+go past Tile5.  Just my opinion, and feel free to let me know yours :)
+</p>
 {% endblock %}
