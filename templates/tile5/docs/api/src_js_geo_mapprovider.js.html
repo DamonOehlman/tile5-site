@@ -3,19 +3,24 @@
 {% block title %}Tile5 API Documentation{% endblock %}
 
 {% block api %}
-<h1><a name="Geo.MapProvider">Geo.MapProvider</a></h1>
+<h1><a name="T5.Geo.MapProvider">T5.Geo.MapProvider</a></h1>
 
 <p>The MapProvider class is the base class from which all map providers are implemented.
 The class provides a number of common functions that can be expected in most 
 implementations of a GIS map provider.</p>
 
-<h2>Properties</h2>
+<h2>Constructor</h2>
+
+<p><code>new <a href="src_js_geo_mapprovider.js.html#T5.Geo.MapProvider">T5.Geo.MapProvider</a>();</code>
+While the constructor of the map provider takes no initialization parameters it is 
+expected that a derivative MapProvider will implement parameters, and some of these
+are part of a common set that are read and acted upon when creating the <a href="src_js_tiling_imagetilegrid.js.html#T5.ImageTileGrid">T5.ImageTileGrid</a>
+that will hold the map tiles in the grid.</p>
+
+<h2>Methods</h2>
 
 <ul>
-<li><p><code>zoomLevel</code></p>
-
-<h2>Methods</h2></li>
-<li><p><code>checkZoomLevel(zoomLevel)</code></p></li>
+<li><code>checkZoomLevel(zoomLevel)</code></li>
 </ul>
 
 <p>Return the passed in zoom level if valid for the map provider, otherwise
@@ -49,6 +54,11 @@ only parameter to the callback</p>
 </ul>
 
 <p>Return an object containing the .min and .max for the zoom of the map provider</p>
+
+<h3>prepTileGridArgs(width, height, tileSize, center, args)</h3>
+
+<p>This method is used by derivative map providers to prepare arguments for a tile
+grid that it creates when populating the map tiles.</p>
 
 <ul>
 <li><code>setZoomRange(min, max)</code></li>

@@ -1,23 +1,15 @@
 (function() {
-    function initTopMenu() {
-        var topMenu = $("#topmenu").get(0),
-            totalWidth = 0;
-            
-        if (topMenu) {
-            $(topMenu).find("li").each(function() {
-                totalWidth += $(this).width();
-            });
-
-            $(topMenu)
-                .width(totalWidth)
-                .hide()
-                .css('position', 'relative')
-                .css('top', '0px')
-                .fadeIn();
-        } // if
-    } // initPageMenu
-    
     $(document).ready(function() {
-        setTimeout(initTopMenu, 50);
+        if (! Modernizr.canvas) {
+            var warning = '<p class="canvas-fail">' + 
+                'Unfortunately the browser you are using does not support canvas, which means ' + 
+                'that Tile5 will not function - at all. If you are interested in trying to bring ' + 
+                'canvas support to your current browser (likelihood is that it is Internet Explorer) ' + 
+                'please consider supporting this ' + 
+                '<a href="http://www.challengepost.com/challenge/tile5-canvas-polyfill-challenge">challenge</a>' + 
+                ' to bring a more fullsome canvas polyfill to IE.</p>';
+            
+            $('#main').prepend(warning);
+        } // if
     });
 })();

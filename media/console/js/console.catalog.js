@@ -12,28 +12,28 @@ CONSOLE.Catalog = (function() {
     catalog.push({
         title: "Pin Center",
         code: function(map) {
-            // clear existing annotations
-            map.annotations.clear();
+            // clear existing markers
+            map.markers.clear();
             
             // find the current center of the map
             var centerPos = T5.Geo.B.getCenter(map.getBoundingBox());
             
             // create the new annotation
-            var annotation = new T5.Geo.UI.ImageAnnotation({
+            var annotation = new T5.ImageAnnotation({
                 imageUrl: "/media/img/pins/pin-158935-1-24.png",
                 animatingImageUrl: "/media/img/pins/pin-158935-1-noshadow-24.png",
                 imageAnchor: new T5.Vector(8, 24),
-                pos: centerPos,
+                xy: new T5.Geo.GeoVector(centerPos),
                 tweenIn: T5.easing('bounce.out'),
                 animationSpeed: 1000
             });
             
             // add an annotation at the center position
-            map.annotations.add(annotation);
+            map.markers.add(annotation);
         },
         
         cleanup: function(map) {
-            map.annotations.clear();
+            map.markers.clear();
             map.repaint();
         }
     });
@@ -42,19 +42,19 @@ CONSOLE.Catalog = (function() {
         title: "Touch Pin",
         code: function(map) {
             // bind to the geo tap event of the map
-            var cid = map.bind("geotap", function(absXY, relXY, touchPos, touchBounds) {
+            var cid = map.bind("geotap", function(evt, absXY, relXY, touchPos, touchBounds) {
                 // create the new annotation
-                var annotation = new T5.Geo.UI.ImageAnnotation({
+                var annotation = new T5.ImageAnnotation({
                     imageUrl: "/media/img/pins/pin-158935-1-24.png",
                     animatingImageUrl: "/media/img/pins/pin-158935-1-noshadow-24.png",
                     imageAnchor: new T5.Vector(8, 24),
-                    pos: touchPos,
+                    xy: new T5.Geo.GeoVector(touchPos),
                     tweenIn: T5.easing('bounce.out'),
                     animationSpeed: 1000
                 });
                 
                 // add an annotation at the center position
-                map.annotations.add(annotation);                
+                map.markers.add(annotation);                
             });
             
             // save the callback id so we can unbind the event later
@@ -67,7 +67,7 @@ CONSOLE.Catalog = (function() {
             } // for
             
             callbackIds = {};
-            map.annotations.clear();
+            map.markers.clear();
             map.repaint();
         }
     });

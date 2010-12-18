@@ -3,26 +3,39 @@
 {% block title %}Tile5 API Documentation{% endblock %}
 
 {% block api %}
-<h1><a name="Map">Map</a></h1>
+<h1><a name="T5.Map">T5.Map</a></h1>
 
-<p>The <a href="src_js_geo_map.js.html#Map">Map</a> class is the entry point for creating a tiling map.  Creating a 
+<p><em>extends:</em> <a href="src_js_tiling_tiler.js.html#T5.Tiler">T5.Tiler</a></p>
+
+<p>The Map class is the entry point for creating a tiling map.  Creating a 
 map is quite simple and requires two things to operate.  A containing HTML5 canvas
-that will be used to display the map and a <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_mapprovider.js.html#Geo.MapProvider">Geo.MapProvider</a> that will populate 
+that will be used to display the map and a <a href="src_js_geo_mapprovider.js.html#T5.Geo.MapProvider">T5.Geo.MapProvider</a> that will populate 
 the map.</p>
 
-<h2>Example Usage: Creating a <a href="src_js_geo_map.js.html#Map">Map</a></h2>
+<h2>Example Usage: Creating a Map</h2>
 
 <pre lang='javascript'>
 // create the map
-map = new <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_map.js.html#Map">Map</a>({
+map = new <a href="src_js_geo_map.js.html#T5.Map">T5.Map</a>({
 container: 'mapCanvas',
-provider: new <a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.Geo.Decarta.MapProvider();
+provider: new <a href="src_js_geo_core.js.html#T5.Geo">T5.Geo</a>.Decarta.MapProvider()
 });
 </pre>
 
-<p>Like all <a href="src_js_graphics_view.js.html#View">View</a> descendants the map supports features such as intertial scrolling and
-the like and is configurable through implementing the GRUNT.configurable interface. For 
-more information on view level features check out the <a href="src_js_graphics_view.js.html#View">View</a> documentation.</p>
+<p>Like all View descendants the map supports features such as intertial scrolling and
+the like and is configurable through implementing the COG.configurable interface. For 
+more information on view level features check out the View documentation.</p>
+
+<h2>Events</h2>
+
+<h3>zoomLevelChange</h3>
+
+<p>This event is triggered when the zoom level has been updated</p>
+
+<pre>
+map.bind('zoomLevelChange', function(evt, newZoomLevel) {
+});
+</pre>
 
 <h2>Methods</h2>
 
@@ -30,20 +43,20 @@ more information on view level features check out the <a href="src_js_graphics_v
 <li><code>getBoundingBox()</code></li>
 </ul>
 
-<p>Return a <a href="src_js_geo_core.js.html#Geo.BoundingBox">Geo.BoundingBox</a> for the current map view area</p>
+<p>Return a Geo.BoundingBox for the current map view area</p>
 
 <ul>
 <li><code>getCenterPosition()</code></li>
 </ul>
 
-<p>Return a <a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> for the center position of the map</p>
+<p>Return a Geo.Position for the center position of the map</p>
 
 <ul>
 <li><code>getXYPosition(xy)</code></li>
 </ul>
 
 <p>Convert the Vector that has been passed to the function to a
-<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a> object</p>
+Geo.Position object</p>
 
 <ul>
 <li><code>gotoBounds(bounds, callback)</code></li>
@@ -62,7 +75,7 @@ more information on view level features check out the <a href="src_js_graphics_v
 </ul>
 
 <p>This method is used to tell the map to pan (not zoom) to the specified 
-<a href="docs_module_overviews_T5.mdown.html#T5">T5</a>.<a href="src_js_geo_core.js.html#Geo.Position">Geo.Position</a>.  An optional callback can be passed as the second
+<a href="src_js_geo_core.js.html#T5.Geo.Position">T5.Geo.Position</a>.  An optional callback can be passed as the second
 parameter to the function and this fires a notification once the map is
 at the new specified position.  Additionally, an optional easingFn parameter
 can be supplied if the pan operation should ease to the specified location 

@@ -1,0 +1,55 @@
+{% extends 'tutorial.html' %}
+{% load markup %}
+
+{% block title %}Poly Layers with Style{% endblock %}
+{% block h1%}<h1>Poly Layers with Style</h1>{% endblock %}
+
+{% block tutorial-includes %}
+<script src="/media/js/tutorials/styles.js"></script>
+{% endblock %}
+
+{% block tutorial %}
+{% filter markdown %}
+This tutorial follows on from the [Poly Layers Introduction](poly-layers-intro) tutorial, as we look
+to make our poly layers actually look *good*.  In the previous tutorial, poly(gon/line)s were drawn with a 
+solid black outline with a white fill (if the fill initialization parameter was set) and this looks
+pretty bland.  Time to give these layers some style.
+
+Styles in Tile5 are stored in a simple external javascript file, but can also be parsed in from external 
+JSON(P) sources. In our tutorial here, if you have a look at the code, you see an additional include for
+[/media/js/tutorials/styles.js](/media/js/tutorials/styles.js) file.
+
+At this stage, no dynamic attributes can be configured within the styles, but if this is
+an important feature to people then it could be investigated.  If you are, however, defining a style and then 
+including it via `script` tag, then you could likely use some nifty canvas tricks such as `createPattern' to 
+create some more interesting fill effects.
+
+Anyway, enough hypotheticals on with the sample code :)
+
+<div class="note">
+This tutorial is currently using the <a href="http://github.com/sidelab/tile5">Tile5 master branch</a>, as the poly functionality does 
+not work correctly in version 0.9.3
+</div>
+
+In this next sample we modify our example from the [Poly Layers Introduction](poly-layers-intro) and specify 
+a `style` parameter when initializing the new T5.PolyLayer using the `area.parkland` style from the 
+[PDXAPI Demo](http://sandbox.tile5.org/samples/pdxapi).
+
+<pre class="prettyprint" id="styledGeopoly"></pre>
+
+You should see now that our poly is filled using a semi-transparent green colour.  Styles can be applied to any one of 
+the T5.PolyLayer or T5.Poly or T5.Geo.UI.Poly classes.  Essentially, the style that is given to the T5.PolyLayer will be used
+unless an *override* is specified for a particular layer, in which case that will be used instead.
+
+This is demonstrated in the sample below.
+
+<pre class="prettyprint" id="styleOverride"></pre>
+
+Hopefully that serves as a bit of introduction of where we are headed with styles in Tile5. As noted above though the 
+feature is not yet available in the [latest stable version](/downloads), and it would be great if you have some specific 
+requirements or thoughts around styles that [join the Tile5 group](http://groups.google.com/group/tile5) and discuss 
+things there.  If you are keen to give things a try before it hits a release, head on over to the 
+[github repository](http://github.com/sidelab/tile5) and grab a copy.
+
+{% endfilter %}
+{% endblock %}

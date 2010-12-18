@@ -1,0 +1,50 @@
+{% extends 'tutorial.html' %}
+
+{% block title %}Marker Layers Introductory Tutorial{% endblock %}
+{% block h1%}<h1>Marker Layers Introduction</h1>{% endblock %}
+
+{% block tutorial-includes %}
+{% endblock %}
+
+{% block tutorial %}
+<p>
+We recently made some changes to Tile5, creating a more general implementation 
+for annotations and markers that opened up the ability to use annotations on anything
+that inherits from a T5.View.  In this tutorial we will demonstrate how to add a 
+T5.ImageAnnotation to the marker layer of a map.
+</p>
+<h2>Maps and Markers</h2>
+<p>
+Using markers with maps is a reasonably simple affair.  Consider the following example, where 
+we already have a T5.Map created and available as the variable <code>map</code>.
+</p>
+<pre id="simpleMapMarker" class="prettyprint">
+</pre>
+<p>
+In the code above, we are creating a new T5.ImageAnnotation (which extends T5.Annotation) and
+this is used to display an image marker on the map.  As part of the initialization of the 
+T5.ImageAnnotation, we can provide urls for the image that will be used when the annotation is
+static and for the image that will be used when the marker is animating.  The 
+<code>animatingImageUrl</code> is optional, and if not provided the image specified in 
+<code>imageUrl</code> will be used.
+</p>
+<p>
+Additionally, we specify the anchor position for the image (which is basically where in the image
+the pin point is) and any animation effects that we want.  The animation parameters (<code>tweenIn</code> and
+<code>animationSpeed</code>) are both optional, and if omitted the marker will be statically displayed.
+</p>
+<h2>Markers and GeoVectors</h2>
+<p>
+One parameter we haven't talked about is the <code>xy</code> coordinate of the annotation.  In previous
+implementations of Tile5 we supplied a position to the annotation, but this restricts an annotations use
+to Geospatial applications.  We now supply the <code>xy</code> position of the image annotation with a 
+magical class called the T5.Geo.GeoVector.
+</p>
+<p>
+The GeoVector is basically a "spatially aware" vector that will automatically convert a position to it's 
+virtual screen coordinate at the appropriate time.  No action is required on your part to make this happen,
+layers that understand GeoVectors watch for the appropriate events in Tile5 and make the conversions when 
+necessary.
+</p>
+
+{% endblock %}

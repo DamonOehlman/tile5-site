@@ -11,11 +11,12 @@ def empty_file(request):
     return HttpResponse()
     
 def main(request):
-    page_name = re.sub(r'^(.*?)(\.htm|\.html)?$', r'\1', request.path)
+    page_path = re.sub(r'^(.*?)(\.htm|\.html)?$', r'\1', request.path)
+    page_name = re.sub(r'.*\/(.*)$', r'\1', page_path);
     
     # find the template name
-    template_name = 'tile5' + page_name + '.html'
-    index_template_name = 'tile5' + page_name + 'index.html'
+    template_name = 'tile5' + page_path + '.html'
+    index_template_name = 'tile5' + page_path + 'index.html'
 
     abs_templatepath = os.path.abspath("templates/" + template_name)
     
@@ -30,4 +31,4 @@ def main(request):
             template_name = 'tile5/page-not-found.html'
     
 	# define the page context
-    return render_to_response(template_name)
+    return render_to_response(template_name, { 'pagename': page_name, 'pagepath': page_path })

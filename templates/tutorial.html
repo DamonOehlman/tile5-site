@@ -3,6 +3,11 @@
 {% block extra-includes %}
 <link href="/media/css/prettify.css" type="text/css" rel="stylesheet" />
 <script src="/media/js/prettify.js"></script>
+<script src="/media/js/tile5/tile5.min.js?v=2"></script>
+<script src="/media/js/tile5/tile5.osm.js?v=2"></script>
+<script src="/media/js/tile5/tile5.cloudmade.js?v=2"></script>
+<script src="/media/js/tutorials/script.js?v=3"></script>
+<script src="/media/js/tutorials/{{ pagename }}.js"></script>
 <script>
 $(document).ready(prettyPrint);
 </script>
@@ -14,18 +19,13 @@ var disqus_shortname = 'tile5';
   (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
 }());
 </script>
+{% block tutorial-includes %}
+{% endblock %}
 {% endblock %}
 
 {% block content %}
+<a href="http://twitter.com/share" class="twitter-share-button" data-count="vertical" data-via="tile5js" data-related="DamonOehlman:Creator of Tile5 Library">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
 {% block tutorial %}
 {% endblock %}
-<h2>Comments</h2>
-<div id="disqus_thread"></div>
-<script type="text/javascript">
-  (function() {
-   var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-   dsq.src = 'http://tile5.disqus.com/embed.js';
-   (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-  })();
-</script><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+<script type='text/javascript'> var mp_protocol = (('https:' == document.location.protocol) ? 'https://' : 'http://'); document.write(unescape('%3Cscript src="' + mp_protocol + 'api.mixpanel.com/site_media/js/api/mixpanel.js" type="text/javascript"%3E%3C/script%3E')); </script> <script type='text/javascript'> try {  var mpmetrics = new MixpanelLib('5918d42d0134e078b68bb678e59b64f5'); } catch(err) { null_fn = function () {}; var mpmetrics = {  track: null_fn,  track_funnel: null_fn,  register: null_fn,  register_once: null_fn, register_funnel: null_fn }; } </script>
 {% endblock %}

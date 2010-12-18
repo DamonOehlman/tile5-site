@@ -113,6 +113,7 @@ INSTALLED_APPS = (
      'django.contrib.webdesign',
      'django.contrib.flatpages',
      'django.contrib.redirects',
+     'django.contrib.markup',
 #     'django.contrib.sites',
 #    'django.contrib.auth',
 #    'django.contrib.contenttypes',

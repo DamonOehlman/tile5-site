@@ -1,5 +1,5 @@
 application: tile5js
-version: 3
+version: 4
 runtime: python
 api_version: 1
 
@@ -9,6 +9,9 @@ handlers:
   
 - url: /media
   static_dir: media
+  
+- url: /jsapi
+  static_dir: dist
   
 - url: /favicon.ico
   static_dir: media/img

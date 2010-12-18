@@ -31,7 +31,7 @@
 
   <!-- CSS : implied media="all" -->
   <!--  <link href='http://fonts.googleapis.com/css?family=Cantarell:regular,bold' rel='stylesheet' type='text/css'> -->
-  <link rel="stylesheet" href="/media/css/style.css?v=5">
+  <link rel="stylesheet" href="/media/css/style.css?v=11">
   {% block extra-styles %}{% endblock %}
 
   <!-- For the less-enabled mobile browsers like Opera Mini -->
@@ -63,11 +63,13 @@
 	{% block content %}{% endblock %}
 	<a class='twitter-link' href="/community">Tile5 Community</a>
 	<a class='twitter-link' href="http://twitter.com/tile5js">Follow Tile5 on Twitter</a>
+	<a class='twitter-link' href="https://fundry.com/project/25-tile5">Suggest a Feature</a>
    </div>
     <a id="forkme" href="http://github.com/sidelab/tile5">
 	<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub" />
 	</a>
 	<footer>
+		<script type="text/javascript" src="http://platform.linkedin.com/in.js"></script><script type="in/recommendproduct" data-company="930955" data-product="21909"data-counter="right"></script>
 		<a href="http://www.sidelab.com/"><img src="/media/img/sidelab-logo.png" alt="Sidelab - Location, Mobility, Scalability" /></a>
 		<p>
 		Tile5 is an initiative of cross-platform mobile development firm, <a href="http://www.sidelab.com/">Sidelab</a>. If you 
@@ -94,19 +96,23 @@
    {% block extra-includes %}
    {% endblock %}
   <script>
-   var _gaq = [['_setAccount', 'UA-8447893-8'], ['_trackPageview']];
-   (function(d, t) {
-    var g = d.createElement(t),
-        s = d.getElementsByTagName(t)[0];
-    g.async = true;
-    g.src = '//www.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g, s);
-   })(document, 'script');
+   if (location.host.indexOf('tile5.org') >= 0) {
+	   var _gaq = [['_setAccount', 'UA-8447893-8'], ['_trackPageview']];
+	   (function(d, t) {
+	    var g = d.createElement(t),
+	        s = d.getElementsByTagName(t)[0];
+	    g.async = true;
+	    g.src = '//www.google-analytics.com/ga.js';
+	    s.parentNode.insertBefore(g, s);
+	   })(document, 'script');
+   } // if
   </script>
   <script type="text/javascript" src="//static.woopra.com/js/woopra.v2.js"></script>
   <script type="text/javascript">
-  woopraTracker.setDomain("tile5.org");
-  woopraTracker.track();
+  if (location.host.indexOf('tile5.org') >= 0) {
+	  woopraTracker.setDomain("tile5.org");
+	  woopraTracker.track();
+  } // if
   </script>
 </body>
 </html>

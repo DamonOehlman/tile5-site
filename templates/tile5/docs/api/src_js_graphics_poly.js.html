@@ -1,0 +1,52 @@
+{% extends 'apidoc.html' %}
+
+{% block title %}Tile5 API Documentation{% endblock %}
+
+{% block api %}
+<h1><a name="T5.Poly">T5.Poly</a></h1>
+
+<p>This class is used to represent individual poly(gon/line)s that are drawn within
+a <a href="src_js_graphics_poly.js.html#T5.PolyLayer">T5.PolyLayer</a>.  </p>
+
+<h2>Constructor</h2>
+
+<p><code><a href="src_js_graphics_poly.js.html#T5.Poly">T5.Poly</a>(vectors, params)</code>
+The constructor requires an array of vectors that represent the poly and 
+also accepts optional initialization parameters (see below).</p>
+
+<h3>Initialization Parameters</h3>
+
+<ul>
+<li><code>fill</code> (default = true) - whether or not the poly should be filled.</li>
+<li><code>style</code> (default = null) - the style override for this poly.  If none
+is specified then the style of the <a href="src_js_graphics_poly.js.html#T5.PolyLayer">T5.PolyLayer</a> is used.</li>
+</ul>
+
+<h2>Methods</h2>
+
+<h3>drawPoly(context, offsetX, offsetY, state)</h3>
+
+<p>This method is used to draw the poly to the specified <code>context</code>.  The 
+<code>offsetX</code> and <code>offsetY</code> arguments specify the panning offset of the <a href="src_js_graphics_view.js.html#T5.View">T5.View</a>
+which is taken into account when drawing the poly to the display.  The 
+<code>state</code> argument specifies the current <a href="src_js_core.js.html#T5">T5</a>.ViewState of the view.</p>
+
+<h3>resync(grid)</h3>
+
+<p>Used to synchronize the vectors of the poly to the grid.</p>
+
+<h1><a name="T5.PolyLayer">T5.PolyLayer</a></h1>
+
+<p><em>extends:</em> <a href="src_js_graphics_viewlayer.js.html#T5.ViewLayer">T5.ViewLayer</a></p>
+
+<p>The PolyLayer is designed to facilitate the storage and display of multiple 
+geometric shapes.  This is particularly useful for displaying <a class="external" href="http://geojson.org">GeoJSON</a> 
+data and the like.</p>
+
+<h2>Methods</h2>
+
+<h3>add(poly)</h3>
+
+<p>Used to add a <a href="src_js_graphics_poly.js.html#T5.Poly">T5.Poly</a> to the layer</p>
+
+{% endblock %}

@@ -251,8 +251,12 @@ div.logo {
     -moz-border-image: url(/media/img/tile5-border.png) 16 stretch stretch;
     border-image: url(/media/img/tile5-border.png) 16 stretch stretch;
     border: 16px;
-    width: 580px;
+    width: 720px;
     line-height: 1.7em;
+}
+
+#main a {
+    white-space: nowrap;
 }
 
 #main a, #main a:visited {
@@ -285,6 +289,17 @@ div.logo {
 #main ul li {
     background: url(/media/img/icons/asterisk.png) no-repeat 4px 9px;
     padding: 4px 0 4px 26px;
+}
+
+#main .canvas-fail {
+    background: #777;
+    color: #eee;
+    padding: 10px;
+    margin: 10px;
+    border: 1px solid black;
+    font-size: 0.8em;
+    font-weight: bold;
+    line-height: 1.7em;
 }
 
 h1 {
@@ -326,8 +341,24 @@ pre {
     line-height: 1.4em;
 }
 
+p > code {
+    font-weight: bold;
+    text-shadow: hsla(0, 0%, 90%, 0.6) 0 1px 0px;
+    padding: 0 4px;
+}
+
 ul {
     padding: 8px 0px;
+}
+
+div.note {
+    background: hsla(0, 0%, 30%, 0.1);
+    padding: 6px 20px;
+    margin: 0 5px;
+    -webkit-border-radius: 10px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-align: center;
 }
 
 ul.downloads, ul.files {
@@ -371,6 +402,11 @@ a.twitter-link, a.twitter-link:visited {
 
 a.twitter-link:hover, a.twitter-link:active {
     color: white;
+}
+
+.twitter-share-button {
+    float: right;
+    margin: 15px 10px 5px 20px;
 }
 
 /* top menu styling */
@@ -499,58 +535,6 @@ button {
     padding: 6px;
 }
 
-/* jodoc documentation */
-
-#apidoc h1 {
-    clear: both;
-}
-
-#apidoc a.index {
-    background: #333333;
-    color: white;
-    text-decoration: none;
-    float: right;
-    -webkit-border-radius: 4px
-    -moz-border-radius: 4px
-}
-
-#apidoc .callout {
-    display: none;
-    position: absolute;
-    background: rgba(30, 30, 30, 0.1);
-    margin: 10px 0 0 0;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    border-right: 0;
-    max-height: 800px;
-    overflow: scroll;
-    -webkit-border-top-left-radius: 10px;
-    -webkit-border-bottom-left-radius: 10px;
-}
-
-#apidoc .callout h3 {
-    background: rgba(255, 255, 255, 0.1);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
-    text-align: center;
-    margin: 0;
-    padding: 5px 0;
-    -webkit-border-top-left-radius: 8px;
-}
-
-#apidoc #index {
-    font-size: 0.8em;
-}
-
-#apidoc #index li {
-    background: none;
-    margin: 0 0 0 10px;
-    padding: 0;
-}
-
-#apidoc #index a {
-    margin: 0 10px 5px 0;
-    word-wrap: none;
-}
-
 /* disqus overrides */
 
 #dsq-content {
@@ -558,6 +542,29 @@ button {
 
 #dsq-content .dsq-options {
     display: none;
+}
+
+/* tutorial styles */
+
+div.showme {
+    margin: 20px 10px 10px;
+    background: #ccc url(/media/img/tile5-map-bg.png);
+    height: 300px;
+    -webkit-box-shadow: hsla(0, 0%, 30%, 0.7) 0 1px 2px;
+}
+
+a.showme {
+    display: block;
+    width: 140px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* linked in widget styles */
+
+.IN-widget {
+    position: absolute;
+    margin: 15px 0 0 5px;
 }
 
 /* 

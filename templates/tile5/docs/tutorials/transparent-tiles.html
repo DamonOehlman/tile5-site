@@ -1,0 +1,75 @@
+{% extends 'tutorial.html' %}
+{% load markup %}
+
+{% block title %}Using Tiles with a Transparent Background{% endblock %}
+{% block h1%}<h1>Using Tiles with a Transparent Background</h1>{% endblock %}
+
+{% block tutorial-includes %}
+<script src="/media/js/tile5/tile5.mapbox.js?v=2"></script>
+{% endblock %}
+
+{% block tutorial %}
+{% filter markdown %}
+If you have been following Tile5 for a little while now, you will know that supporting
+[partial transparency](http://en.wikipedia.org/wiki/Transparency_(graphic)) well has been 
+something that has needed a bit of work.  We are starting to get there with this and here is
+a tutorial on how to use tiles that have some measure of transparency in your map.
+
+<div class="note">
+This tutorial is currently using the <a href="http://github.com/sidelab/tile5">Tile5 master branch</a>, as there
+was a few things that we needed to tweak to get this working properly.  Also note that you can get some 
+interesting tile mismatches in this sample due to the shared image repository and indexing by image url.  You will
+notice a call to `T5.Images.reset()` in each of the samples which does mitigate the situation somewhat.
+</div>
+
+In this example, we will be using the excellent [World Glass Tileset from Mapbox](http://mapbox.com/tileset/world-glass)
+as this tileset is designed to enable you to create use custom coloring in your maps thanks to some clever
+use of alpha transparency.
+
+Firstly, let's take a look at what happens if you attempt use the `world-glass` tileset 'out of the box'.
+
+<pre class="prettyprint" id="worldGlassBroken"></pre>
+
+Doesn't look so good, does it?  This is essentially because Tile5 is very conservative when it comes to drawing
+tiles (avoiding clearing the background when you can is good for canvas performance).  There are essentially 
+two ways of handling this.  Either telling the tilegrid to clear the background when on each draw cycle or 
+alternatively specifying a tile background color when loading the tiles.  _It's highly undocumented at the moment, 
+but the T5.Images module supports some post-processing of images when loading them_.
+
+### Option 1: Clearing the Background
+
+If we do want to enable canvas clearing we can specify this when we create the map provider.  
+This probably seems a little strange, but essentially a T5.Geo.MapProvider is responsible for injecting a 
+T5.ImageTileGrid into the map and as such it has the ability to specify initialization parameters when the 
+new grid is created.
+
+To instruct the grid that it needs to clear the background before drawing tiles, we set the `clearBackground` 
+parameter on the map provider to true when creating it:
+
+<pre class="prettyprint" id="worldClassClearingBackground"></pre>
+
+This is a very simple option, but a little inefficient.  On the plus side, it does provide the ability to 
+apply CSS styles to the canvas that the map is created on (or containing HTML elements) and have that displayed
+through the map (which is why [MapBox](http://mapbox.com/) created the tileset in the first place).  On the 
+down-side, using the `clearBackground` option does mean that the layer is reconstructed when a zoom operation takes place.
+
+### Option 2: Setting a Tile Background Color
+
+To set the tiles to use a particular background color, we can simply provider the `tileBackgroundColor` parameter
+to the MapProvider when initializing:
+
+<pre class="prettyprint" id="worldClassBackgroundColor"></pre>
+
+While no more complicated to use, this is slightly more efficient than clearing the background.  This is because
+the tiles are 'post processed' as they are loaded and the background color never has to be applied more than once.  
+When it comes to drawing the tiles we only incur the same overheads as the first example (which didn't work).
+
+Hopefully this tutorial answers some questions with regards to using transparent tiles, and the feature will be 
+included in the 0.9.4 release of Tile5.  In the meantime you can download the required files from the 
+[github repository](http://github.com/sidelab/tile5) if you would like to use transparent tiles in your
+mapping application.  
+
+As always, jump on the [Tile5 Group](http://groups.google.com/group/tile5/) if you have
+questions about this or other Tile5 features.
+{% endfilter %}
+{% endblock %}

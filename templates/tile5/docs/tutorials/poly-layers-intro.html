@@ -1,0 +1,40 @@
+{% extends 'tutorial.html' %}
+{% load markup %}
+
+{% block title %}Poly Layers Introductory Tutorial{% endblock %}
+{% block h1%}<h1>Poly Layers Introduction</h1>{% endblock %}
+
+{% block tutorial %}
+{% filter markdown %}
+Poly layers are still a little experimental, but they are coming along pretty nicely (as 
+can be seen in our [PDXAPI sample](http://sandbox.tile5.org/samples/pdxapi).  This tutorial
+will provide an introduction on how to use poly layers in a Tile5 application.
+
+<div class="note">
+This tutorial is currently using the <a href="http://github.com/sidelab/tile5">Tile5 master branch</a>, as the poly functionality does 
+not work correctly in version 0.9.3
+</div>
+
+In this first example, we will draw a simple rectangle over our map.  Note that the `prepareMap` 
+function call in the first line of the code is simple used to set the position of the map, and 
+remove the test poly layer if it exists so we can perform the demo.
+
+<pre class="prettyprint" id="simpleRectangle"></pre>
+
+Now, in the above example there is a fair bit of redundancy with regards to parsing positions 
+over and over again.  So just as there is a T5.GeoVector class, there is also a T5.Geo.UI.Poly 
+class that makes creating poly(gon/line)s for positions simpler. 
+
+<pre class="prettyprint" id="simpleRectangleGeopoly"></pre>
+
+This demonstrates using poly layers in a very simple way, but as you would have seen if you ran
+the sample code the poly that is created is very bland (white fill, black border) and definitely
+not something that would make for a very attractive map or visualization.
+
+As such, we are introducing styles in Tile5 to help make using poly layers useful.  We have also worked
+through existing layer types and replaced any initialization parameters specifying stroke or fill styles
+with a general style parameter.
+
+For more information on using styles, continue on to the [Poly Layers with Style](poly-layers-with-style) tutorial.
+{% endfilter %}
+{% endblock %}

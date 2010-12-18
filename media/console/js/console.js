@@ -69,7 +69,7 @@ CONSOLE = (function() {
 
                     if (map) {
                         map.repaint();
-                        GT.say("view.wake", { id: "" });
+                        COG.say("view.wake", { id: "" });
                     } // if
                 } // if
                 else if (modeElement) {
@@ -110,7 +110,7 @@ CONSOLE = (function() {
 
                     if (map) {
                         map.repaint();
-                        GT.say("view.wake", { id: "" });
+                        COG.say("view.wake", { id: "" });
                     } // if
                 } // if
             }
@@ -253,7 +253,7 @@ CONSOLE = (function() {
                 if (initMap) {
                     createMap();
                     
-                    map.bind("zoomLevelChange", function(zoomLevel) {
+                    map.bind("zoomLevelChange", function(evt, zoomLevel) {
                         var zoomRange = map.provider().getZoomRange();
 
                         var rangeApi = $("#zoom").data("rangeinput"),
@@ -284,7 +284,7 @@ CONSOLE = (function() {
                 } // if..else
                 
                 if (map) {
-                    map.annotations.clear();
+                    map.markers.clear();
                     map.repaint();
                 } // if
 
