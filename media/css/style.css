@@ -302,6 +302,17 @@ div.logo {
     line-height: 1.7em;
 }
 
+#link-footer {
+	  background: #abc837;
+	  text-align: center;
+	  padding: 10px;
+	  border: 1px solid grey;
+}
+
+#link-footer a {
+	background: none;
+}
+
 h1 {
     margin: 0px 0 10px 0;
     font-size: 1.1em;
@@ -632,7 +643,7 @@ a.showme {
       -webkit-border-radius: 0;
       -moz-border-radius: 0;
   }  
-  
+
   footer {
       width: 290px;
   } 

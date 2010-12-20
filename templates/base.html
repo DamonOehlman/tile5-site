@@ -60,11 +60,14 @@
 		<a href="/download">Download</a>
 	</header>
    <div id="main">
-	{% block h1 %}{% endblock %}
-	{% block content %}{% endblock %}
-	<a class='twitter-link' href="/community">Tile5 Community</a>
-	<a class='twitter-link' href="http://twitter.com/tile5js">Follow Tile5 on Twitter</a>
-	<a class='twitter-link' href="https://fundry.com/project/25-tile5">Suggest a Feature</a>
+		{% block h1 %}{% endblock %}
+		{% block content %}{% endblock %}
+		<div id="link-footer">
+			<a href="/community">Get involved</a> |
+			<a href="http://twitter.com/tile5js">Follow Tile5 on Twitter</a> |
+			<a href="https://fundry.com/project/25-tile5">Request a Feature</a> |
+			<a href="/sitemap">Sitemap</a>
+		</div>
    </div>
     <a id="forkme" href="http://github.com/sidelab/tile5">
 	<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub" />
