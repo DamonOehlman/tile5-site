@@ -1,0 +1,22 @@
+---
+layout: default
+title:  Tile5 Vision
+---
+
+When the idea of building Tile5 was first conceived, the following were key design goals for the project:
+
+## Offer a Compelling Experience
+
+Build and showcase a HTML5, cross-device, javascript library that offers similar form and function to a native mapping interface. Prioritize performance and feel over feature-set.
+
+## Be Open - Create Opportunities.
+
+Be built in a way such that any map provider with a mercator-projection image tile generation could be supported. License the technology for maximum flexibility.
+
+## Look forward, not back.
+
+Web browsers are changing for the better. Embrace the change and support only browsers and devices also embracing change. This will result in a lighter weight, better performing library.
+
+## Be innovative
+
+Solve problems other just mapping related problems. Build the library to support building alternative application interfaces.

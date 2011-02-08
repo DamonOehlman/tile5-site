@@ -1,0 +1,36 @@
+---
+layout: default
+title:  HTML5 Mapping
+---
+
+The objective of the Tile5 mapping library is simple:
+
+> Offer cross-device HTML5 mapping that feels as good as a native device implementation on any mobile device that supports HTML5.
+
+This objective is not one that will be realised overnight, but as the quality and power of mobile devices improves so to will Tile5. Right now, the performance and features of Tile5 HTML5 mapping on an iPhone 3GS (or greater) offers a comparable experience to those of the native maps.
+
+## Multiple Map Providers
+
+Tile5 has been built from the ground-up to be a vendor neutral implementation. With the number of map provider and mobile device combinations being very high, a native device implementation for each provider is unsustainable.
+
+This was one of the primary design decisions for choosing a technology such as HTML5, and it was important to also ensure that Tile5 provided suitable extension points for "plugging in" as many mapping providers as possible. We believe this will providing a sustainable solution for businesses interested in implementing location based services.
+
+[Supported Map Providers](/map-providers)
+
+## What about OpenLayers?
+
+A question that comes up every now and again, is why was Tile5 built rather than getting involved with and using [OpenLayers](http://openlayers.org/)?
+
+Well, Tile5 was first created because I ([DamonOehlman](http://twitter.com/DamonOehlman)) for the following reasons:
+
+- The main project I was working on required serving tiles and routes from [deCarta](http://decarta.com) DDS and from my research no DDS + OpenLayers integration seems to be publicly available. As to why I didn't use deCarta's JS API? Well that brings me to my next point.
+
+- Tile5 has first and foremost built for [mobile devices](/device-compatibility-roadmap) with HTML5 desktop browsers being a secondary goal. Handling touch events (including multitouch) was critical as I saw Tile5's competition as the many different native mobile mapping APIs available. Not the established desktop JS APIs.
+
+- Because I was designing for mobile and HTML5, I had the opportunity to leave all the "bloat" (read IE6 support) that other established libraries might be subjected to behind. Plus I could focus on [javascript performance and UX](http://www.distractable.net/coding/getting-the-foundation-right/) over the multitude of GIS features that existing libraries support. 
+
+_I wanted to rattle a sabre at the native APIs as if to say "your time will be up soon". I hope I did that._
+
+So you see, it's not really about choosing between Tile5 and something like OpenLayers.
+
+If you are building a web application and you have to cater for IE support, then your choice is simple - use [OpenLayers](http://openlayers.org/). If, however, you are thinking about building a mobile app and want to make your app work on more than just one device and eventually get a desktop web app for free, then I don't think you can go past Tile5. Just my opinion, and feel free to let me know yours :)

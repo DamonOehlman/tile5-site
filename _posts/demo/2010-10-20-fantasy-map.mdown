@@ -1,0 +1,14 @@
+---
+layout: sample
+title:  Fantasy Map
+sample: fantasy-map
+
+categories:
+ - demo
+
+thumbnail: /img/samples/fantasy-map.jpg
+---
+
+This is still a bit of a work in progress, but work has started on providing support for non-geo maps through the use of [Zoomify](http://zoomify.com/). In actual fact, you could chop up other large images using the same tech so there are some interesting possibilities.
+
+The fantasy map that is shown here was processed from the original image available from [Fantasy Map Maker](http://www.fantasymapmaker.com/epic-world-cinematic-landscapes/).

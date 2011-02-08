@@ -1,0 +1,14 @@
+---
+layout: sample
+title:  Layer Transitions
+sample: layer-transitions
+
+categories:
+ - demo
+
+thumbnail: /img/samples/layer-transitions.jpg
+---
+
+One part of the Tile5 library that we have been paying particular attention to in recent releases is around improving the support for multiple image layers. This sample demonstrates how you can have multiple image layers and actually animated between the two of them.
+
+The implementation is relatively simple, but shows how to define Tile5 styles dynamically, and then use a T5.Tween to adjust the styles themselves.

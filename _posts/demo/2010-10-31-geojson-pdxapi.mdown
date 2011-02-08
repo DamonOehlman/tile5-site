@@ -1,0 +1,12 @@
+---
+layout: sample
+title:  GeoJSON Parsing (PDX-API)
+sample: geojson-pdxapi
+
+categories:
+ - demo
+
+thumbnail: /img/samples/geojson-pdxapi.jpg
+---
+
+This sample is designed to show some of the [GeoJSON](http://geojson.org/) parsing and rendering capabilities that are currently being developed in Tile5. The data is incorporated from [Max Ogden](http://twitter.com/maxogden)’s excellent [PDXAPI](http://pdxapi.com/).

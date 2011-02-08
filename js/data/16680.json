@@ -1,0 +1,618 @@
+{
+	"icon_link": null,
+	"description": "This dataset shows the location of every olympic game since the first one in 1896 in Athens. \r\n\r\n1906\t Athens, Greece - The 1906 Intercalated Games are considered unofficial by the International Olympic Committee. However, most record books include these interim games with the others. \r\n\r\n1916\t Berlin, Germany - Canceled because of World War I.\r\n\r\n1940 Tokyo, Japan; 1944 London, England; 1940\t Sapporo, Japan; 1944 Cortina d'Ampezzo, Italy - Canceled because of World War II.\r\n\r\n1956  Melbourne, Australia -  Equestrian events held in Stockholm, Sweden.\r\n",
+	"extent": [-123.114034, -37.817532, 151.206955, 61.114995],
+	"permissions": [{
+		"group_id": "everyone",
+		"permissions": {
+			"download": true,
+			"show": true,
+			"view": true
+		}
+	}],
+	"stats": {
+		"latitude": {
+			"table": {
+				"max": 61.114995,
+				"median": 45.193987,
+				"variance": 369.982187530681,
+				"stdev": 19.2349210430061,
+				"mean": 40.4301162857143,
+				"min": -37.817532
+			}
+		},
+		"year": {
+			"table": {
+				"max": 2016.0,
+				"median": 1964.0,
+				"variance": 1141.22467532468,
+				"stdev": 33.7820170405006,
+				"mean": 1960.89285714286,
+				"min": 1896.0
+			}
+		},
+		"longitude": {
+			"table": {
+				"max": 151.206955,
+				"median": 10.463655,
+				"variance": 5552.11020413941,
+				"stdev": 74.512483545641,
+				"mean": 6.83741526785714,
+				"min": -123.114034
+			}
+		}
+	},
+	"tags": "leisure,olympics,sports",
+	"link": "http://geocommons.com/overlays/16680.json",
+	"classification": null,
+	"published": "2009-10-03T12:00:00Z",
+	"title": "Olympic Game Locations, World, 1896 to 2016",
+	"name": "Olympic Game Locations, World, 1896 to 2016",
+	"features": [{
+		"city": " Athens",
+		"latitude": 37.97615,
+		"number": " I",
+		"country": " Greece",
+		"olympics": "Summer Olympics",
+		"year": 1896.0,
+		"longitude": 23.736415,
+		"geometry": "0101000000AA4885B185BC3740C5FEB27BF2FC4240"
+	},
+	{
+		"city": " Paris",
+		"latitude": 48.856925,
+		"number": " II",
+		"country": " France",
+		"olympics": "Summer Olympics",
+		"year": 1900.0,
+		"longitude": 2.34121,
+		"geometry": "0101000000978BF84ECCBA0240F90FE9B7AF6D4840"
+	},
+	{
+		"city": " St. Louis",
+		"latitude": 38.62774,
+		"number": " III",
+		"country": " United States",
+		"olympics": "Summer Olympics",
+		"year": 1904.0,
+		"longitude": -90.199514,
+		"geometry": "010100000006465ED6C48C56C00E32C9C859504340"
+	},
+	{
+		"city": " Athens",
+		"latitude": 37.97615,
+		"number": " -",
+		"country": " Greece",
+		"olympics": "Summer Olympics",
+		"year": 1906.0,
+		"longitude": 23.736415,
+		"geometry": "0101000000AA4885B185BC3740C5FEB27BF2FC4240"
+	},
+	{
+		"city": " London",
+		"latitude": 51.506325,
+		"number": " IV",
+		"country": " England",
+		"olympics": "Summer Olympics",
+		"year": 1908.0,
+		"longitude": -0.127144,
+		"geometry": "0101000000D3F9F02C4146C0BFD712F241CFC04940"
+	},
+	{
+		"city": " Stockholm",
+		"latitude": 59.332175,
+		"number": " V",
+		"country": " Sweden",
+		"olympics": "Summer Olympics",
+		"year": 1912.0,
+		"longitude": 18.062435,
+		"geometry": "010100000032207BBDFB0F32403FC6DCB584AA4D40"
+	},
+	{
+		"city": " Berlin",
+		"latitude": 52.516074,
+		"number": " VI",
+		"country": " Germany",
+		"olympics": "Summer Olympics",
+		"year": 1916.0,
+		"longitude": 13.376987,
+		"geometry": "0101000000C808A87004C12A4070287CB60E424A40"
+	},
+	{
+		"city": " Antwerp",
+		"latitude": 51.222085,
+		"number": " VII",
+		"country": " Belgium",
+		"olympics": "Summer Olympics",
+		"year": 1920.0,
+		"longitude": 4.39771,
+		"geometry": "01010000002C2B4D4A4197114051F701486D9C4940"
+	},
+	{
+		"city": " Paris",
+		"latitude": 48.856925,
+		"number": " VIII",
+		"country": " France",
+		"olympics": "Summer Olympics",
+		"year": 1924.0,
+		"longitude": 2.34121,
+		"geometry": "0101000000978BF84ECCBA0240F90FE9B7AF6D4840"
+	},
+	{
+		"city": " Chamonix",
+		"latitude": 44.531087,
+		"number": " I",
+		"country": " France",
+		"olympics": "Winter Olympics",
+		"year": 1924.0,
+		"longitude": 5.066902,
+		"geometry": "0101000000E12538F581441440562AA8A8FA434640"
+	},
+	{
+		"city": " Amsterdam",
+		"latitude": 52.373119,
+		"number": " IX",
+		"country": " The Netherlands",
+		"olympics": "Summer Olympics",
+		"year": 1928.0,
+		"longitude": 4.89319,
+		"geometry": "0101000000FB743C66A09213401442075DC22F4A40"
+	},
+	{
+		"city": " St. Moritz",
+		"latitude": 46.497059,
+		"number": " II",
+		"country": " Switzerland",
+		"olympics": "Winter Olympics",
+		"year": 1928.0,
+		"longitude": 9.83817,
+		"geometry": "010100000005FA449E24AD23405B971AA19F3F4740"
+	},
+	{
+		"city": " Los Angeles",
+		"latitude": 34.05349,
+		"number": " X",
+		"country": " United States",
+		"olympics": "Summer Olympics",
+		"year": 1932.0,
+		"longitude": -118.245319,
+		"geometry": "01010000009885764EB38F5DC0DE54A4C2D8064140"
+	},
+	{
+		"city": " Lake Placid",
+		"latitude": 27.296695,
+		"number": " III",
+		"country": " United States",
+		"olympics": "Winter Olympics",
+		"year": 1932.0,
+		"longitude": -81.366659,
+		"geometry": "01010000002E724F57775754C000E31934F44B3B40"
+	},
+	{
+		"city": " Berlin",
+		"latitude": 52.516074,
+		"number": " XI",
+		"country": " Germany",
+		"olympics": "Summer Olympics",
+		"year": 1936.0,
+		"longitude": 13.376987,
+		"geometry": "0101000000C808A87004C12A4070287CB60E424A40"
+	},
+	{
+		"city": " Garmisch-Partenkirchen",
+		"latitude": 47.492874,
+		"number": " IV",
+		"country": " Germany",
+		"olympics": "Winter Olympics",
+		"year": 1936.0,
+		"longitude": 11.086801,
+		"geometry": "01010000002B85402E712C26403C86C77E16BF4740"
+	},
+	{
+		"city": " Sapporo",
+		"latitude": 42.985321,
+		"number": " -",
+		"country": " Japan",
+		"olympics": "Winter Olympics",
+		"year": 1940.0,
+		"longitude": 141.248062,
+		"geometry": "01010000002C2CB81FF0A76140F0879FFF1E7E4540"
+	},
+	{
+		"city": " Tokyo",
+		"latitude": 35.670479,
+		"number": " XII",
+		"country": " Japan",
+		"olympics": "Summer Olympics",
+		"year": 1940.0,
+		"longitude": 139.740921,
+		"geometry": "01010000006DFDF49FB5776140D0D38041D2D54140"
+	},
+	{
+		"city": " Cortina d'Ampezzo",
+		"latitude": 46.416317,
+		"number": " -",
+		"country": " Italy",
+		"olympics": "Winter Olympics",
+		"year": 1944.0,
+		"longitude": 12.792064,
+		"geometry": "01010000008AADA0698995294069E21DE049354740"
+	},
+	{
+		"city": " London",
+		"latitude": 51.506325,
+		"number": " XIII",
+		"country": " England",
+		"olympics": "Summer Olympics",
+		"year": 1944.0,
+		"longitude": -0.127144,
+		"geometry": "0101000000D3F9F02C4146C0BFD712F241CFC04940"
+	},
+	{
+		"city": " London",
+		"latitude": 51.506325,
+		"number": " XIV",
+		"country": " England",
+		"olympics": "Summer Olympics",
+		"year": 1948.0,
+		"longitude": -0.127144,
+		"geometry": "0101000000D3F9F02C4146C0BFD712F241CFC04940"
+	},
+	{
+		"city": " St. Moritz",
+		"latitude": 46.497059,
+		"number": " V",
+		"country": " Switzerland",
+		"olympics": "Winter Olympics",
+		"year": 1948.0,
+		"longitude": 9.83817,
+		"geometry": "010100000005FA449E24AD23405B971AA19F3F4740"
+	},
+	{
+		"city": " Oslo",
+		"latitude": 59.91228,
+		"number": " VI",
+		"country": " Norway",
+		"olympics": "Winter Olympics",
+		"year": 1952.0,
+		"longitude": 10.74998,
+		"geometry": "0101000000E44EE960FD7F2540BF654E97C5F44D40"
+	},
+	{
+		"city": " Helsinki",
+		"latitude": 60.17116,
+		"number": " XV",
+		"country": " Finland",
+		"olympics": "Summer Olympics",
+		"year": 1952.0,
+		"longitude": 24.93258,
+		"geometry": "010100000058E71890BDEE384012312592E8154E40"
+	},
+	{
+		"city": " Melbourne",
+		"latitude": -37.817532,
+		"number": " XVI",
+		"country": " Australia",
+		"olympics": "Summer Olympics",
+		"year": 1956.0,
+		"longitude": 144.967148,
+		"geometry": "01010000008ACC5CE0F21E62407CB779E3A4E842C0"
+	},
+	{
+		"city": " Cortina d'Ampezzo",
+		"latitude": 46.416317,
+		"number": " VII",
+		"country": " Italy",
+		"olympics": "Winter Olympics",
+		"year": 1956.0,
+		"longitude": 12.792064,
+		"geometry": "01010000008AADA0698995294069E21DE049354740"
+	},
+	{
+		"city": " Rome",
+		"latitude": 41.90311,
+		"number": " XVII",
+		"country": " Italy",
+		"olympics": "Summer Olympics",
+		"year": 1960.0,
+		"longitude": 12.49576,
+		"geometry": "010100000076543541D4FD28406458C51B99F34440"
+	},
+	{
+		"city": " Squaw Valley",
+		"latitude": 36.740406,
+		"number": " VIII",
+		"country": " United States",
+		"olympics": "Winter Olympics",
+		"year": 1960.0,
+		"longitude": -119.24711,
+		"geometry": "0101000000EF2076A6D0CF5DC08FE1B19FC55E4240"
+	},
+	{
+		"city": " Innsbruck",
+		"latitude": 47.267997,
+		"number": " IX",
+		"country": " Austria",
+		"olympics": "Winter Olympics",
+		"year": 1964.0,
+		"longitude": 11.391304,
+		"geometry": "0101000000859675FF58C826408B36C7B94DA24740"
+	},
+	{
+		"city": " Tokyo",
+		"latitude": 35.670479,
+		"number": " XVIII",
+		"country": " Japan",
+		"olympics": "Summer Olympics",
+		"year": 1964.0,
+		"longitude": 139.740921,
+		"geometry": "01010000006DFDF49FB5776140D0D38041D2D54140"
+	},
+	{
+		"city": " Grenoble",
+		"latitude": 45.193987,
+		"number": " X",
+		"country": " France",
+		"olympics": "Winter Olympics",
+		"year": 1968.0,
+		"longitude": 5.732003,
+		"geometry": "0101000000A94BC63192ED1640B16CE690D4984640"
+	},
+	{
+		"city": " Mexico City",
+		"latitude": 19.4319,
+		"number": " XIX",
+		"country": " Mexico",
+		"olympics": "Summer Olympics",
+		"year": 1968.0,
+		"longitude": -99.132851,
+		"geometry": "01010000006B0F7BA180C858C0742497FF906E3340"
+	},
+	{
+		"city": " Sapporo",
+		"latitude": 42.985321,
+		"number": " XI",
+		"country": " Japan",
+		"olympics": "Winter Olympics",
+		"year": 1972.0,
+		"longitude": 141.248062,
+		"geometry": "01010000002C2CB81FF0A76140F0879FFF1E7E4540"
+	},
+	{
+		"city": " Munich",
+		"latitude": 48.13641,
+		"number": " XX",
+		"country": " Germany",
+		"olympics": "Summer Olympics",
+		"year": 1972.0,
+		"longitude": 11.57752,
+		"geometry": "0101000000649291B3B0272740766C04E275114840"
+	},
+	{
+		"city": " Innsbruck",
+		"latitude": 47.267997,
+		"number": " XII",
+		"country": " Austria",
+		"olympics": "Winter Olympics",
+		"year": 1976.0,
+		"longitude": 11.391304,
+		"geometry": "0101000000859675FF58C826408B36C7B94DA24740"
+	},
+	{
+		"city": " Montréal",
+		"latitude": 45.512288,
+		"number": " XXI",
+		"country": " Canada",
+		"olympics": "Summer Olympics",
+		"year": 1976.0,
+		"longitude": -73.554392,
+		"geometry": "0101000000804A95287B6352C00E1137A792C14640"
+	},
+	{
+		"city": " Moscow",
+		"latitude": 55.75687,
+		"number": " XXII",
+		"country": " Russia",
+		"olympics": "Summer Olympics",
+		"year": 1980.0,
+		"longitude": 37.615105,
+		"geometry": "0101000000944DB9C2BBCE424069A9BC1DE1E04B40"
+	},
+	{
+		"city": " Lake Placid",
+		"latitude": 27.296695,
+		"number": " XIII",
+		"country": " United States",
+		"olympics": "Winter Olympics",
+		"year": 1980.0,
+		"longitude": -81.366659,
+		"geometry": "01010000002E724F57775754C000E31934F44B3B40"
+	},
+	{
+		"city": " Los Angeles",
+		"latitude": 34.05349,
+		"number": " XXIII",
+		"country": " United States",
+		"olympics": "Summer Olympics",
+		"year": 1984.0,
+		"longitude": -118.245319,
+		"geometry": "01010000009885764EB38F5DC0DE54A4C2D8064140"
+	},
+	{
+		"city": " Sarajevo",
+		"latitude": 44.085461,
+		"number": " XIV",
+		"country": " Yugoslavia",
+		"olympics": "Winter Olympics",
+		"year": 1984.0,
+		"longitude": 18.106979,
+		"geometry": "0101000000D95BCAF9621B3240AF0AD462F00A4640"
+	},
+	{
+		"city": " Calgary",
+		"latitude": 51.045215,
+		"number": " XV",
+		"country": " Canada",
+		"olympics": "Winter Olympics",
+		"year": 1988.0,
+		"longitude": -114.063174,
+		"geometry": "010100000048FDF50A0B845CC0F224E99AC9854940"
+	},
+	{
+		"city": " Seoul",
+		"latitude": 37.557121,
+		"number": " XXIV",
+		"country": " South Korea",
+		"olympics": "Summer Olympics",
+		"year": 1988.0,
+		"longitude": 126.977379,
+		"geometry": "01010000000533A6608DBE5F401975ADBD4FC74240"
+	},
+	{
+		"city": " Albertville",
+		"latitude": 45.6763,
+		"number": " XVI",
+		"country": " France",
+		"olympics": "Winter Olympics",
+		"year": 1992.0,
+		"longitude": 6.39327,
+		"geometry": "0101000000DFFDF15EB5921940742497FF90D64640"
+	},
+	{
+		"city": " Barcelona",
+		"latitude": 41.385725,
+		"number": " XXV",
+		"country": " Spain",
+		"olympics": "Summer Olympics",
+		"year": 1992.0,
+		"longitude": 2.17005,
+		"geometry": "0101000000787AA52C435C0140F31FD26F5FB14440"
+	},
+	{
+		"city": " Lillehammer",
+		"latitude": 61.114995,
+		"number": " XVII",
+		"country": " Norway",
+		"olympics": "Winter Olympics",
+		"year": 1994.0,
+		"longitude": 10.463655,
+		"geometry": "0101000000F6402B3064ED24400D1AFA27B88E4E40"
+	},
+	{
+		"city": " Atlanta",
+		"latitude": 33.748315,
+		"number": " XXVI",
+		"country": " United States",
+		"olympics": "Summer Olympics",
+		"year": 1996.0,
+		"longitude": -84.391109,
+		"geometry": "0101000000F60A0BEE071955C0990D32C9C8DF4040"
+	},
+	{
+		"city": " Nagano",
+		"latitude": 36.11441,
+		"number": " XVIII",
+		"country": " Japan",
+		"olympics": "Winter Olympics",
+		"year": 1998.0,
+		"longitude": 138.031982,
+		"geometry": "0101000000F1811DFF05416140ED2AA4FCA40E4240"
+	},
+	{
+		"city": " Sydney",
+		"latitude": -33.869629,
+		"number": " XXVII",
+		"country": " Australia",
+		"olympics": "Summer Olympics",
+		"year": 2000.0,
+		"longitude": 151.206955,
+		"geometry": "0101000000CC9717609FE662409C53C90050EF40C0"
+	},
+	{
+		"city": " Salt Lake City",
+		"latitude": 40.75952,
+		"number": " XIX",
+		"country": " United States",
+		"olympics": "Winter Olympics",
+		"year": 2002.0,
+		"longitude": -111.888229,
+		"geometry": "0101000000F69672BED8F85BC037548CF337614440"
+	},
+	{
+		"city": " Athens",
+		"latitude": 37.97615,
+		"number": " XXVIII",
+		"country": " Greece",
+		"olympics": "Summer Olympics",
+		"year": 2004.0,
+		"longitude": 23.736415,
+		"geometry": "0101000000AA4885B185BC3740C5FEB27BF2FC4240"
+	},
+	{
+		"city": " Turin",
+		"latitude": 45.069512,
+		"number": " XX",
+		"country": " Italy",
+		"olympics": "Winter Olympics",
+		"year": 2006.0,
+		"longitude": 7.705403,
+		"geometry": "01010000004B00FE2955D21E40FC56EBC4E5884640"
+	},
+	{
+		"city": " Beijing",
+		"latitude": 39.90601,
+		"number": " XXIX",
+		"country": " China",
+		"olympics": "Summer Olympics",
+		"year": 2008.0,
+		"longitude": 116.387909,
+		"geometry": "0101000000BD344580D3185D40ABECBB22F8F34340"
+	},
+	{
+		"city": " Vancouver",
+		"latitude": 49.26044,
+		"number": " XXI",
+		"country": " Canada",
+		"olympics": "Winter Olympics",
+		"year": 2010.0,
+		"longitude": -123.114034,
+		"geometry": "0101000000742843554CC75EC0FE48111956A14840"
+	},
+	{
+		"city": " London",
+		"latitude": 51.506325,
+		"number": " XXX",
+		"country": " England",
+		"olympics": "Summer Olympics",
+		"year": 2012.0,
+		"longitude": -0.127144,
+		"geometry": "0101000000D3F9F02C4146C0BFD712F241CFC04940"
+	},
+	{
+		"city": " Sochi",
+		"latitude": 43.615428,
+		"number": " XXII",
+		"country": " Russia",
+		"olympics": "Winter Olympics",
+		"year": 2014.0,
+		"longitude": 39.725887,
+		"geometry": "0101000000B8CB7EDDE9DC434077853E58C6CE4540"
+	},
+	{
+		"city": "Rio de Janeiro",
+		"latitude": -22.976734,
+		"number": null,
+		"country": "Brazil",
+		"olympics": "Summer Olympics",
+		"year": 2016.0,
+		"longitude": -43.195084,
+		"geometry": "010100000087FC3383F89845C02AE44A3D0BFA36C0"
+	}],
+	"author": "Encarta",
+	"core_overlay_id": 18258,
+	"source": "http://encarta.msn.com/media_461520358_761556835_-1_1/olympic_games_locations_and_years.html",
+	"short_classification": "Y",
+	"id": 16680,
+	"feature_count": 56,
+	"contributor": "emily"
+}

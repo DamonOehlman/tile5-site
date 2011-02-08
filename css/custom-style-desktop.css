@@ -1,0 +1,27 @@
+body {
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+h1 {
+    margin: 15px 10px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+#topdrop {
+    height: 160px;
+}
+
+html.ie8 #topdrop, html.ie7 #topdrop {
+    height: auto !important;
+}
+
+ul.nav {
+    clear: both;
+}
+
+#mapContainer {
+    margin: 0 10px;
+}

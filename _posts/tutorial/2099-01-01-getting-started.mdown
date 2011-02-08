@@ -1,0 +1,82 @@
+---
+layout: default
+title:  Getting Started with Tile5
+
+categories:
+ - tutorial
+---
+
+This tutorial is designed to help you get started with Tile5 by drawing a very simple map to a HTML page.
+
+## Step 1: Setting up your HTML Page
+
+The actual HTML required to render the map is simply a HTML5 canvas tag. Something like what is displayed below would be sufficient to get started:
+
+{% highlight html %}
+<!doctype html>
+<html lang="en" class="no-js">
+<body>
+<canvas id="mapCanvas" width="400" height="300" />
+</body>
+</html>
+{% endhighlight %}
+
+__NOTE:__ Here we give the map the id of mapCanvas rather than possibly the more obvious id of map. This is because the world will explode if you give the canvas element the id of map - or something like that.
+
+## Step 2: Including Tile5 JS Library
+
+When building a mapping interface you will need to include either the uncompressed or minified version of tile5.js whereas for those building non-mapping tiling interfaces the lite version (tile5.lite.js) will do the job. As in this example we are building a HTML5 map, we will bring in the minified version of the full tile5 library.
+
+{% highlight html %}
+<!-- include the tile5 script, in the head, body wherever... -->
+<script src="js/tile5.min.js"></script>
+{% endhighlight %}
+
+## Step 3: Including Map Providers JS
+
+Now, depending on the map providers that you intend on using for your project you will need to include different javascript libraries to support that. In time, we will produce an online download facility to help prepackage this into a single file.... We are going to use Cloudmade maps for this example, which requires both the tile5.osm.js (as it follows the OpenStreetMap tile url convention) and also the tile5.cloudmade.js file.
+
+{% highlight html %}
+<!-- include the tile5 osm libs and cloudmade (after tile5) -->
+<script src="js/tile5.osm.js"></script>
+<script src="js/tile5.cloudmade.js"></script>
+{% endhighlight %}
+	
+__NOTE:__ It is possible to include multiple map providers and switch between them at runtime, however, that is a topic for another tutorial.
+For information on the required javascript files for your project, please consult the map providers information.
+
+## Step 4: Initialise the Map
+
+Initialising the map requires the creation of a T5.Map instance, and for it to be ready to draw a map it requires two pieces of information. Firstly, the canvas that is going to be used to draw the map and secondly the map provider that will be used.
+
+{% highlight html %}
+<script>
+// initialise the map
+var map = new T5.Map({
+    container: 'mapCanvas',
+    provider: new T5.Geo.Cloudmade.MapProvider({
+        // demo api key, register for an API key
+        // at http://dev.cloudmade.com/
+        apikey: '7960daaf55f84bfdb166014d0b9f8d41'
+    })
+});
+</script>
+{% endhighlight %}
+
+After this has been completed, then the the canvas is ready to draw a map, however, it has no idea what location to draw. So to have it actually draw a map, execute the gotoPosition method of the T5.Map class. Insert the following code after the map has been initialized in the previously defined script section:
+
+{% highlight js %}
+// center on Brisbane, Australia at zoom level 6
+map.gotoPosition(T5.Geo.P.parse("-27.468 153.028"), 6);
+{% endhighlight %}
+
+And that's pretty much it. Simply change the latitude and longitude string that is parsed by the T5.Geo.P.parse function to something near you and away you go.
+
+## Next Steps
+
+- Introduction to Marker Layers
+- Adding Zoom Controls (coming soon)
+
+## Example Source Code
+
+[http://gist.github.com/600207](http://gist.github.com/600207)

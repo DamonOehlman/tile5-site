@@ -1,0 +1,7 @@
+title: Tile5
+description: "HTML5 Mobile Optimized Mapping and Tiling Library.  Available under the MIT opensource license."
+theme: tile5
+ga-code: UA-8447893-8
+permalink: /:categories/:title
+
+pygments: true

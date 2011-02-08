@@ -1,0 +1,19 @@
+---
+layout: default
+title:  Run Demo
+---
+
+<div id="mapContainer">
+	<canvas id="mapCanvas"></canvas>
+</div>
+
+<script>
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/t5demos.js').wait(function() {
+	DEMO.run();
+});
+</script>

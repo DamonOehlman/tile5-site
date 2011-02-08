@@ -1,0 +1,18 @@
+---
+layout: sample
+title:  Walmart Stores Visualization
+sample: visualization-walmart
+
+categories:
+ - demo
+
+thumbnail: /img/samples/visualization-walmart.jpg
+---
+
+This is a sample showing how you can integrate time-series data such as the [Walmart Store Opening Data](http://flowingdata.com/2010/04/07/watching-the-growth-of-walmart-now-with-100-more-sams-club/) that was nicely visualized by [Flowing Data](http://projects.flowingdata.com/walmart/).
+
+Hat tip also to [Jeremy Arnold](http://twitter.com/#!/jaggednz) for using radial gradients in his award-winning mashup [Grid Watch](http://gridwatch.co.nz/). Pretty much a copy and paste job from his original glow markers code :)
+
+It's also worth noting that this demo uses the `T5.Images.newCanvas` method to create an offscreen canvas that is uses to create and store the glow marker.  We are then able to pass the `glowMarker` variable through when we are creating the new `T5.ImageMarker` as the image that will be displayed.
+
+Oh, and there is a cool use of the `hsla` for generating colors pretty simply.

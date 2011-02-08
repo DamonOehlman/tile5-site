@@ -1,0 +1,12 @@
+---
+layout: sample
+title:  Custom Markers
+sample: custom-markers
+
+categories:
+ - demo
+
+thumbnail: /img/samples/custom-markers.png
+---
+
+This demo provides an example of how to draw a custom marker. In this particular case we draw a semi-transparent markers for places (PPL) returned from Geonames. Each marker is sized relative to the highest population returned.

@@ -1,0 +1,14 @@
+---
+layout: sponsor
+title:  RACQ
+
+categories:
+ - sponsor
+
+homepage: http://www.racq.com.au/
+logo: /img/sponsors/racq.png
+---
+
+RACQ are one of the major project sponsors for the Tile5 library.  With a strong interest in delivering mobile maps to their members, RACQ saw the potential in Tile5 as a cross-platform mobile mapping solution.
+
+Tile5 has already been delpoyed as the mapping solution for the RACQ Mobile Trip Planner, which is available to RACQ members who install the RACQ iPhone Road Service app.

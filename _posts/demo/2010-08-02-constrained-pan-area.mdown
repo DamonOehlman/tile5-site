@@ -1,0 +1,12 @@
+---
+layout: sample
+title:  Constrained Pan Area
+sample: constrained-area
+
+categories:
+ - demo
+
+thumbnail: /img/samples/constrained-area.png
+---
+
+This demo shows how it is possible to constain a map to a particular view area.

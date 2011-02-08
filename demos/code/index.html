@@ -1,0 +1,19 @@
+---
+layout: default
+title:  Sample Code
+---
+
+<link href="/js/prettify/prettify.css" type="text/css" rel="stylesheet" />
+<pre id="democode" class="prettyprint"> </pre>
+
+<script>
+$LAB
+.script('/js/t5demos.js')
+.script('/js/prettify/prettify.js')
+.wait(function() {
+	DEMO.loadCode(function(code) {
+		$('#democode')[0].innerText = code;
+		prettyPrint();
+	});
+});
+</script>

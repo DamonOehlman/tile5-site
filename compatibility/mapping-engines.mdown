@@ -1,0 +1,85 @@
+---
+layout: default
+title:  Mapping Engines
+---
+
+The table below lists the status of the various operations that are supported in Tile5 and their implementation status in the library for a particular mapping engine.
+
+_The ability to display map markers is core to the library so once tiles for a particular provider can be displayed, markers come for free._
+
+<table class="statuses">
+<thead>
+	<tr>
+	<th>Provider</th>
+	<th>Map Tiles</th>
+	<th>Geocode</th>
+	<th>Routing</th>
+	</tr>
+</thead>
+<tr>
+	<td><a href="http://maps.bing.com/">Bing</a></td>
+	<td class="yes" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+<tr>
+	<td><a href="http://cloudmade.com/">Cloudmade</a></td>
+	<td class="yes" />
+	<td class="planned" />
+	<td class="planned" />
+</tr>
+<tr>
+	<td><a href="http://decarta.com/">deCarta</a></td>
+	<td class="yes" />
+	<td class="yes" />
+	<td class="yes" />
+</tr>
+<tr>
+	<td><a href="http://www.esri.com/software/mapping_for_everyone/api/index.html">esri</a></td>
+	<td class="tbd" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+<tr>
+	<td><a href="http://developer.mapquest.com/">Mapquest</a></td>
+	<td class="yes" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+<tr>
+	<td><a href="http://maps.google.com/">Google</a></td>
+	<td class="na" data-href="http://code.google.com/p/gmaps-api-issues/issues/detail?id=1396" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+<tr>
+	<td><a href="http://www.nn4d.com/site/global/home/p_home.jsp">Navteq</a></td>
+	<td class="tbd" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+<tr>
+	<td><a href="http://nearmap.com/">nearmap</a></td>
+	<td class="yes" />
+	<td class="na" />
+	<td class="na" />
+</tr>
+<tr>
+	<td><a href="http://openstreetmap.org/">OSM</a></td>
+	<td class="yes" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+<tr>
+	<td><a href="http://maps.ovi.com/">Ovi (Nokia)</a></td>
+	<td class="tbd" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+<tr>
+	<td><a href="http://developer.yahoo.com/maps/">Yahoo</a></td>
+	<td class="tbd" />
+	<td class="tbd" />
+	<td class="tbd" />
+</tr>
+</table>

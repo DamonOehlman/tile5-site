@@ -1,0 +1,12 @@
+---
+layout: sample
+title:  Animated Map Markers
+sample: animated-map-markers
+
+categories:
+ - demo
+
+thumbnail: /img/samples/animated-map-markers.jpg
+---
+
+Everyone loves animation right?  We think so, which is why we've made it possible to animate our map markers with ease.  This demo gives you an idea on how to do it.

@@ -1,0 +1,15 @@
+{
+	"icon_link": null,
+	"description": "",
+	"extent": [-88.3449527450596, 28.7204282253251, -88.3449527450596, 28.7204282253251],
+	"permissions": [{
+		"group_id": "everyone",
+		"permissions": {
+			"download": true,
+			"view": true
+		}
+	}],
+	"stats": {},
+	"tags": "oil,slick",
+	"link": ""
+http://geocommons.com/overlays/58749.json", "classification": null, "published": "2010-09-29T20:25:44-04:00", "title": "Oil Slick", "name": "Oil Slick", "features": [{"name": "Gulf of Mexico Oil Slick", "description": "\u003Chtml\u003E\u003Chead\u003E\u003Cstyle\u003Ebody:width:230px;\u003C/style\u003E\u003C/head\u003E\u003Cbody\u003E\u003Ch3\u003EGulf of Mexico Oil Slick\u003C/h3\u003E\nOn April 20, 2010, an explosion occurred on the semi-submersible offshore drilling rig Deepwater Horizon in the Gulf of Mexico. On April 24 it was found that the wellhead was damaged and was leaking oil into the Gulf. Coast Guard Rear Admiral Mary Landry has described it as \"a very serious spill,\" leaking as many as 5,000 barrels of oil a day, or 210,000 gallons into the Gulf. Such a significant spill poses a serious threat to wildlife, affecting as many as 400 species all along the coastal areas of Louisiana, Mississippi, Alabama, and Florida.\u003Cspan style=\"font-size:95%;color:gray;\"\u003E Source: \u003Ca href=http://en.wikipedia.org/wiki/Deepwater_Horizon_drilling_rig_explosion\"\u003EWikipedia\u003C/a\u003E.\u003C/span\u003E\n\u003Cbr /\u003E\u003Cbr /\u003E\nTo learn more, please visit: \n\u003Ca href=\"http://www.google.com/crisisresponse/oilspill/\"\u003Ehttp://www.google.com/crisisresponse/oilspill\u003C/a\u003E\n\n\u003C/body\u003E\n\u003C/html\u003E", "geometry": "010100000091ACADB4131656C000E3F2FB6DB83C40"}], "author": "", "core_overlay_id": 51715, "source": "", "short_classification": "Y", "id": 58749, "feature_count": 1, "contributor": "mbaram"}

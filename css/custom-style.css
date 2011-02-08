@@ -1,0 +1,144 @@
+#logo {
+    float: none;
+}
+
+#logo a {
+    font: bold 1.2em Arial;
+    background: url(/img/tile5-logo.png) 15px 8px no-repeat;
+    height: 115px;
+    width: 100%;
+    display: block;
+}
+
+#main img {
+    float: right;
+    border: 4px solid white;
+    -webkit-box-shadow: #333 0 1px 2px;
+    -moz-box-shadow: #333 0 1px 2px;
+    box-shadow: #333 0 1px 2px;
+    margin: 0 10px 5px 20px;
+}
+
+#main img.demothumb {
+    background-size: 100%;
+}
+
+#main img.thumbnail {
+    float: left;
+    max-height: 90px;
+    margin-left: 10px;
+    margin-right: 10px;
+    clear: left;
+}
+
+div.item {
+    clear: both;
+    padding-top: 10px;
+}
+
+div.item:first-of-type {
+    padding-top: 0;
+}
+
+#main h2.listheader {
+    margin: 5px 10px 5px;
+}
+
+#main p.excerpt {
+    margin-top: 5px;
+}
+
+/* sponsor styles */
+
+#main div.sponsor {
+    border-top: 1px solid #d8d8d8;
+}
+
+#main div.sponsor img {
+    float: left;
+    border: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    margin: 15px 10px 5px;
+}
+
+/* action styles */
+
+#main ul.actions {
+    list-style-type: none;
+    margin: 5px 10px 10px;
+    max-width: 440px;
+    float: right;
+    clear: right;
+}
+
+#main ul.actions li {
+    margin: 5px 0 5px 5px;
+    float: right;
+}
+
+#main ul.actions li a {
+    padding: 5px 8px;
+    background: #555;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#333), to(#555));
+    display: block;
+    min-width: 40%;
+    color: white;
+    text-decoration: none;
+    -webkit-border-radius: 5px;
+    text-align: center;
+}
+
+div.sample p {
+    text-align: justify;
+}
+
+/* map styles */
+
+#mapContainer {
+    height: 400px;
+    background: url(/img/map-bg.png);
+    -webkit-user-select: none;
+}
+
+@media screen and (max-width: 700px) {
+    #topdrop {
+        height: 90px;
+    }
+    
+    #topdrop.dropped {
+        height: 254px;
+    }
+
+    #logo a {
+        background-position: top 50%;
+        zoom: 0.4;
+        padding-bottom: 10px;
+    }
+
+    #main img {
+        margin: 0 2% 10px;
+        max-width: 94%;
+    }
+}
+
+@media screen and (max-device-width: 480px) {
+    #main ul.actions {
+        float: none;
+    }
+    
+    #main ul.actions li {
+        float: none;
+        margin-left: 0;
+    }
+    
+    #main p {
+        text-align: justify;
+    }
+    
+    #mapContainer {
+        height: 220px;
+        margin-top: -13px;
+    }    
+}

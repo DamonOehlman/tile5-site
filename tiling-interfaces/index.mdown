@@ -1,0 +1,10 @@
+---
+layout: default
+title:  Tiling Application Interfaces
+---
+
+When you look at any online "draggable" map, what are you seeing? Essentially, a series of images arranged in a grid providing you the ability to scroll in either direction to explore your world. This is an excellent method in which to explore the vast amount of data that is available for something such as a map.
+
+The only question is, why do we only use this style of visual exploration only for mapping data. One of the early [design goals](/vision) of Tile5 was to produce a HTML5 javascript library that not only provided an excellent mapping implementation, but to also use the same technology and core principles to build interfaces for exploring other kinds of visual data.
+
+For just one example of such an interface, have a look at our [Photo Explorer](http://photoexplorer.tile5.org/).

@@ -1,0 +1,20 @@
+---
+layout: default
+title:  Sponsor Tile5
+---
+
+Tile5 is a liberally licensed OpenSource (MIT) product.  This means you are _absolutely free_ to do with it whatever you like.  Build opensource apps, commercial apps, and you don't need to pay anything. This is the way [Sidelab](http://www.sidelab.com) (maintainers of Tile5) believe it should be.
+
+That said, a lot of time and effort do go into making Tile5 the best software it can be, which includes not only coding but providing resources (documentation and tutorials) to help you use the library.
+
+If you have the capacity (or work for a company with the capacity) to sponsor some [future features](/sponsor/features) of Tile5 then that would be a great way to both give back and also help shape the future of Tile5.  
+
+For more information on sponsorship, please see the [OpenSource Sponsorship](http://www.sidelab.com/opensource/sponsorship.html) information on the Sidelab site.
+
+## Active Sponsors
+
+Active sponsors of Tile5 are listed below.  Thank you to all of you who make Tile5 possible and for your ongoing commitment to OpenSource software and choice in mapping.
+
+{% for post in site.categories.sponsor %}
+{% include sponsor-list-item.html %}
+{% endfor %}

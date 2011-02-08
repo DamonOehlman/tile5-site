@@ -1,0 +1,14 @@
+---
+layout: sample
+title:  Animated Map Panning
+sample: animated-map-panning
+
+categories:
+ - demo
+
+thumbnail: /img/samples/animated-map-panning.jpg
+---
+
+This sample showcases the ability of Tile5 to smoothly animate around the map area.  For this demo, we use the [Geonames webservices](http://geonames.org/) to find some places in Europe and then pan around to each one.
+
+In this demo you can also see the [MapQuest OpenStreetMap](http://developer.mapquest.com/web/products/open/map) provider in action. 
