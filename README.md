@@ -1,5 +1,5 @@
-# Mobi-Wan
+# Tile5 Public Site
 
-This is a Jekyll Site template that is designed to enable you to create a simple desktop site that also looks good on mobile devices.  The main piece of work that has gone on here is around customization of a menu that basically aligns to the top of the page for desktop display.
+This is the source repo for the [Tile5 Site](http://www.tile5.org/).  
 
-When the screen hits a certain width, the menu will disappear and will be activated by a "Menu" button.  This reveals the menu in a more mobile-like navigation menu.
+Code samples here are licensed under the [MIT license](https://secure.wikimedia.org/wikipedia/en/wiki/MIT_License), content under a [Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-nc-sa/3.0/).
