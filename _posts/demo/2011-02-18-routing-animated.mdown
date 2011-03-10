@@ -1,0 +1,14 @@
+---
+layout: sample
+title:  Animated Route
+sample: routing-animated
+version: dev
+
+categories:
+ - demo-mapping
+
+thumbnail: /img/samples/routing-animated.png
+controls: route-animated
+---
+
+This demo shows the ability of Tile5 to display routing information on a map using a [mapping engine](/compatibility/mapping-engines.html) that has had routing support implemented.  Additionally in the demo we showcase the ability to display simple animations along the route.

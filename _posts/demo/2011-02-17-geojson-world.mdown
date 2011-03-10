@@ -1,0 +1,13 @@
+---
+layout: sample
+title:  GeoJSON World
+sample: geojson-world
+version: dev
+
+categories:
+ - demo-mapping
+
+thumbnail: /img/samples/geojson-world.png
+---
+
+This demo shows how you can use a local [GeoJSON](http://geojson.org/) file and display it alongside standard map tiles.  It is also possible to use a geojson file without the map layer if that is desired.

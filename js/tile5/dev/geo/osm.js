@@ -16,12 +16,15 @@ T5.Geo.OSM = (function() {
     */
     var OSMGenerator = function(params) {
         params = COG.extend({
-            flipY: false
+            flipY: false,
+            tileSize: 256,
+            tilePath: '{0}/{1}/{2}.png'
         }, params);
         
         // initialise variables
         var serverDetails = null,
-            subDomains = [];
+            subDomains = [],
+            tilePath = params.tilePath;
         
         /* internal functions */
         
@@ -32,115 +35,116 @@ T5.Geo.OSM = (function() {
 
         http://developers.cloudmade.com/projects/tiles/examples/convert-coordinates-to-tile-numbers
         */
-        function calculateTileOffset(position, zoomLevel) {
+        function calculateTileOffset(position, numTiles) {
             var lon = position.lon % 360,
                 lat = position.lat,
-                zoomFactor = 2 << (zoomLevel - 1),
                 tileX, tileY;
                 
-            tileX = ~~((lon+180) / 360 * zoomFactor);
-            tileY = ~~((1-Math.log(Math.tan(lat*DEGREES_TO_RADIANS) + 1/Math.cos(lat*DEGREES_TO_RADIANS))/Math.PI)/2 * zoomFactor);
-                
+            tileX = Math.floor((lon+180) / 360 * numTiles);
+            tileY = Math.floor((1-Math.log(Math.tan(lat*DEGREES_TO_RADIANS) + 1/Math.cos(lat*DEGREES_TO_RADIANS))/Math.PI)/2 * numTiles) % numTiles;
+            
             return T5.XY.init(tileX, tileY);
         } // calculateTileOffset
         
-        function calculatePosition(x, y, zoomLevel) {
-            var zoomFactor = 2 << (zoomLevel - 1),
-                n = Math.PI - 2*Math.PI * y / zoomFactor,
-                lon = x / zoomFactor * 360 - 180,
+        function calculatePosition(x, y, numTiles) {
+            var n = Math.PI - 2*Math.PI * y / numTiles,
+                lon = x / numTiles * 360 - 180,
                 lat = RADIANS_TO_DEGREES * Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
             
             return T5.Geo.Position.init(lat, lon);
         } // calculatePosition
         
-        function getBaseXY(position, zoomLevel) {
-            var radsPerPixel = T5.Geo.radsPerPixel(zoomLevel),
-                tileOffset = calculateTileOffset(position, zoomLevel),
-                tilePosition = calculatePosition(tileOffset.x, tileOffset.y, zoomLevel),
-                baseXY = T5.GeoXY.init(position, radsPerPixel),
-                tileXY = T5.GeoXY.init(tilePosition, radsPerPixel);
-                
-            return T5.XY.init(
-                        baseXY.x + (tileXY.x - baseXY.x), 
-                        baseXY.y + (tileXY.y - baseXY.y));
-        } // getBaseXY
+        function getTileXY(x, y, numTiles, radsPerPixel) {
+            var tilePos = calculatePosition(x, y, numTiles);
+            
+            return T5.GeoXY.init(tilePos, radsPerPixel);
+        } // getTileXY
         
         /* exports */
         
-        function buildTileUrl(tileX, tileY, maxTileX, maxTileY, zoomLevel, flipY) {
-            // determine the tile url
-            var tileUrl = COG.formatStr("{0}/{1}/{2}.png",
+        function buildTileUrl(tileX, tileY, zoomLevel, numTiles, flipY) {
+            if (tileY >= 0 && tileY < numTiles) {
+                // TODO: this seems pretty convoluted...
+                tileX = (tileX % numTiles + numTiles) % numTiles;
+                
+                // determine the tile url
+                var tileUrl = COG.formatStr(tilePath,
                     zoomLevel,
                     tileX,
-                    flipY ? Math.abs(tileY - maxTileY + 1) : tileY);
+                    flipY ? Math.abs(tileY - numTiles + 1) : tileY);
 
-            // COG.info('getting url for tile x = ' + tileX + ', y = ' + tileY);
-            if (serverDetails) {
-                tileUrl = (subDomains.length ? 
-                    COG.formatStr(serverDetails.baseUrl, subDomains[tileX % subDomains.length]) :
-                    serverDetails.baseUrl) + tileUrl;
+                // COG.info('getting url for tile x = ' + tileX + ', y = ' + tileY);
+                if (serverDetails) {
+                    tileUrl = (subDomains.length ? 
+                        COG.formatStr(serverDetails.baseUrl, subDomains[tileX % subDomains.length]) :
+                        serverDetails.baseUrl) + tileUrl;
+                } // if
+
+                return tileUrl;
             } // if
-            
-            return tileUrl;
         } // buildTileUrl
         
-        function initTileCreator(tileWidth, tileHeight, args, callback) {
-            var zoomLevel = args.zoomLevel,
-                position = args.position,
-                tileOffset = calculateTileOffset(position, zoomLevel),
-                baseXY = getBaseXY(position, zoomLevel, tileOffset),
-                baseX = baseXY.x,
-                baseY = baseXY.y,
-                
-                maxTileX = 2 << (zoomLevel - 1),
-                maxTileY = Math.pow(2, zoomLevel),
-                
-                flipY = params.flipY,
-                
-                // initialise the tile creator
-                creator = function(tileX, tileY) {
-                    if (! tileOffset.x) {
-                        return null;
-                    } // if
+        function run(view, viewRect, callback) {
+            var zoomLevel = view.getZoomLevel ? view.getZoomLevel() : 0;
+            
+            if (zoomLevel) {
+                var numTiles = 2 << (zoomLevel - 1),
+                    tileSize = params.tileSize,
+                    radsPerPixel = (Math.PI * 2) / (tileSize << zoomLevel),
+                    position = T5.GeoXY.toPos(T5.XY.init(viewRect.x1 - tileSize, viewRect.y1 - tileSize), radsPerPixel),
+                    tileOffset = calculateTileOffset(position, numTiles),
+                    tilePixels = getTileXY(tileOffset.x, tileOffset.y, numTiles, radsPerPixel),
+                    xTiles = (viewRect.width  / tileSize | 0) + 2,
+                    yTiles = (viewRect.height / tileSize | 0) + 2,
+                    images = [],
+                    flipY = params.flipY;
                     
-                    var realTileX = tileOffset.x + tileX,
-                        realTileY = tileOffset.y + tileY,
-                        tileUrl;
-                        
-                    // bring the real tile x into the appropriate range
-                    realTileX = (realTileX % maxTileX);
-                    realTileX = realTileX + (realTileX < 0 ? maxTileX : 0);
-
-                    // build the tile url 
-                    tileUrl = self.buildTileUrl(realTileX, realTileY, maxTileX, maxTileY, zoomLevel, flipY);
-                    if (tileUrl) {
-                        return T5.Tiling.init(
-                            baseX + (tileX * tileWidth), 
-                            baseY + (tileY * tileHeight),
-                            tileWidth,
-                            tileHeight, {
-                                url: tileUrl
-                            });
-                    } // if
-                }; // loader
+                if (tilePixels.x < 0) {
+                    xTiles += (tilePixels.x / tileSize | 0) + 1;
+                } // if
                 
-            // initialise the server details
-            serverDetails = self.getServerDetails ? self.getServerDetails() : null;
-            subDomains = serverDetails ? serverDetails.subDomains : [];
-
-            // if the callback is assigned, then pass back the creator
-            if (callback) {
-                callback(creator);
+                // COG.info('tile pixels = ' + T5.XY.toString(tilePixels) + ', viewrect.x1 = ' + viewRect.x1);
+                    
+                // initialise the server details
+                serverDetails = _self.getServerDetails ? _self.getServerDetails() : null;
+                subDomains = serverDetails && serverDetails.subDomains ? 
+                    serverDetails.subDomains : [];
+                    
+                for (var xx = -1; xx <= xTiles; xx++) {
+                    for (var yy = -1; yy <= yTiles; yy++) {
+                        // build the tile url 
+                        tileUrl = _self.buildTileUrl(
+                            tileOffset.x + xx, 
+                            tileOffset.y + yy, 
+                            zoomLevel, 
+                            numTiles, 
+                            flipY);
+                            
+                        if (tileUrl) {
+                            images[images.length] = T5.Tiling.init(
+                                tilePixels.x + xx * tileSize,
+                                tilePixels.y + yy * tileSize, 
+                                tileSize,
+                                tileSize, {
+                                    url: tileUrl
+                                });
+                        } // if
+                    } // for
+                } // for
+                    
+                // if the callback is assigned, then pass back the creator
+                if (callback) {
+                    callback(images);
+                } // if                
             } // if
-        } // initTileLoader
+        } // callback
         
         /* define the generator */
 
         // initialise the generator
-        var self = COG.extend(new T5.MapTileGenerator(params), {
+        var _self = COG.extend(new T5.ImageGenerator(params), {
             buildTileUrl: buildTileUrl,
-            getServerDetails: null,
-            initTileCreator: initTileCreator
+            run: run
         });
         
         // trigger an attribution requirement
@@ -148,7 +152,7 @@ T5.Geo.OSM = (function() {
         
         // bind to generator events
         
-        return self;
+        return _self;
     }; // OSMGenerator
     
     T5.Generator.register('osm.cloudmade', function(params) {

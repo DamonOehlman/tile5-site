@@ -1,0 +1,15 @@
+<div id='geojson'> 
+	<label for='layerid'>GeoCommons Layer ID</label> 
+	<div> 
+	<input maxlength='10' size='7' id='layerid' type='text' value='' /> 
+	<small>Allow Cached</small> 
+	<input id='allowcached' type='checkbox' /> 
+	</div> 
+	<button onclick='GEOCOMMONS_DEMO.load($(&apos;#layerid&apos;).val());'>Display</button> 
+</div> 
+<h4 id='some_sample_sets'>Some Sample Sets</h4> 
+<ul id='geojson-samples'> 
+	<li><a href='#' data-layerid='2646'>Major Climates of Africa</a></li> 
+	<li><a href='#' data-layerid='76035'>Last flight of Amelia Earhart</a></li> 
+	<li><a href='#' data-layerid='78664'>Black Friday Tweets</a></li> 
+</ul>

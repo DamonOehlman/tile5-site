@@ -1,5 +1,4 @@
 var map,
-    startPosition,
     styleA = T5.Style.get(T5.Style.define('a', {
         globalAlpha: 1
     })),
@@ -24,9 +23,6 @@ $(document).ready(function() {
         });
     } // tweenLayers
     */
-    
-    // initialise the start position
-    startPosition = new T5.Geo.Position(geoip_latitude(), geoip_longitude());
     
     // initialise the map
     map = T5.Map({
@@ -54,7 +50,7 @@ $(document).ready(function() {
     */
 
     // goto the specified position
-    map.gotoPosition(startPosition, 9);
+    map.gotoPosition(DEMO.getHomePosition(), 9);
 });
 
 // Initialise deCarta demo credentials

@@ -1,0 +1,17 @@
+---
+layout: default
+title:  Support
+---
+
+## Community Support
+
+Tile5 is an open source product, licensed under the liberal [MIT-licence](http://opensource.org/licenses/mit-license.php) to ensure maximum flexibility. As such, building and supporting a support community is our primary goal. 
+
+Please feel free to submit issues and requests on the [Tile5 issue tracker at Github](http://github.com/sidelab/tile5/issues).
+
+Free support will be offered via the [mailing list](http://groups.google.com/group/tile5/) - check out the information on the [community page](/community) for further details.
+
+## Custom Development Services
+
+In addition to support services, [Sidelab](http://www.sidelab.com/) is looking to partner with forward thinking companies to integrate Tile5's open mapping (and more) into their products and/or organisation. Tile5 (amongst other products) opens up a myriad of opportunities for both to leverage OpenSource mapping to create competitive advantage or reduce current spend around mapping technologies.
+For more information, please contact info -at- sidelab.com

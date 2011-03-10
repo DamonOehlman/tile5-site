@@ -1,11 +1,25 @@
 ---
 layout: default
-title:  Run Demo
+title:  Tile5 Demo
 ---
 
+<div id="statusMessage"></div>
+
+<!--
+<ul id="mapTools">
+	<li>
+		<label for="mapEngine">Map Engine:</label>
+		<select id="mapEngine">
+			<option>Cloudmade</option>
+		</select>
+	</li>
+</ul>
+-->
 <div id="mapContainer">
+	<div id="demoStats" style="position: absolute;"></div>
 	<canvas id="mapCanvas"></canvas>
 </div>
+<div id="demoControls"><button id="prefs">Preferences</button></div>
 
 <script>
 $LAB
@@ -13,7 +27,17 @@ $LAB
 	UsePreloading: false,
 	UseCachePreload: false
 })
-.script('/js/t5demos.js').wait(function() {
+.script('/js/t5demos.js?v={{ site.time | date_to_xmlschema }}').wait(function() {
+	// run the demo
 	DEMO.run();
+})
+.script('https://github.com/mrdoob/stats.js/raw/master/build/Stats.js').wait(function() {
+	var stats = new Stats();
+
+	// add the stats display to the dom
+	$('#demoStats')[0].appendChild(stats.domElement);
+	setInterval(function() {
+		stats.update();
+	}, 1000 / 60);
 });
 </script>

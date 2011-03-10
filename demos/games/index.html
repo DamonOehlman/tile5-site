@@ -1,0 +1,15 @@
+---
+layout: default
+title:  Game Demos
+---
+
+<p>
+While Tile5 was never designed as a game engine, recent changes that brought some 
+pretty solid hit detection to the table makes simple things possible.  For more advanced HTML5 games
+though we would recommend you check out one of the many HTML5 game engines that are currently
+being developed.
+</p>
+
+{% for post in site.categories.demo-games %}
+	{% include custom-demo-summary.html %}
+{% endfor %}

@@ -1,0 +1,12 @@
+---
+layout: sample
+title:  Local Map Tiles
+sample: tiles-local
+
+categories:
+ - demo-mapping
+
+thumbnail: /img/samples/local-map-tiles.png
+---
+
+This demo shows how it is possible to use your own tiles that have been rendered using Mapnik or a similar.

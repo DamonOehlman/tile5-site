@@ -1,0 +1,45 @@
+---
+layout: article
+title:  0.9.4.1 and updated Tile5 Site Launch
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+Today the updated version of the Tile5 site is launched.  The site has been rebuilt from the ground up and has been designed to present well on both desktop and mobile devices.
+
+The release of the site follows after releasing Tile5 version `0.9.4.1` yesterday which continues to implement the restructuring of Tile5 as part of the `0.9.4` branch.
+
+As with previous updates of Tile5 if you need some assistance with transitioning old code to work with the more recent version of Tile5 please use the [Tile5 Mailing List](https://groups.google.com/forum/#!forum/tile5) to ask any questions and either I ([Damon](http://twitter.com/DamonOehlman)) or some other helpful soul may be able to offer some assistance.
+
+In terms of both progress with Tile5 as a library and also this site I am quite pleased.  There is still quite a lot to do, but I think the underlying foundation of the library is getting stronger with each release and while this does cause some headaches for developers who are working with Tile5 (sorry), I think will provide the best possible experience in the long term.
+
+### Internet Explorer Support
+
+One thing that is still a work in progress, but I think is definitely quite exciting is that in this release of both the library and the site we have started working towards IE compatibility.  The site itself is reasonable tolerant of IE, and the [demos](/demos) demo-viewer has also been written to include the excellent [Flash Canvas](http://flashcanvas.net) which provides an impressive level of compatibility with IE.  
+
+Full IE support will be released as part of the long-promised `0.9.5` release which is scheduled for late March / early April inline with a client project that [Sidelab](http://www.sidelab.com/) is working on. The interesting thing with regards to this project is that it will be targetted for desktop and tablets rather than hand-held mobile but still makes use of Tile5 for mapping :)
+
+### Change History
+
+The change history as noted in the [source](https://github.com/sidelab/tile5) is shown below:
+
+- __BREAKING CHANGE__: `T5.Geo.XY` becomes `T5.GeoXY` and is not longer created using a "new" method but rather an object literal is returned when `T5.GeoXY.init` is called.
+
+- __BREAKING CHANGE__: `T5.Geo.Position` is now a full helper module for all position methods and replaces the somewhat obscurely named `T5.Geo.P` module.  Creating new Position objects is done through a call to `T5.Geo.Position.init()` rather than `new T5.Geo.Position()`
+
+- __BREAKING CHANGE__: `T5.Geo.BoundingBox` is now a helper module for bounding box operations in a similar way to the position helper as described above.  This replaces the `T5.Geo.B` module.  As per position objects, bounding boxes are now created with a call to `T5.Geo.BoundingBox.init()` rather than `new T5.Geo.BoundingBox()`
+
+- IE Compatibility tweaks. __Tile5 now works in IE__ (via Flash Canvas of course)
+
+- Offsets now consistently 0 based, rather than using a mix of 0 based for y offset and -x to +x for the xoffset.  This will hopefully help prevent [me](http://twitter.com/DamonOehlman) from going insane in the future.
+
+- Maps and views wrap more effectively, which means that overlays such as the shape and marker overlays display more effectively when wrapping around the x-axis (as is fairly common when playing with maps).
+
+- Transitioned away from using [ant](http://ant.apache.org/) for builds and a concatenation style, to using [sprockets](http://www.getsprockets.com/) instead.
+
+- Interaction handlers [decoupled](https://github.com/sidelab/interact) from views and are now external drivers.  This creates opportunities for different interaction handlers and more automated testing opportunities.
+
+- Handling of zoom simplified to improve stability, will "full-feature" zoom in a later release.

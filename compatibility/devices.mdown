@@ -31,7 +31,7 @@ title:  Mobile Device Compatibility
 </tr>
 <!-- android support -->
 <tr>
-	<td rowspan="5">Android</td>
+	<td rowspan="4">Android</td>
 	<td>1.6</td>
 	<td>A</td>
 	<td class="developing"></td>

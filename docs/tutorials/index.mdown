@@ -4,4 +4,6 @@ title:  Tutorials
 category: tutorial
 ---
 
-Get started using Tile5 quickly with these tutorials.  If you need more help, check out the [documentation](/docs) or ask the [Tile5 community](/support/community.html).
+<p class="note">We are still in the process of converting all of the tutorials across from the old site design.  In addition to the tutorials listed below, you will find a couple more on the <a href="http://4.latest.tile5js.appspot.com/docs/tutorials/">old tutorials page.</a></p>
+
+Get started using Tile5 quickly with these tutorials.  If you need more help, check out the [documentation](/docs) or ask the [Tile5 community](/community).

@@ -4,28 +4,6 @@ var SEARCH_URL = 'http://ws.geonames.org/searchJSON?country=AU&fcode=PPL&maxRows
     TWO_PI = Math.PI * 2,
     maxPopulation = 0;
 
-var PlaceMarker = function(params) {
-    // calculate the marker size for this place
-    var markerSize = Math.floor(params.population / maxPopulation * MAX_MARKER_SIZE);
-    
-    return T5.ex(new T5.Marker(params), {
-        drawMarker: function(context, viewRect, x, y, state, overlay, view) {
-            context.fillStyle = "rgba(30, 30, 30, 0.4)";
-            
-            // draw the marker (xy specifies the center)
-            context.beginPath();
-            context.arc(
-                x, 
-                y,
-                markerSize,
-                0,
-                TWO_PI,
-                false);                    
-            context.fill();
-        }
-    });
-};
-
 function loadData(data){
     var ii;
     
@@ -44,9 +22,10 @@ function loadData(data){
             position = T5.Geo.Position.init(placeData.lat, placeData.lng);
             
         // initialise the new marker
-        var marker = new PlaceMarker({
+        var marker = new T5.Marker({
             population: placeData.population,
             name: placeData.name,
+            size: placeData.population / maxPopulation * MAX_MARKER_SIZE | 0,
             xy: T5.GeoXY.init(position)
         });
         

@@ -3,28 +3,15 @@ layout: default
 title:  Download Tile5
 ---
 
-We are now at version 0.9.5 of our Beta Release.  Expect things to change a little until the 1.0 release.  Have a look at the [documentation](/docs) and [demos](/demos) to get up and running with your own apps.
+The latest version of the Tile5 Beta is `0.9.4.2` and this is used to power all the demos on this site.  Additionally, the `0.9.3.1` release is also available for download and does have some features that have temporarily been removed from the `0.9.4` branch.
 
-- [tile5-0.9.3.zip](http://github.com/downloads/sidelab/tile5/tile5-0.9.3.zip)	 ( 2010-11-18)
 
-Each distribution contains the following files:
+<p>
+<a href="https://github.com/sidelab/tile5/zipball/v0.9.4.2" class="button">Download 0.9.4.2</a>
+</p>
 
-- `tile5.js`
+We'd certainly encourage you to use the latest version, but if things such as inertial scrolling are really important to you right now, then you may want to opt for `0.9.3`.
 
-	The uncompressed source of the Tile5 library that includes the mapping and geospatial functionality. No map providers are included in this library, but they are included in the distribution separately.
-	
-- `tile5.min.js`
-
-	Minified version of the tile5.js file.
-	
-- `tile5.lite.js`
-
-	The uncompressed source of the Tile5 library, without mapping functionality (as used in the Flickr Photogrid Demo). This library allow you to build generic tiling interfaces, including with touch support, device detection and animation and easing effects.
-	
-- `tile5.lite.min.js`
-
-	The minified version of the tile5.lite.js file.
-	
-- `tile5.%mapprovider%.js`
-
-	A collection of different map providers that can be used with the full version of the Tile5 library.
+<p>
+<a href="https://github.com/sidelab/tile5/zipball/v0.9.3.1" class="button">Download 0.9.3.1</a>
+</p>

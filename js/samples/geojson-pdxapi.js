@@ -50,7 +50,7 @@ PDXDEMO = (function() {
         } // if
                 
         COG.info('selected dataset: ' + dsid + ', bounds size = ', boundsSize);
-        $('#' + dsid + '_title').prepend('<img src="/img/loading-2.gif" />');
+        $('#' + dsid + '_title').addClass('loader');
         
         datasources[dsid].requestActive = true;
         COG.jsonp(dsUrl, function(data) {
@@ -105,10 +105,10 @@ PDXDEMO = (function() {
                     layer.style = datasources[dsid].style;
                     layer.zindex = datasources[dsid].zindex;
 
-                    map.setLayer(dsid + layerId, layer);
+                    map.setLayer(dsid, layer);
                 }
                 
-                $('#' + dsid + '_title img').remove();
+                $('#' + dsid + '_title').removeClass('loader');
                 datasources[dsid].requestActive = false;
             }, {
                 rowPreParse: function(row) {
@@ -135,7 +135,7 @@ PDXDEMO = (function() {
     };
     
     $(document).ready(function() {
-        T5.Style.load('/js/tile5/style/map-overlays.js');
+        DEMO.loadStyle('map-overlays');
         
         // defineLayer('bicycle_network', 'path.bike');
         defineLayer('bridges');
@@ -150,7 +150,7 @@ PDXDEMO = (function() {
         // defineLayer('parks_trails');
         // defineLayer('pavement_moratorium');
         defineLayer('pedestrian_districts', 'area.general');
-        defineLayer('schools');
+        // defineLayer('schools');
         // defineLayer('redline_1938');
         // defineLayer('zipcode');
         
@@ -161,7 +161,10 @@ PDXDEMO = (function() {
         });
         
         map = new T5.Map({
-            container: 'mapCanvas'
+            container: 'mapCanvas',
+            clipping: true,
+            minZoom: 11,
+            maxZoom: 17
         });
         
         map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {

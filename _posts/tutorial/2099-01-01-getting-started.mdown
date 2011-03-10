@@ -65,7 +65,7 @@ var map = new T5.Map({
 
 After this has been completed, then the the canvas is ready to draw a map, however, it has no idea what location to draw. So to have it actually draw a map, execute the gotoPosition method of the T5.Map class. Insert the following code after the map has been initialized in the previously defined script section:
 
-{% highlight js %}
+{% highlight javascript %}
 // center on Brisbane, Australia at zoom level 6
 map.gotoPosition(T5.Geo.P.parse("-27.468 153.028"), 6);
 {% endhighlight %}
@@ -74,8 +74,7 @@ And that's pretty much it. Simply change the latitude and longitude string that 
 
 ## Next Steps
 
-- Introduction to Marker Layers
-- Adding Zoom Controls (coming soon)
+- [Introduction to Marker Layers](/tutorial/marker-layers-intro)
 
 ## Example Source Code
 

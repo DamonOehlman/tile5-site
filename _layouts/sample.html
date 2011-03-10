@@ -3,11 +3,11 @@ layout: default
 ---
 
 <div class="sample">
-<a href="/demos/run/#!/{{ page.sample }}">
+<a href="/demos/run/#!/{{ page.sample }}?controls={{ page.controls }}&version={{ page.version }}">
 	<img class="demothumb" src="/img/play-demo-overlay.png" alt="{{ page.title }}" style="background-image: url({{ page.thumbnail}})" />
 </a>
 <ul class="actions">
-	<li><a href="/demos/run/#!/{{ page.sample }}">Run the Demo</a></li>
+	<li><a href="/demos/run/#!/{{ page.sample }}?controls={{ page.controls }}&version={{ page.version }}">Run the Demo</a></li>
 	<li><a href="/demos/code/#!/{{ page.sample }}">See the Code</a></li>
 </ul>
 

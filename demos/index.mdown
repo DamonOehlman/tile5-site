@@ -2,4 +2,20 @@
 layout: category-pages
 title:  Demos
 category: demo
----
+--- 
+
+<a href="/demos/mapping"><img src="/img/demos/mapping.png" alt="Tile5 Mapping Demos" /></a>
+
+## Mapping Demos
+
+The [Mapping Demos](/demos/mapping) showcase the capabilities of a [HTML5 mapping](/html5-mapping) platform.  We are still working on a few of these demos and also hope to bring you more, but we hope you agree there is some pretty cool stuff in there.
+
+<a href="http://photoexplorer.tile5.org/"><img src="/img/demos/photoexplorer.png" alt="Tile5 PhotoExplorer" /></a>
+
+## Flickr Photo Explorer
+
+The [Flickr Photo Explorer](http://photoexplorer.tile5.org/) demonstrates that Tile5 is not just about mapping. Using the tile based grid to search for and display flickr photos, you really can look through and process much more information than would be possible through a traditional display.
+
+## Demo Suggestions?
+
+If you have an idea for what could be built with Tile5 and would like to see a proof of concept, or are interested in contributing a demo then please get in touch via Twitter or by emailing tile5 -at- sidelab.com.

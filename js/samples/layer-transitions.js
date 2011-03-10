@@ -1,5 +1,4 @@
 var map,
-    startPosition,
     styleA = T5.Style.get(T5.Style.define('a', {
         globalAlpha: 1
     })),
@@ -9,14 +8,12 @@ var map,
     tween;
 
 $(document).ready(function() {
-    startPosition = T5.Geo.Position.init(geoip_latitude(), geoip_longitude());
-    
     function tweenLayers(from, to) {
-        tween = T5.tweenValue(from, to, T5.easing('sine.in'), null, 2000);
-        tween.requestUpdates(function(value, complete) {
+        COG.tweenValue(from, to, T5.easing('sine.in'), 2000, function(val, complete) {
             // update the style values
-            styleA.update('globalAlpha', value);
-            styleB.update('globalAlpha', 1 - value);
+            styleA.update('globalAlpha', val);
+            styleB.update('globalAlpha', 1 - val);
+            map.invalidate();
 
             // if complete, then go again (in reverse)
             if (complete) {
@@ -48,6 +45,6 @@ $(document).ready(function() {
     }));
 
     // goto the specified position
-    map.gotoPosition(startPosition, 13);
+    map.gotoPosition(DEMO.getHomePosition(), 13);
     tweenLayers(0, 1);
 });

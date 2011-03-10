@@ -1,41 +1,67 @@
 var map;
 
+function displayFirstElement(elements, hideDelay) {
+    if (elements.length > 0) {
+        var props = elements[0].target ? elements[0].target.properties : null;
+        if (props) {
+            DEMO.status(props.name, hideDelay);
+            elements[0].target.scale = hideDelay ? 1 : 1.2;
+        } // if
+    } // if
+}
+
 $(document).ready(function() {
-    T5.Style.load('/js/tile5/style/map-overlays.js');
+    DEMO.loadStyle('map-overlays');
 
     // initialise the map
-    map = T5.Map({
-        container: 'mapCanvas'
+    map = new T5.Map({
+        container: 'mapCanvas',
+        clipping: true,
+        minZoom: 3,
+        maxZoom: 10
     });
-    
-    /*
-    map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
-            // demo api key, register for an API key
-            // at http://dev.cloudmade.com/
-            apikey: '7960daaf55f84bfdb166014d0b9f8d41',
-            styleid: 999
-    }));
-    */
+
+    // set the map background to an oceanesque colour...
+    // $('#mapCanvas').css('background', '#5f8dd3');
 
     // goto the specified position
-    map.gotoPosition(T5.Geo.P.parse('37.16 -96.68'), 3);
+    map.gotoPosition(T5.Geo.Position.parse('37.16 -96.68'), 3);
+    
+    map.bind('hoverHit', function(evt, elements, absXY, relXY, offsetXY) {
+        displayFirstElement(elements);
+    });
+    
+    map.bind('tapHit', function(evt, elements, absXY, relXY, offsetXY) {
+        displayFirstElement(elements, 1000);
+    });    
+    
+    map.bind('hoverOut', function(evt, elements, absXY, relXY, offsetXY) {
+        displayFirstElement(elements, 100);
+    });
+
+    DEMO.status('Loading World Data');
     
     // get the walmarts data
     $.ajax({
         url: '/js/data/world.json',
         dataType: 'json',
         success: function(data, textStatus, raw) {
-            COG.info('parsing geojson data');
+            DEMO.status('Parsing GeoJSON');
+
             T5.GeoJSON.parse(data, function(layers) {
                 for (layerId in layers) {
                     layers[layerId].style = 'area.simple';
+                    layers[layerId].hoverStyle = 'area.highlight';
+                    layers[layerId].downStyle = 'area.highlight';
                     
                     map.setLayer(layerId, layers[layerId]);
                 } // for
+                
+                DEMO.status();
             });
         },
         error: function(raw, textStatus, errorThrown) {
-            COG.warn('error: ' + textStatus, errorThrown);
+            DEMO.status('Error loading data', 1000);
         }
     });    
 });

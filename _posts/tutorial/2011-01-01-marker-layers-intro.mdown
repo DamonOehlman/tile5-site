@@ -1,0 +1,26 @@
+---
+layout: tutorial
+title:  Marker Layers Intro
+code: marker-layers-intro
+
+categories:
+ - tutorial
+---
+
+In this tutorial we will demonstrate how to add a T5.ImageMarker to the marker layer of a map.
+
+## Maps and Markers
+
+Using markers with maps is a reasonably simple affair.  Consider the following example, where we already have a T5.Map created and available as the variable `map`.
+
+<pre id="simpleMapMarker" class="prettyprint"> </pre>
+
+In the code above, we are creating a new T5.ImageMarker (which extends T5.Marker) and this is used to display an image marker on the map.  As part of the initialization of the T5.ImageMarker, we can provide urls for the image that will be used when the annotation is static and for the image that will be used when the marker is animating.  The `animatingImageUrl` is optional, and if not provided the image specified in `imageUrl` will be used.
+
+Additionally, we specify the anchor position for the image (which is basically where in the image the pin point is) and any animation effects that we want.  The animation parameters (`tweenIn` and `animationSpeed`) are both optional, and if omitted the marker will be statically displayed.
+
+## Markers and GeoXY
+
+Tne parameter we haven't talked about is the `xy` coordinate of the annotation.  In previous implementations of Tile5 we supplied a position to the annotation, but this restricts an annotations use to Geospatial applications.  We now supply the `xy` position of the image annotation with a magical class called the T5.GeoXY.
+
+The T5.GeoXY is basically a "spatially aware" vector that will automatically convert a position to it's virtual screen coordinate at the appropriate time.  No action is required on your part to make this happen, layers that understand GeoXY objects watch for the appropriate events in Tile5 and make the conversions when necessary.

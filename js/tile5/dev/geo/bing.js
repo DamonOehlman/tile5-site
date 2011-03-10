@@ -36,7 +36,7 @@ T5.Geo.Bing = (function() {
                 // display the copyright appropriately
                 T5.userMessage('ack', 'bing', data.copyright);
 
-                // self.setZoomRange(resourceData.zoomMin + 1, resourceData.zoomMax);
+                // _self.setZoomRange(resourceData.zoomMin + 1, resourceData.zoomMax);
 
                 T5.Tiling.tileSize = resourceData.imageHeight;
 
@@ -71,7 +71,7 @@ T5.Geo.Bing = (function() {
         /* exports */
         
         // initialise the url builder
-        function buildTileUrl(tileX, tileY, maxTileX, maxTileY, zoomLevel) {
+        function buildTileUrl(tileX, tileY, numTiles, zoomLevel) {
             // initialise the image url
             var quadKey = quad(tileX, tileY, zoomLevel);
                 tileUrl = 
@@ -103,12 +103,12 @@ T5.Geo.Bing = (function() {
         } // if
 
         // initialise the generator
-        var self = COG.extend(new T5.Geo.OSM.Generator(params), {
+        var _self = COG.extend(new T5.Geo.OSM.Generator(params), {
             buildTileUrl: buildTileUrl,
             prepTileCreator: prepTileCreator
         });
             
-        return self;        
+        return _self;        
     };
     
     // register the generator

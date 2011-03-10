@@ -1,0 +1,22 @@
+---
+layout: default
+---
+
+<link rel="stylesheet" href="/js/prettify/prettify.css" />
+
+{{ content }}
+
+<script>
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/tile5/0.9.4.1/tile5.js').wait()
+.script('/js/tile5/0.9.4.1/geo/osm.js')
+.script('/js/prettify/prettify.js')
+.script('/js/tutorials/script.js').wait()
+.script('/js/tutorials/{{ page.code }}.js').wait(function() {
+	TUTOR.run();
+});
+</script>

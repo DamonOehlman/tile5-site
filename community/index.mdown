@@ -1,0 +1,16 @@
+---
+layout: default
+title:  Get Involved with Tile5
+---
+
+There are a number of ways that you can get involved with Tile5, whether you are interested in using Tile5 or actively contributing to Tile5.
+
+## Keep Up To Date
+
+To keep up to date with Tile5 developments, the most effective way is through [following Tile5 on Twitter](http://twitter.com/tile5js).
+
+## Developer Mailing List
+If you are using or are interested in using Tile5 and have questions, then please join the [mailing list](http://groups.google.com/group/tile5/) and send your questions through there.
+
+## Fork the Source
+The [Tile5 source](http://github.com/sidelab/tile5) is hosted on Github, which means that it can easily be forked and modified in your own personal space. So please feel free to do this, and if you make some changes that you think would be useful to others then let us know and we will look at merging those changes back in.

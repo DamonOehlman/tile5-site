@@ -46,12 +46,12 @@ GEOCOMMONS_DEMO = (function() {
                     },
                     error: function(raw, textStatus, errorThrown) {
                         COG.info('error triggered');
-                        status();
+                        DEMO.status();
                     },
                     complete: function(raw, textStatus) {
                         COG.info('complete triggered');
                         if (! layerData[layerId]) {
-                            status();
+                            DEMO.status();
                         } // if
                     }
                 };
@@ -64,28 +64,22 @@ GEOCOMMONS_DEMO = (function() {
                 });
             } // if
             
-            status('Retrieving Layer (#' + layerId + ') Data');
+            DEMO.status('Retrieving Layer (#' + layerId + ') Data');
             
             $.ajax(ajaxOpts);
         } // if..else
     } // loadLayerData
     
     function resetMap(callback) {
-        map.gotoPosition(T5.Geo.Position.init(43.961, -36.566), 2, callback);
+        map.gotoPosition(T5.Geo.Position.init(41.77131167976406, -101.07421875), 2, callback);
+        
+        map.markers.clear();
+        map.markers.add(new T5.ImageMarker({
+            imageUrl: "/img/pins/pin-158935-1-24.png",
+            imageAnchor: T5.XY.init(8, 24),
+            xy: T5.GeoXY.init(T5.Geo.Position.init(41.77131167976406, -101.07421875))
+        }));
     } // resetMap
-    
-    function status(statusMsg) {
-        var statusContainer = $('#status');
-        
-        COG.info('status message = ' + statusMsg);
-        
-        if (! statusMsg) {
-            statusContainer.hide();
-        }
-        else {
-            statusContainer.html(statusMsg).fadeIn();
-        } // if..else
-    } // statusMsg
     
     /* exports */
     
@@ -103,11 +97,11 @@ GEOCOMMONS_DEMO = (function() {
         loadLayerData(overlayId, function(data) {
             // if this request is still valid then process
             if (sequenceId === sequenceCounter) {
-                status('parsing GeoJSON data');
+                DEMO.status('parsing GeoJSON data');
                 resetMap(function() {
                     displayOverlay(overlayId, data);
 
-                    status(loading = false);
+                    DEMO.status();
                 });
             } // if
         }, sequenceId);
@@ -124,7 +118,7 @@ GEOCOMMONS_DEMO = (function() {
     };
     
     $(document).ready(function() {
-        T5.Style.load('/js/tile5/style/map-overlays.js');
+        DEMO.loadStyle('map-overlays');
 
         map = new T5.Map({
             container: "mapCanvas"
@@ -149,10 +143,6 @@ GEOCOMMONS_DEMO = (function() {
             
             $(this).after(' <a class="geocommons" target="_blank" href="http://geocommons.com/overlays/' + layerId + '">geocommons</a>');
         });
-        
-        if (location.hash) {
-            load(location.hash.replace(/^#(.*)$/, '$1'));
-        } // if
     });
     
     return module;

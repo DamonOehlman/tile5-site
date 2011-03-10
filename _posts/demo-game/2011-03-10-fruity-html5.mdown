@@ -1,0 +1,12 @@
+---
+layout: sample
+title:  Fruity HTML5
+sample: games-fruity
+version: dev
+
+categories:
+ - demo-games
+
+thumbnail: /img/samples/custom-markers.png
+---
+

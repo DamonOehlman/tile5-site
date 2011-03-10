@@ -53,7 +53,7 @@ function displayStores(year, withEasing) {
         markers[markers.length] = new T5.ImageMarker({
             xy: T5.GeoXY.init(storePos),
             image: glowMarker,
-            tweenIn: withEasing ? T5.easing('sine.out') : null,
+            tweenIn: withEasing ? COG.easing('sine.out') : null,
             animationSpeed: 250
         });
         

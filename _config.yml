@@ -3,5 +3,12 @@ description: "HTML5 Mobile Optimized Mapping and Tiling Library.  Available unde
 theme: tile5
 ga-code: UA-8447893-8
 permalink: /:categories/:title
+google-site-verification: TQKLiOHEgndgtpmDLSr7_Olj7b51CLLH1mPHUW3VeMA
+root: /
 
 pygments: true
+
+authors:
+    DamonOehlman:
+        name: Damon Oehlman
+        mailhash: ed265adf145a12d2e5f09b2a761f232f

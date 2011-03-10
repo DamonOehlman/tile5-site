@@ -4,7 +4,7 @@ title:  Layer Transitions
 sample: layer-transitions
 
 categories:
- - demo
+ - demo-mapping
 
 thumbnail: /img/samples/layer-transitions.jpg
 ---

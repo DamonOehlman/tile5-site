@@ -1,0 +1,18 @@
+---
+layout: sample
+title:  GeoJSON Geocommons
+sample: geojson-geocommons
+
+categories:
+ - demo-mapping
+
+thumbnail: /img/samples/geojson-geocommons.png
+controls: geojson-geocommons
+---
+
+This is a demo showing Tile5 GeoJSON support (in progress) working with GeoJSON output from [Geocommons](http://geocommons.com/). For more information on how to retrieve GeoJSON output from GeoCommons - see this [blog post on how to integrate GeoCommons with Polymaps](http://developer.geoiq.com/blog/2010/12/08/integrating-geocommons-datasets-with-polymaps/).
+
+### Current Limitations
+
+- Complete GeoJSON spec not yet implemented.
+- Interacting with GeoJSON layers not yet implemented.

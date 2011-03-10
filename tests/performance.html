@@ -1,0 +1,28 @@
+---
+layout: raw
+title:  Tile5 Demo
+---
+
+<script src="/js/LAB.min.js"></script>
+<div id="statusBox" style="display: none;"><a href="#" onclick="SIMULATOR.start(200);">Start Tests</a></div>
+<div id="mapContainer">
+	<canvas id="mapCanvas">
+</div>
+<script>
+var version = 'dev';
+
+if (location.hash) {
+	version = location.hash.replace('#', '');
+} // if
+
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/tile5/' + version + '/tile5.min.js').wait()
+.script('/js/tile5/' + version + '/geo/osm.js').wait()
+.script('https://github.com/sidelab/tile5/raw/master/test/performance/simulator.js').wait(function() {
+	$('#statusBox').show();
+});
+</script>

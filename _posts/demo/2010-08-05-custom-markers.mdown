@@ -2,9 +2,10 @@
 layout: sample
 title:  Custom Markers
 sample: custom-markers
+version: dev
 
 categories:
- - demo
+ - demo-mapping
 
 thumbnail: /img/samples/custom-markers.png
 ---

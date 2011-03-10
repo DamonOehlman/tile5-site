@@ -1,0 +1,25 @@
+---
+layout: article
+title:  0.9.4.2 Update - Progress with Inertial Scrolling
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+I've made some pretty good progress towards a `0.9.4.2` version, so hopefully we will be able to provide another stable release of Tile5 in the very near future.  So far the following features have been implemented:
+
+- Screen redraw improved for transition between zoom layers. (0.9.4.1 was pretty agressive with clearing the screen).
+
+- Implemented the `requestAnimationFrame` for animation where possible which further improves performance on browsers that support this feature.  Once I saw this implemented in [PhiloGL](http://senchalabs.github.com/philogl/) I absolutely had to implement it :)
+
+- Improved deCarta tile rendering by eliminating the need for an extra call to the deCarta servers.  A big thanks to the guys at [deCarta](http://decarta.com/) for including the source for their new [HTML5 Mobile Javascript library](http://developer.decarta.com/docs/read/Mobile_JS) which included some tasty nuggets on how to improve Tile5.
+
+- Implemented _inertial scrolling_ into the supporting [Interact](http://sidelab.github.com/interact) library, so Tile5 maps now have _inertial scrolling_ back active.  Still a few tweaks here, but the implementation is probably a little stronger than the first time round.
+
+- Mouse over events are captured in Interact now also, so we will be able to support interaction with markers (and eventually shapes) by both tap and hover events.  Might try and release a demo illustrating the new `hoverHit` and `tapHit` events of a `T5.View`.
+
+There are still a [few things](https://github.com/sidelab/tile5/issues/labels/0.9.4.2) to sort out before making another release, but I think it is safe to say that it will be sooner rather than later.
+
+In the meantime if you would like to have a look, the [Animated Routing Demo](/demo-mapping/routing-animated) is using the dev version of Tile5, and the [source repository](https://github.com/sidelab/tile5) contains source code current at the time of writing this article.

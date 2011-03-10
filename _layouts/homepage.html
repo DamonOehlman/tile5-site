@@ -1,0 +1,48 @@
+---
+layout: default
+---
+
+<div id="statusMessage"></div>
+<div id="homedemo">
+	<!--
+	<a href="#" class="navigator next">next</a>
+	<a href="#" class="navigator back">back</a>
+	-->
+	<h3></h3>
+	<div id="mapContainer">
+		<canvas id="mapCanvas"></canvas>
+	</div>
+	<p><a href="/demos/mapping">More HTML5 Mapping Demos &amp; Sample Code</a></p>
+</div>
+
+<script>
+var demos = [
+		'layer-transitions',
+//		'animated-map-markers',
+// 		'geojson-world'
+	],
+	demoIndex = 0;
+
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/t5demos.js?v={{ site.time | date_to_xmlschema }}').wait(function() {
+	DEMO.run(demos[demoIndex], '#homedemo h3');
+	
+	$('a.navigator').fadeIn().click(function() {
+		var increment = $(this).hasClass('next') ? 1 : -1;
+		
+		demoIndex = (demoIndex + increment) % demos.length;
+		if (demoIndex < 0) {
+			demoIndex += demos.length;
+		} // if
+		
+		$('#homedemo h3').html('');
+		DEMO.run(demos[demoIndex], '#homedemo h3');
+	});
+});
+</script>
+
+{{ content }}

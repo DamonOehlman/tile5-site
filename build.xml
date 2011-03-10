@@ -21,4 +21,23 @@ http://github.com/jquery/jquery/blob/master/build.xml
 			<fileset dir="tile5/src/style" />
 		</copy>
 	</target>
+	
+	<target name="docs">
+		<exec executable="sh" dir="tile5">
+			<arg line="docs-build.sh" />
+		</exec>
+		
+		<copy todir="docs/api/dev">
+			<fileset dir="tile5/dist/docs" />
+			
+			<filterchain>
+				<tokenfilter>
+					<replacestring from="h1" to="h2" />
+				</tokenfilter>
+			</filterchain>
+		</copy>
+		
+		<move file="docs/api/dev/_index.json" tofile="docs/api/dev/index.json" />
+		<move file="docs/api/dev/_index.html" tofile="docs/api/dev/index.html" />
+	</target>
 </project>

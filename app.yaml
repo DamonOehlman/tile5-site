@@ -4,22 +4,25 @@ runtime: python
 api_version: 1
 
 handlers:
+- url: /tile/.*
+  script: tile.py
+  
 - url: /(.*\.(html|js|css|gif|png|jpg|xml|json|txt|ico|swf))
-  static_files: _site/\1
-  upload: _site/(.*\.(html|js|css|gif|png|jpg|xml|json|txt|ico|swf))
-  
+  static_files: \1
+  upload: (.*\.(html|js|css|gif|png|jpg|xml|json|txt|ico|swf))
+
 - url: /tag/(.*/?)
-  static_files: _site/category/\1index.html
-  upload: _site/category/(.*/?)index.html
-  
+  static_files: category/\1index.html
+  upload: category/(.*/?)index.html
+
 - url: /
-  static_files: _site/index.html
-  upload: _site/index.html  
-  
+  static_files: index.html
+  upload: index.html  
+
 - url: /(.*/)
-  static_files: _site/\1index.html
-  upload: _site/(.*/)index.html  
-  
+  static_files: \1index.html
+  upload: (.*/)index.html  
+
 - url: /(.*/?)
-  static_files: _site/\1/index.html
-  upload: _site/(.*/?)index.html
+  static_files: \1/index.html
+  upload: (.*/?)index.html

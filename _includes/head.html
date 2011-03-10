@@ -6,15 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Place favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
-<link rel="shortcut icon" href="favicon.png" />
-<link rel="apple-touch-icon" href="apple-touch-icon.png" />
-<link rel="stylesheet" href="/css/base.css?v={{ site.time | date_to_xmlschema }}" />
-<link rel="stylesheet" href="/css/themes/{{ site.theme }}.css?v={{ site.time | date_to_xmlschema }}" />
-<link rel="stylesheet" href="/css/custom-style.css?v={{ site.time | date_to_xmlschema }}" />
-<link rel="stylesheet" media="screen and (min-width: 701px)" href="/css/custom-style-desktop.css?v={{ site.time | date_to_xmlschema }}" />
+<link rel="shortcut icon" href="{{ site.root }}favicon.png" />
+<link rel="apple-touch-icon" href="{{ site.root }}apple-touch-icon.png" />
+<link rel="stylesheet" href="{{ site.root }}css/base.css?v={{ site.time | date_to_xmlschema }}" />
+<link rel="stylesheet" href="{{ site.root }}css/themes/{{ site.theme }}.css?v={{ site.time | date_to_xmlschema }}" />
+<link rel="stylesheet" href="{{ site.root }}css/custom-style.css?v={{ site.time | date_to_xmlschema }}" />
+<link rel="stylesheet" media="screen and (min-width: 701px)" href="{{ site.root }}css/custom-style-desktop.css?v={{ site.time | date_to_xmlschema }}" />
 <!--[if IE 9 ]>
 <link rel="stylesheet" media="screen" href="/css/custom-style-desktop.css?v={{ site.time | date_to_xmlschema }}" />
 <![endif]-->
-<script src="/js/libs/modernizr-1.6.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script src="{{ site.root }}js/libs/modernizr-1.6.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+<script>!window.jQuery && document.write('<script src="{{ site.root }}js/libs/jquery-1.5.1.min.js"><\/script>')</script>
 {% include custom-head.html %}

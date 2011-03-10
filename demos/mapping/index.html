@@ -1,0 +1,22 @@
+---
+layout: default
+title:  Mapping Demos
+---
+
+<p class="note">
+We have brought across most of the demos from both the <a href="http://sandbox.tile5.org/">Sandbox</a> 
+and <a href="http://4.latest.tile5js.appspot.com/">previous Tile5 site</a> here. 
+ We still have to finish off some of the features (such as allowing you to change providers at run-time) so 
+if this is of interest to you, we would recommend you can can visit 
+the <a href="http://4.latest.tile5js.appspot.com/demos/mapping/">Previous Demo Interface</a>
+</p>
+
+<p>
+Displayed below are the various mapping demos that we have put together for Tile5.
+From time to time we will include demos here that are using the current development branch of Tile5.  These
+demos are indicated below.
+</p>
+
+{% for post in site.categories.demo-mapping %}
+	{% include custom-demo-summary.html %}
+{% endfor %}

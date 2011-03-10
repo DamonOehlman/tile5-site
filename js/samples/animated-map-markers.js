@@ -23,10 +23,12 @@ function movePlane(evt, offset, tickCount) {
             startPosition, 
             arcRadius * Math.sin(angle),
             arcRadius * Math.cos(angle));
-        
-        plane.rotation = TWO_PI - angle;
+            
         T5.GeoXY.updatePos(plane.xy, newPosition);
+        
+        plane.rotate(TWO_PI - angle);
         map.panToPosition(newPosition);
+        map.invalidate();
     }
     
     lastTickCount = tickCount;
@@ -34,12 +36,13 @@ function movePlane(evt, offset, tickCount) {
 } // movePlane
 
 $(document).ready(function() {
-    startPosition = T5.Geo.Position.init(geoip_latitude(), geoip_longitude());
+    startPosition = DEMO.getHomePosition();
     planeStart = T5.Geo.Position.offset(startPosition, 0, -arcRadius);
 
     // initialise the map
-    map = T5.Map({
-        container: 'mapCanvas'
+    map = new T5.Map({
+        container: 'mapCanvas',
+        clipping: false
     });
 
     map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
@@ -56,8 +59,11 @@ $(document).ready(function() {
     plane = new T5.ImageMarker({
         xy: T5.GeoXY.init(planeStart),
         imageUrl: '/img/fly/plane.png',
-        scale: getPlaneScale()
+        transformable: true
     });
+    
+    // make the plane transformable
+    plane.scale(getPlaneScale());
 
     // add the marker to the map
     map.markers.animated = true;
@@ -72,7 +78,7 @@ $(document).ready(function() {
     });
 
     // handle tapping markers
-    map.markers.bind('markerTap', function(evt, absXY, relXY, markers) {
-       COG.info('hit the plane - yeah :)');
+    map.bind('tapHit', function(evt, elements, absXY, relXY, offsetXY) {
+        DEMO.status('tapped the plane', 1200);
     });
 });

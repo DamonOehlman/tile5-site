@@ -1,0 +1,38 @@
+---
+layout: article
+title:  0.9.4.2 Released
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+Just a quick update to announce that the `0.9.4.2` release is now available, and as per the previous [post](/news/progress-with-inertial-scrolling) this is very much just a further stablization of the `0.9.4` branch (with some old features integrated back into the library).
+
+Additionally, I did slip a new feature in around the ability to hover over markers and this is demonstrated in the [Marker Hit Test](/demo-mapping/marker-hit-test) demo.
+
+## A Note Regarding Tile5 Performance
+
+If you visit or have subscribed to the [Tile5 Mailing List](https://groups.google.com/forum/#!forum/tile5) then you may have seen some discussion around the performance of Tile5 varying between versions.
+
+Over the last few releases I have been attempting to get the balance right between the general "cleanliness" of what is drawn to the canvas and tweaking Tile5 for optimal performance.  While the speed of Javascript on mobile devices will improve  over the next few years, we still have devices that while they support HTML5 their general JS performance is pretty ordinary (case in point being the iPhone 3G).
+
+From my own investigations, I think this release of Tile5 has probably gotten the balance pretty much right and when a map (or view) is initialized the default settings provide solid performance while supporting transparency at both the underlying image tiles level and also overlays.
+
+If, however, you are looking to use Tile5 with older devices and know that you won't be using transparent tiles, then you can opt to switch on `turbo` mode:
+
+{% highlight js %}
+var map = new T5.Map({
+	container: 'mapCanvas',
+	turbo: true
+});
+{% endhighlight %}
+
+In this mode a more aggressive canvas [globalCompositeOperation](http://www.w3.org/TR/2dcontext/#dom-context-2d-globalcompositeoperation) is used (copy) for layers that have a `zIndex` of 0 or less.  This means that transparency in images is not supported.  The impact is not great on desktop or capable mobile devices, but on some slower devices there will be a slight improvement.
+
+To help gauge improvements and determine where further effort is required, I have started constructing a page that will be used to run some performance tests for Tile5.  Eventually this will have the ability to report statistics back to the Tile5 site and allow us gauge some idea of how Tile5 performance on various devices.  
+
+_Unfortunately there is no way to detect an iPhone 3G through the User-Agent string, so who knows maybe I'll build a simple Tile5 app in [PhoneGap](http://www.phonegap.com) that allows users to report back on device performance..._
+
+Presently the test page just runs to simple tests in the standard (non-turbo) mode. Feel free to have a look at the [in-progress version of the page](/tests/performance.html).  Once this page is more complete and tested on a few difference devices, I would certainly appreciate people hitting it and submitting results for analysis.

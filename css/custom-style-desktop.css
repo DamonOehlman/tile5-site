@@ -11,7 +11,7 @@ h1 {
 }
 
 #topdrop {
-    height: 160px;
+    height: 150px;
 }
 
 html.ie8 #topdrop, html.ie7 #topdrop {
@@ -24,4 +24,13 @@ ul.nav {
 
 #mapContainer {
     margin: 0 10px;
+}
+
+#demoControls {
+    margin: 0 10px;
+    -webkit-border-radius: 0 0 8px 8px;
+    -moz-border-radius: 0 0 8px 8px;
+}
+
+ul.tabs {
 }

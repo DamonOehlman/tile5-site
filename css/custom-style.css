@@ -12,6 +12,7 @@
 
 #main img {
     float: right;
+    clear: right;
     border: 4px solid white;
     -webkit-box-shadow: #333 0 1px 2px;
     -moz-box-shadow: #333 0 1px 2px;
@@ -29,6 +30,19 @@
     margin-left: 10px;
     margin-right: 10px;
     clear: left;
+}
+
+div.demo-item[data-version=dev]::before {
+    content: 'dev';
+    display: block;
+    position: absolute;
+    background: #e44d26;
+    padding: 5px 10px;
+    color: white;
+    font: bold 1.2em Arial;
+    -webkit-border-radius: 5px;
+    -webkit-transform: rotate(-18deg);
+    -webkit-box-shadow: rgba(30, 30, 30, 0.3) 0 1px 2px;
 }
 
 div.item {
@@ -100,15 +114,260 @@ div.sample p {
     height: 400px;
     background: url(/img/map-bg.png);
     -webkit-user-select: none;
+    clear: both;
+}
+
+#mapTools {
+    margin: 0 10px;
+    padding: 5px 10px;
+    list-style-type: none;
+    background: #333;
+    -webkit-border-radius: 8px 8px 0 0;
+}
+
+#mapTools li {
+    margin: 0 5px 0 0;
+    padding: 0;
+    display: inline-block;
+    font: bold 0.8em Arial;
+    color: white;
+}
+
+#mapTools select {
+    margin: 0 0 0 5px;
+}
+
+#mapTools img {
+    border: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    margin: 0;
+    float: none;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+#mapTools img:hover {
+    opacity: 1.0;
+}
+
+/* controls style */
+
+#demoControls {
+    background: #e8e8e8;
+    padding: 10px;
+    display: none;
+}
+
+#demoControls table {
+    background: white;
+    -webkit-border-radius: 4px;
+}
+
+#demoControls table th {
+    padding: 4px;
+}
+
+#main td.loader {
+    background: url(/img/loading-2.gif) 10px 50% no-repeat;
+}
+
+/* preferences button */
+
+button#prefs {
+    position: absolute;
+    margin: 0 10px;
+}
+
+/* tutorials */
+
+.showme {
+    margin: 10px 20px 0px 10px;
+}
+
+a.showme {
+    display: inline-block;
+}
+
+.tutorialmap {
+    height: 250px;
+}
+
+.tutorialmap canvas {
+    background: url(/img/map-bg.png);
+}
+
+/* api doc styles */
+
+.apidoc {
+    
+}
+
+.apidoc hr {
+    display: none;
+}
+
+.apidoc h2 a {
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+.apidoc a.index {
+    float: right;
+    margin: 0 10px 0 0;
+}
+
+.apidoc h3 {
+    background: url(/img/information-balloon.png) left 50% no-repeat;
+    font: normal 1.2em 'Inconsolata', Courier;
+    margin-top: 12px;
+    padding-left: 24px;
+}
+
+.apidoc ul {
+    list-style-type: none;
+    margin-left: 10px;
+}
+
+.apidoc ul li {
+    background: url(/img/star-small-empty.png) left 5px no-repeat;
+    padding-left: 20px;
+}
+
+div#index h2 {
+    display: none;
+}
+
+/* article styles */
+
+#main p.article-date {
+    font: bold 0.95em Arial;
+    display: inline-block;
+    margin: 2px 10px;
+}
+
+#main p.article-date img {
+    vertical-align: middle;
+    margin: 0 6px 0 0;
+    border: 0;
+    -webkit-box-shadow: inset #333 0 0 2px;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    float: none;
+    -webkit-border-radius: 4px;
+}
+
+/* roadmap styles */
+
+
+ul.roadmap-items {
+    list-style-type: none;
+    margin-left: 10px;
+}
+
+ul.roadmap-items li {
+    background: url(/img/star-small-empty.png) left 5px no-repeat;
+    padding-left: 24px;
+}
+
+ul.roadmap-items li.bug {
+    background-image: url(/img/exclamation-diamond.png);
+}
+
+ul.roadmap-items li.request {
+    background-image: url(/img/cake.png);
+}
+
+ul.roadmap-items li.refactor {
+    background-image: url(/img/wrench.png);
+}
+
+ul.roadmap-items li.sponsored::after {
+    content: 'sponsored';
+    background: #e44d26;
+    margin: -2px 0 0 10px;
+    display: inline-block;
+    padding: 3px 8px;
+    color: white;
+    font: bold 0.8em Arial;
+    -webkit-border-radius: 5px;
+    -webkit-box-shadow: rgba(30, 30, 30, 0.3) 0 0 2px;    
+}
+
+ul.roadmap-items li.in-dev::before {
+    content: 'dev';
+    font: 0.75em Arial;
+    margin-right: 5px;
+    padding-bottom: 2px;
+}
+
+/* footer */
+
+footer {
+    margin: 10px;
+    text-align: center;
+}
+
+/* status message */
+
+#statusMessage {
+    position: absolute;
+    top: -80px;
+    left: 20%;
+    right: 20%;
+    padding: 10px 0;
+    width: 60%;
+    text-align: center;
+    font: 1.2em Arial;
+    background: #777;
+    color: white;
+    -webkit-border-radius: 0 0 8px 8px;
+    -webkit-box-shadow: #333 0 1px 2px;
+    -webkit-transition: all 0.3s ease-in-out;
+}
+
+#statusMessage.dropped {
+    top: 0px;
+}
+
+/* homepage demo pages */
+
+#homedemo {
+    float: right;
+    margin: 0 10px 0 20px;
+    width: 50%;
+    padding: 2px;
+    background: #333;
+    color: white;
+    -webkit-border-radius: 8px;
+    text-align: center;
+}
+
+#homedemo a {
+    color: #e8e8e8;
+}
+
+#homedemo a.navigator {
+    margin: 10px;
+    display: none;
+}
+
+#homedemo a.next {
+    float: right;
+}
+
+#homedemo a.back {
+    float: left;
 }
 
 @media screen and (max-width: 700px) {
     #topdrop {
-        height: 90px;
+        height: 80px;
     }
     
     #topdrop.dropped {
-        height: 254px;
+        height: 245px;
     }
 
     #logo a {
@@ -120,6 +379,10 @@ div.sample p {
     #main img {
         margin: 0 2% 10px;
         max-width: 94%;
+    }
+    
+    #homedemo {
+        display: none;
     }
 }
 
@@ -139,6 +402,12 @@ div.sample p {
     
     #mapContainer {
         height: 220px;
-        margin-top: -13px;
-    }    
+    }
+    
+    #mapTools {
+        margin: 0;
+        -webkit-border-radius: 0;
+        -moz-border-radius: 0;
+        border-radius: 0;
+    }
 }

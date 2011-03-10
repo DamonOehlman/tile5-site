@@ -2,9 +2,10 @@
 layout: sample
 title:  Animated Map Markers
 sample: animated-map-markers
+version: dev
 
 categories:
- - demo
+ - demo-mapping
 
 thumbnail: /img/samples/animated-map-markers.jpg
 ---
