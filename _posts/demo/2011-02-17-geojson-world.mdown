@@ -8,6 +8,7 @@ categories:
  - demo-mapping
 
 thumbnail: /img/samples/geojson-world.png
+controls: geojson-world
 ---
 
 This demo shows how you can use a local [GeoJSON](http://geojson.org/) file and display it alongside standard map tiles.  It is also possible to use a geojson file without the map layer if that is desired.

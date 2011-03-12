@@ -1,0 +1,14 @@
+---
+layout: sample
+title:  World Earthquakes
+sample: visualization-earthquakes
+version: dev
+
+categories:
+ - demo-mapping
+
+thumbnail: /img/samples/visualization-earthquakes.png
+controls: visualization-earthquakes
+---
+
+Today, a massive earthquake hit Japan and frustrated by the lack of good visualizations showing what had happened (in terms of the actual earthquakes) this was put together.

@@ -1,0 +1,74 @@
+---
+layout: article
+title:  Animation Refinements
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+I've said it before, but I'll say it again.
+
+>  I rarely get things write the first time around.
+
+Surely someone else has said that before, so if you know please let me know and I'll make sure they get due credit.  Any way, the topic for today is animation.  Right from the beginning, I have said the polish and feel of Tile5 is one of the things that I really wanted to focus on (oh, and performance, and..).  Part of polish really is animation, and while Tile5 had animation in areas it wasn't implemented in a way that made it really usable in other places.
+
+For instance, in the past if you wanted an animated marker, you would specify animation properties when you created it, e.g:
+
+{% highlight js %}
+var marker = new T5.ImageMarker({
+    imageUrl: "/img/pins/pin-158935-1-24.png",
+    tweenIn: COG.easing('bounce.out'),
+    imageAnchor: T5.XY.init(8, 24),
+    xy: T5.GeoXY.init(position)
+});
+{% endhighlight %}
+
+Great if you wanted a marker to drop from the sky when it was created (which is kind of neat), but kind of limiting if you want that functionality for anything else.  So in the current `0.9.5` development branch I've been working on some changes.
+
+It is a bit of a change though, and probably not quite as easy to use, but definitely more powerful. _Not as powerful as what you can do with the likes of [Raphaël](http://raphaeljs.com/) though, it must be said. (/ht [Dmitry Baranovskiy](http://twitter.com/DmitryBaranovsk))_
+
+So what do you do to animate a marker dropping from the sky now then, I hear you ask?  Well, let me show you:
+
+Firstly, you define the marker as `transformable`:
+
+{% highlight js %}
+var marker = new T5.ImageMarker({
+    imageUrl: "/img/pins/pin-158935-1-noshadow-24.png",
+    imageAnchor: T5.XY.init(8, 24),
+    xy: T5.GeoXY.init(position),
+    transformable: true
+});
+{% endhighlight %}
+
+When a marker (or any `T5.Drawable` in the `0.9.5` branch is created as transformable) the transformation operations of `translate`, `rotate` and `scale` may be applied to it.  In addition to patching in these additional methods, the functions can also be animated using the `animate` method.  The syntax of the animate method being:
+
+{% highlight js %}
+drawable.animate(
+	methodName, // name of the trans. method as a string (translate, rotate, scale)
+	startArgs, // the numerical start args in an array, i.e. [0, 0] for translate
+	endArgs, // the numerical end args in an array, i.e. [50, 0] for translate
+	easingFnName, // the easing function name, e.g. 'sine.out'
+	duration, // the duration of the easing effect
+	callback // a callback that will be fired once the animation has been completed
+);
+{% endhighlight %}
+
+So given that you can translate a marker's position from the specified `xy` position using `marker.translate(50, 50)`, you could animate the marker to that position using the `animate` method:
+
+{% highlight js %}
+marker.animate('translate', [0, 0], [50, 50], 'sine.out', 500);
+{% endhighlight %}
+
+Likewise, you can all the rotate method to tip a marker on it's side by calling `marker.rotate(Math.PI / 2)` so you would animate it using:
+
+{% highlight js %}
+marker.animate('rotate', [0], [Math.PI / 2], 'bounce.out', 1000);
+{% endhighlight %}
+
+I've updated the [Marker Hit Test](/demo-mapping/marker-hit-test) to use these new animation function so you can have a look at it in action there.  While not finalized, I feel pretty happy with this implementation and it will definitely provide more scope for doing more customization animations in Tile5 applications.
+
+### A Note on Cross Browser Compatibility and Transforms
+
+While as far as I can tell, the actual animation code works well across Chrome, Firefox and Opera, there are some implications to the ability to hit test transformed objects in Firefox.  This is due to a difference in the way that Firefox has currently implemented the [isPointInPath](http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-context-2d-ispointinpath) function.  While I have implemented workarounds for the simple cases of hit detection rotation and scale transforms are not accounted for so just be aware of this before you get super enthusiastic about implementing them...

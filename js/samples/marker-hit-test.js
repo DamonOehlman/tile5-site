@@ -1,5 +1,7 @@
 // Set the source of the JSON 
-var SEARCH_URL = 'http://ws.geonames.org/searchJSON?country=AU&fcode=PPL&maxRows=100';
+var SEARCH_URL = 'http://ws.geonames.org/searchJSON?country=AU&fcode=PPL&maxRows=100',
+    minRotate = 0,
+    maxRotate = Math.PI / 2;
 
 function loadData(data){
     var ii;
@@ -14,13 +16,17 @@ function loadData(data){
             
         // initialise the new marker
         var marker = new T5.ImageMarker({
-            population: placeData.population,
-            name: placeData.name,
-            imageUrl: "/img/pins/pin-158935-1-24.png",
-            tweenIn: COG.easing('bounce.out'),
-            imageAnchor: T5.XY.init(8, 24),
-            xy: T5.GeoXY.init(position)
-        });
+                population: placeData.population,
+                name: placeData.name,
+                imageUrl: "/img/pins/pin-158935-1-noshadow-24.png",
+                imageAnchor: T5.XY.init(8, 24),
+                xy: T5.GeoXY.init(position),
+                transformable: true
+            }),
+            aniDuration = Math.random() * 500 + 250;
+        
+        marker.animate('scale', [1.5], [1], 'sine.out', aniDuration);
+        marker.animate('translate', [0, -400], [0, 0], 'sine.out', aniDuration);
         
         // add the marker to the map
         map.markers.add(marker);
@@ -29,6 +35,19 @@ function loadData(data){
     DEMO.status('TIP: Hover over markers to highlight, tap to get info.', 1200);
     map.invalidate();
 } // loadData
+
+function tapMarker(marker) {
+    marker.animate(
+        'rotate', 
+        [marker.tapped ? maxRotate : minRotate], 
+        [marker.tapped ? minRotate : maxRotate],
+        'bounce.out', 
+        1000, 
+        function() {
+            marker.tapped = ! marker.tapped;
+        }
+    );
+} // tapMarker
 
 function handleHover(evt, elements, absXY, relXY, offsetXY) {
     for (var ii = elements.length; ii--; ) {
@@ -41,7 +60,7 @@ function handleHover(evt, elements, absXY, relXY, offsetXY) {
 
 function handleHoverOut(evt, elements, absXY, relXY, offsetXY) {
     for (var ii = elements.length; ii--; ) {
-        elements[ii].target.changeImage('/img/pins/pin-158935-1-24.png');
+        elements[ii].target.changeImage('/img/pins/pin-158935-1-noshadow-24.png');
     } // for
     
     // invalidate the map
@@ -52,7 +71,10 @@ function handleTap(evt, elements, absXY, relXY, offsetXY) {
     var tappedNames = [];
     
     for (var ii = elements.length; ii--; ) {
-        tappedNames.push(elements[ii].target.name);
+        var marker = elements[ii].target;
+        
+        tappedNames.push(marker.name);
+        tapMarker(marker);
     } // for
     
     DEMO.status('tapped: ' + tappedNames.join(', '), 1200);
