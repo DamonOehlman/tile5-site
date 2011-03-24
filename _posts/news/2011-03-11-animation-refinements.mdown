@@ -72,3 +72,40 @@ I've updated the [Marker Hit Test](/demo-mapping/marker-hit-test) to use these n
 ### A Note on Cross Browser Compatibility and Transforms
 
 While as far as I can tell, the actual animation code works well across Chrome, Firefox and Opera, there are some implications to the ability to hit test transformed objects in Firefox.  This is due to a difference in the way that Firefox has currently implemented the [isPointInPath](http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-context-2d-ispointinpath) function.  While I have implemented workarounds for the simple cases of hit detection rotation and scale transforms are not accounted for so just be aware of this before you get super enthusiastic about implementing them...
+
+## UPDATE (2011-03-15): Update to Animate Function Signature
+
+After having a bit of a play around with a few test apps, I have decided that the following is probably the more appropriate signature for the `animate` function:
+
+{% highlight js %}
+drawable.animate(
+	methodName, // name of the trans. method as a string (translate, rotate, scale)
+	startArgs, // the numerical start args in an array, i.e. [0, 0] for translate
+	endArgs, // the numerical end args in an array, i.e. [50, 0] for translate
+	opts // animation options
+);
+{% endhighlight %}
+
+The options array is an object literal with the following default values:
+
+{% highlight js %}
+opts = {
+	easing: 'sine.out', // the name of the easing equation that will be used
+	duration: 1000, // the duration of the animation
+	progress: null, // a callback that is triggered on animation progress
+	complete: null, // a callback that is triggered on animation completion
+	autoInvalidate: true // whether or not the animation target should be invalidate on changes
+};
+{% endhighlight %}
+
+And finally the format of the callbacks is:
+
+{% highlight js %}
+function progressCallback(complete, args*) {
+} // progressCallback
+
+function completeCallback(args*) {
+} // completeCallback
+{% endhighlight %}
+
+Essentially, if you want to know everything that is going on and update the values in your application in response to the animation you will want to use the progress callback.  The first parameter of the function contains a completion flag for the animation so there is no need to bind to the complete callback if you are interested in both events.  The `args*` parameter contains the current argument values that are passed to the transformation function.  This is also true of the complete callback which is only fired once the animation has been completed.

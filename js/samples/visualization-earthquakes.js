@@ -1,48 +1,61 @@
-QUAKES = (function() {
-    var YQL_QUERY = "http://query.yahooapis.com/v1/public/yql?format=json&q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.iris.edu%2Fservlet%2Feventserver%2FeventsXML.do%3Fpriority%3Dtime%26PointsMax%3D200%26LatMax%3D82.81%26LatMin%3D-70.14%26LonMax%3D178.95%26LonMin%3D-171.21'",
-        TIME_INCREMENT = 120000,
+DEMO.Sample = (function() {
+    var YQL_QUERY = "http://query.yahooapis.com/v1/public/yql?format=json&q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.iris.edu%2Fservlet%2Feventserver%2FeventsXML.do%3Fpriority%3Dtime%26StartDate%3D20110311%26PointsMax%3D1000%26LatMax%3D82.81%26LatMin%3D-70.14%26LonMax%3D178.95%26LonMin%3D-171.21'",
+        TIME_INCREMENT = 60000,
         DAY_MILLIS = 86400000,
         HOUR_MILLIS = 3600000,
-        START_DATE = '2011/03/11 04:00:00.000',
+        ZOOMLEVEL_DEFAULT = 6,
+        zoomLevelScaling = 1,
         reDate = /(\d{4})\/(\d{2})\/(\d{2})\s(\d{2})\:(\d{2}).*/,
         map,
         quakes = [],
         quakeIdx = 0,
+        quakeCount = 0,
+        runId = 0,
         currentTime;
         
     /* drawable implementation */
     
     var Quake = function(params) {
         
-        function prepPath(context, offsetX, offsetY, width, height, state) {
-            var alpha = Math.max(0.01, 1 - (currentTime.getTime() - this.dt.getTime()) / (HOUR_MILLIS*2));
-            
-            context.fillStyle = 'hsla(' + Math.max(360, this.dkm / 50) + ', 50%, 50%, ' + alpha + ')';
-            context.strokeStyle = 'rgba(0, 0, 0, 0)';
-            
-            context.beginPath();
-            context.arc(
-                this.xy.x - offsetX,
-                this.xy.y - offsetY,
-                this.size >> 1,
-                0,
-                Math.PI * 2,
-                false
-            );
+        function draw(drawData) {
+            var context = drawData.context,
+                saturation = Math.max(0, 1 - (currentTime.getTime() - this.dt.getTime()) / (HOUR_MILLIS*6)) * 100 | 0,
+                hue = Math.min(160, this.dkm / 5);
+                
+            // if we are using the canvas renderer a context will be available
+            // so we will just draw exactly what we want
+            if (context) {
+                context.fillStyle = 'hsla(' + hue + ', ' + saturation + '%, 50%, 0.4)';
 
-            return true;
+                context.arc(
+                    this.xy.x, 
+                    this.xy.y, 
+                    (this.size * zoomLevelScaling) >> 1,
+                    0,
+                    Math.PI * 2,
+                    false
+                );
+                context.fill();
+            }
+            // otherwise just let the renderer do what it wants
+            // (given of course that it wants to do something)
+            else if (drawData.draw) {
+                drawData.draw.call(this, drawData);
+            } // if..else
         } // prepPath
         
+        params.stroke = false;
+        
         // call the inherited constructor
-        T5.Drawable.call(this, params);
+        T5.Arc.call(this, params);
         
         // override default drawable behaviour
         COG.extend(this, {
-            prepPath: prepPath
+            draw: draw
         });
     };
     
-    Quake.prototype = COG.extend(T5.Drawable.prototype, {
+    Quake.prototype = COG.extend(T5.Arc.prototype, {
         constructor: Quake
     });
     
@@ -60,22 +73,6 @@ QUAKES = (function() {
         });
     } // createClock
             
-    function createMap() {
-        map = T5.Map({
-            // Point to which canvas element to draw in
-            container: 'mapCanvas'
-        });
-        
-        map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
-                // demo api key, register for an API key
-                // at http://dev.cloudmade.com/
-                apikey: '7960daaf55f84bfdb166014d0b9f8d41',
-                styleid: 3
-        }));     
-        
-        map.gotoPosition(T5.Geo.Position.init(37.09, 139.22), 4);
-    } // createMap
-    
     function displayData(data) {
         if (! data.query.results) {
             loadCached();
@@ -86,8 +83,32 @@ QUAKES = (function() {
         DEMO.status();
         
         createClock();
-        setTimeout(runClock, 0);
+        
+        // update the display on draw complete
+        map.bind('enterFrame', runClock);
+        map.invalidate();
     } // displayData
+    
+    function handleHoverHit(evt, elements, absXY, relXY, offsetXY) {
+        for (var ii = elements.length; ii--; ) {
+            var quake = elements[ii].target;
+            if (quake.animations === 0) {
+                quake.animate('scale', [quake.scaling], [1], {
+                    duration: 300,
+                    easing: 'back.out'
+                });
+            } // if
+        } // for
+    } // handleHit
+
+    function handleHoverOut(evt, elements, absXY, relXY, offsetXY) {
+        for (var ii = elements.length; ii--; ) {
+            var quake = elements[ii].target;
+            quake.animate('scale', [quake.scaling], [0.1]);
+        } // for
+    } // handleHoverOut
+
+    
     
     function loadCached() {
         DEMO.status('Request failed - using cached data');
@@ -117,7 +138,7 @@ QUAKES = (function() {
                     xy: T5.GeoXY.init(quakePos),
                     transformable: true,
                     fill: true,
-                    size: quakeMag * 5 | 0,
+                    size: Math.pow(2, quakeMag) | 0,
 
                     // custom quake properties
                     dt: parseDate(events[ii].date),
@@ -141,7 +162,7 @@ QUAKES = (function() {
         if (matches) {
             return new Date(Date.UTC(
                 matches[1], // year
-                matches[2], // month
+                matches[2] - 1, // month
                 matches[3], // minutes
                 matches[4], // hours
                 matches[5]  // minutes
@@ -154,23 +175,12 @@ QUAKES = (function() {
     function runClock() {
         // update the current time
         $('#quakeClock').html(currentTime.toString());
-        map.invalidate();
         
         // while the quake time is less than the current display and goto the next
         while (quakeIdx < quakes.length && quakes[quakeIdx].dt < currentTime) {
-            var marker = quakes[quakeIdx];
-            
-            
-            // animate the marker
-            marker.scale(0.1);
-            marker.animate('scale', [0.1], [1], 'back.out', 2000, function() {
-                // marker.animate('scale', [1], [0], 'sine.in', 1000);
-            });
-            
-            // add the marker
-            map.markers.add(marker);
-            
+            showQuake(quakes[quakeIdx]);
             quakeIdx++;
+            quakeCount++;
         } // while
         
         // increment the current time by five minutes
@@ -179,31 +189,75 @@ QUAKES = (function() {
             DEMO.status('End of Data');
         } // if
         
-        setTimeout(runClock, 100);
+        $('#quake_counter').html(quakeCount + 1);
+        map.invalidate();
     } // runClock
     
-    createMap();
-    
-    currentTime = parseDate(START_DATE);
-    COG.info('current date = ' + currentTime.toString());
+    function start() {
+        // clear the timeout
+        map.markers.clear();
+        
+        // update the current time
+        currentTime = parseDate($('#date-start').val());
+        COG.info('current date = ' + currentTime.toString());
 
-    // get the data
-    DEMO.status('Requesting earthquake data');
-    $.ajax({
-        url: YQL_QUERY,
-        dataType: 'jsonp',
-        timeout: 10000,
-        success: displayData,
-        error: loadCached
-    });
+        // get the data
+        DEMO.status('Requesting earthquake data');
+        $.ajax({
+            url: YQL_QUERY,
+            dataType: 'jsonp',
+            timeout: 10000,
+            success: displayData,
+            error: loadCached
+        });
+    } // start
+    
+    function showQuake(quakeMarker) {
+        // animate the marker
+        quakeMarker.scale(0.1);
+        quakeMarker.animate('scale', [0.01], [1], {
+            duration: 500,
+            complete: function() {
+                quakeMarker.animate('scale', [1], [0.05], {
+                    easing: 'sine.in',
+                    duration: 1000,
+                    complete: function() {
+                        quakeMarker.past = true;
+                    }
+                });
+            }
+        });
+        
+        // add the marker
+        map.markers.add(quakeMarker, true);
+    } // showQuake
+    
+    $('#btnRun').click(start);
     
     return {
-        getMap: function() {
+        run: function(container, renderer, generatorType, generatorOpts) {
+            map = T5.Map({
+                // Point to which canvas element to draw in
+                container: container,
+                renderer: renderer
+            });
+
+            map.setLayer('tiles', new T5.ImageLayer(generatorType, $.extend({
+                    styleid: 3
+            }, generatorOpts)));
+
+            map.bind('zoomLevelChange', function(evt, zoomLevel) {
+                zoomLevelScaling = zoomLevel / ZOOMLEVEL_DEFAULT;
+            });
+
+            //map.bind('hoverHit', handleHoverHit);
+            //map.bind('hoverOut', handleHoverOut);
+            map.gotoPosition(T5.Geo.Position.init(38, 139.22), ZOOMLEVEL_DEFAULT);            
+
+            // start the simulation
+            start();
+            
             return map;
-        },
-        
-        getQuakes: function() { 
-            return quakes;
         }
     };
 })();

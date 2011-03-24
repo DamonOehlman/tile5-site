@@ -24,7 +24,7 @@ If, however, you are looking to use Tile5 with older devices and know that you w
 
 {% highlight js %}
 var map = new T5.Map({
-	container: 'mapCanvas',
+	container: 'mapContainer',
 	turbo: true
 });
 {% endhighlight %}

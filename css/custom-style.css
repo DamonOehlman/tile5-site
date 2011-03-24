@@ -123,6 +123,7 @@ div.sample p {
     list-style-type: none;
     background: #333;
     -webkit-border-radius: 8px 8px 0 0;
+    text-align: right;
 }
 
 #mapTools li {
@@ -157,7 +158,6 @@ div.sample p {
 #demoControls {
     background: #e8e8e8;
     padding: 10px;
-    display: none;
 }
 
 #demoControls table {
@@ -167,6 +167,23 @@ div.sample p {
 
 #demoControls table th {
     padding: 4px;
+}
+
+#usermessages-ack {
+    float: right;
+    margin: 10px 10px 0 15px;
+    padding: 0 5px;
+    list-style-type: none;
+    background: rgba(200, 200, 200, 0.6);
+    font: 0.7em Arial;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    z-index: 100;
+}
+
+#viz-info {
+    display: none;
 }
 
 #main td.loader {
@@ -281,6 +298,15 @@ ul.roadmap-items li.request {
 
 ul.roadmap-items li.refactor {
     background-image: url(/img/wrench.png);
+}
+
+ul.roadmap-items li.in-master {
+    text-decoration: line-through;
+    font-style: italic;
+}
+
+ul.roadmap-items li.in-master a {
+    color: #999;
 }
 
 ul.roadmap-items li.sponsored::after {

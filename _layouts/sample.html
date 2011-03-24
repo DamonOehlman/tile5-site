@@ -2,15 +2,64 @@
 layout: default
 ---
 
-<div class="sample">
-<a href="/demos/run/#!/{{ page.sample }}?controls={{ page.controls }}&version={{ page.version }}">
-	<img class="demothumb" src="/img/play-demo-overlay.png" alt="{{ page.title }}" style="background-image: url({{ page.thumbnail}})" />
-</a>
+<div id="statusMessage"></div>
+
+<ul id="mapTools" style="display:block;">
+	<li>
+		<label for="generator">Map Engine:</label>
+		<select id="generator">
+			<option value="osm.cloudmade">Cloudmade</option>
+			<option value="decarta">deCarta</option>
+			<option value="osm.mapbox">MapBox</option>
+			<option value="osm.mapquest">MapQuest</option>
+			<!--
+			<option value="bing">Bing</option>
+			-->
+		</select>
+	</li>
+	<!--
+	<li>
+		<label for="renderer">Renderer:</label>
+		<select id="renderer">
+			<option value="canvas">Canvas</option>
+			<option value="canvas/dom">Canvas + DOM</option>
+			<option value="three:webgl">WebGL (via Three)</option>
+			<option value="webgl" disabled="disabled">WebGL</option>
+			<option value="raphael">RaphaëlJS</option>
+		</select>
+	</li>
+	-->
+</ul>
+<div id="demoStats" style="position: absolute; z-index: 10; margin-left: 10px;"></div>
+<div id="mapContainer">
+</div>
+
+<ul id="usermessages-ack">
+</ul>
+
 <ul class="actions">
-	<li><a href="/demos/run/#!/{{ page.sample }}?controls={{ page.controls }}&version={{ page.version }}">Run the Demo</a></li>
 	<li><a href="/demos/code/#!/{{ page.sample }}">See the Code</a></li>
 </ul>
 
 {{ content }}
 
 </div>
+
+<script>
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+//.script('/js/tile5/dev/tile5.js').wait()
+//.script('/js/tile5/dev/plugins/renderer.webgl.js?v=={{ site.time | date_to_xmlschema }}')
+.script('/js/t5demos.js?v={{ site.time | date_to_xmlschema }}').wait(function() {
+	DEMO.init({ version: '{{ page.version }}' }, function(loader) {
+		loader
+			.script('/js/samples/{{ page.sample }}.js?v={{ site.time | date_to_xmlschema }}')
+			.wait(function() {
+				DEMO.run(true);
+			});
+	});
+});
+</script>

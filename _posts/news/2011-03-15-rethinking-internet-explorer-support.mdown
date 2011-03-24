@@ -1,0 +1,29 @@
+---
+layout: article
+title:  Rethinking Internet Explorer Support
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+First of all, don't panic (if you were).  It's not the __what__ of Internet explorer that I'm having to rethink, simply the __how__.  
+
+## Plan A - Fail
+
+The plan was basically to either [FlashCanvas](http://flashcanvas.net/) or [Explorer Canvas](http://code.google.com/p/explorercanvas/) to provide the required support for IE using either a Flash or VML (respectively) polyfill.  While the technique does work, it's unfortunately too slow to consider for a production solution.
+
+Interestingly the problem isn't how well canvas support is implemented using the various PolyFill libraries (FlashCanvas has extremely good API coverage - especially the Pro version), but rather the overheads of drawing a large amount of images using the technique.
+
+In FlashCanvas for instance, drawing image markers, drawing shapes (check out the [GeoJSON world demo](/demo-mapping/geojson-world) in IE for instance) actually works suprisingly well.  FlashCanvas supports transforms (I've disabled them for the moment though in FC) and in general works really, really well.  As soon as you start moving a more significant number of pixels around though, you start to hurt.  As an example, have a look at the [Marker Hit Test demo](/demo-mapping/marker-hit-test) in IE.  Ouch - slow :(
+
+So what's the alternative?
+
+## Proposed Plan B
+
+My thoughts are to basically fall back to the more traditionally "slippy map" implementation using absolute positioned HTML image elements, and use the canvas overlay for other drawing.  In many ways this is a very unHTML5 solution to the problem, but when you are faced with very unHTML5 browsers (such as IE 7.x and IE 8.x) I think there is little else that you can do.
+
+## What about IE9?
+
+It works - based on a couple of hours of testing yesterday anyway :)

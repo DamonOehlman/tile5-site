@@ -12,3 +12,33 @@ controls: route-animated
 ---
 
 This demo shows the ability of Tile5 to display routing information on a map using a [mapping engine](/compatibility/mapping-engines.html) that has had routing support implemented.  Additionally in the demo we showcase the ability to display simple animations along the route.
+
+<p>
+Click two points to create a route. As this demo doesn't attempt to reverse geocode the points, it 
+is recommended that you click two points that the deCarta engine is going to be able to route between (
+i.e. click near roads and not in the ocean).
+</p>
+<p>
+Once a route is displayed on the map, you will be able to use the controls below to display some simple
+animations of the route.  
+</p>
+<p>
+<em>Actually, animation is broken at the moment, in the dev branch because we are
+implementing draggable markers, so um, sorry.  Why not try dragging a marker instead ?
+</em></p>
+<p>
+<select id="animate-easing" class="animator">
+	<option>sine.out</option>
+	<option>sine.in</option>
+	<option>sine.inout</option>
+	<option>bounce.out</option>
+	<option>bounce.in</option>
+	<option>bounce.inout</option>
+</select>
+<input class="animator" type="number" id="animate-duration" min="500" max="10000" step="500" value="3000" />
+<button id="animate" class="animator">Animate</button>
+<!--
+<label class="animator" for="animate-follow">Follow Route</label>
+<input class="animator" type="checkbox" id="animate-follow" />
+-->
+</p>

@@ -11,4 +11,18 @@ thumbnail: /img/samples/visualization-earthquakes.png
 controls: visualization-earthquakes
 ---
 
+<div id="viz-info">
+	<label>Quake Count:</label><span id="quake_counter" class="numeric"></span>
+</div>
+
 Today, a massive earthquake hit Japan and frustrated by the lack of good visualizations showing what had happened (in terms of the actual earthquakes) this was put together.
+
+<p style="display:none;">
+	<label><strong>Start Date:</strong></label>
+	<input type="text" id="date-start" value="2011/03/11 05:00" /> <em>(format: yyyy/mm/dd hh:nn GMT)</em>
+	<button id="btnRun">Visualize</button>
+</p>
+
+<p>
+Data sourced from <a target="_blank" href="http://www.iris.edu/servlet/eventserver/map.do">IRIS</a>.
+</p>

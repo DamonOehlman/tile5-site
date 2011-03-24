@@ -16,7 +16,7 @@ The actual HTML required to render the map is simply a HTML5 canvas tag. Somethi
 <!doctype html>
 <html lang="en" class="no-js">
 <body>
-<canvas id="mapCanvas" width="400" height="300" />
+<div id="mapContainer" style="height: 350px;" />
 </body>
 </html>
 {% endhighlight %}
@@ -53,7 +53,7 @@ Initialising the map requires the creation of a T5.Map instance, and for it to b
 <script>
 // initialise the map
 var map = new T5.Map({
-    container: 'mapCanvas',
+    container: 'mapContainer',
     provider: new T5.Geo.Cloudmade.MapProvider({
         // demo api key, register for an API key
         // at http://dev.cloudmade.com/

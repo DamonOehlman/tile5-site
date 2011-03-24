@@ -4,7 +4,7 @@ title:  Apps4NSW Topo Demo
 sample: tiles-topo
 
 categories:
- - demo-mapping
+ - demo-disabled
 
 thumbnail: /img/samples/constrained-area.png
 ---

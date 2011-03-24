@@ -17,7 +17,7 @@ FRUITY = (function() {
     /* initialization */
     
     view = new T5.View({
-        container: 'mapCanvas'
+        container: 'mapContainer'
     });
     
     // handle the draw complete event

@@ -5,7 +5,7 @@ sample: custom-markers
 version: dev
 
 categories:
- - demo-mapping
+ - demo-archived
 
 thumbnail: /img/samples/custom-markers.png
 ---

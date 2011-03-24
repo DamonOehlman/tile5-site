@@ -10,4 +10,13 @@ thumbnail: /img/samples/geojson-pdxapi.jpg
 controls: geojson-pdxapi
 ---
 
+<div id="demoControls">
+	<table cellspacing='0' id='datasources' border='0' cellpadding='2'> 
+	<tr> 
+		<th>Layer</th> 
+		<th align='center'>Enabled</th> 
+	</tr> 
+	</table>
+</div>
+
 This sample is designed to show some of the [GeoJSON](http://geojson.org/) parsing and rendering capabilities that are currently being developed in Tile5. The data is incorporated from [Max Ogden](http://twitter.com/maxogden)’s excellent [PDXAPI](http://pdxapi.com/).

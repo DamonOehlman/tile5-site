@@ -1,0 +1,78 @@
+---
+layout: article
+title:  Decoupling Renderers - The Past, Present and Future
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+Holy crap, the last little bit of coding in Tile5 has been intense.  Following on from the [previous post](/news/rethinking-internet-explorer-support) there have been some __pretty big changes__.
+
+Thankfully if you are simply __using__ Tile5 the current batch of changes should not affect things too much, however, if you are __extending__ Tile5 in any way, then upgrading to `0.9.5` when it is eventually released will mean some changes.  One of those changes is how Tile5 does it's actual drawing under the hood, and while those changes aren't finished yet it's definitely worth having a quick look at where things are headed.
+
+## Specifying a Renderer
+
+Prior to the current updates sitting in the dev branch of Tile5 you could choose from having Tile5 render to either the HTML5 canvas or the HTML5 canvas ;) Given the _capabilities_ of Canvas and the ability to use the likes of [FlashCanvas](http://flashcanvas.net/) for polyfilling, this seemed fine.  
+
+The [quest for IE support](/news/rethinking-internet-explorer-support), however, challenged that.  So now you can specify a renderer when creating a new `T5.Map` or `T5.View` instance:
+
+{% highlight js %}
+var map = new T5.Map({
+	container: 'mapCanvas',
+	renderer: 'canvas'  // defaults to canvas so you don't need to do anything really
+});
+{% endhighlight %}
+
+## Renderer Chaining
+
+One of the things I am most happy about is the way in which renderers can __be designed__ to work together via chaining.  This is the way the in progress [DOM renderer](https://github.com/sidelab/tile5/blob/dev/src/js/graphics/renderers/dom.js)  is designed to work.
+
+The DOM renderer just draws tiles (or background images in the more generic case).  It doesn't try to draw lines, polygons or even image markers (which get slightly different treatment).  
+
+Therefore if you created your map like so:
+
+{% highlight js %}
+var map = new T5.Map({
+	container: 'mapContainer', // note use of div container rather than canvas
+	renderer: 'dom'
+});
+{% endhighlight %}
+
+You should see map tiles but markers and other drawables would not be displayed.
+
+So how do you get all that drawable goodness then?  Well, I'm glad you asked. Essentially, by specifying a render chain:
+
+{% highlight js %}
+var map = new T5.Map({
+	container: 'mapContainer', // note use of div container rather than canvas
+	renderer: 'canvas/dom'
+});
+{% endhighlight %}
+
+What happens here is that when the `T5.View` is attaching it's renderer it will split the specified renderer name on the `/` and iteratively create each of the renderers.  Any methods that renderer _n_ defines will replace the method implemented by render _n-1_.  Thus if you were to define a renderer as `dom/canvas` this would be the same as requesting a renderer as `canvas` due to the __full-stack rendering implementation__ of the [canvas renderer](https://github.com/sidelab/tile5/blob/dev/src/js/graphics/renderers/canvas.js).
+
+I think this is pretty nifty, and opens the door for creating the likes of a [VML](http://www.w3.org/TR/1998/NOTE-VML-19980513) renderer to be coupled with the DOM renderer for an alternative to using polyfilling the canvas via flash.
+
+## The Past, Present and Future Bit
+
+With the more loosely coupled renderers now in play in Tile5 a few things become possible.  
+
+1. As mentioned, implementing rendering via _older_ technologies such as VML becomes possible.
+
+2. We have the possibility of implementing alternative _current_ technologies such as [SVG](http://www.w3.org/Graphics/SVG/).
+
+3. The implementation of more bleeding edge technologies such as [WebGL](http://www.khronos.org/webgl/) also become a reality.  Obviously calling WebGL a _future_ technology is a bit of a stretch given we have it now, but I think you get the idea. 
+
+This isn't just talk either.
+
+As part of reworking the renderers I wanted to make sure that what was being implemented was flexible enough to support ways in which different rendering backends work.  I've started playing around with both a pure WebGL renderer, and also one that makes use of the excellent [three.js](https://github.com/mrdoob/three.js) library.  Progress has definitely been made and I hope that I can demo something in the near future.
+
+## Fighting Library Bloat with Plugins
+
+A quick note just in closing regarding __fighting bloat__ in Tile5.  Obviously this talk of renderers and everything is very exciting, but if you are building a mobile mapping application you really won't want a WebGL renderer bulking out your code.  As such, __all__ renderers apart from the core Canvas and DOM renderers will be implemented as plugins and will need to be included separately.  
+
+Additionally, I'm pretty carefully going through the library and looking for other areas where something should be implemented either as a plugin or configurably built into the library.
+
+As it stands, Tile5 is still hanging around the __54K minified__ size (around __21.5K gzipped__) and I would definitely like to keep it there or even possibly hit a sweet 50K minified or 20K gzipped.  We will see how we go :)

@@ -47,7 +47,7 @@ function showVenuePins(yqlData) {
 $(document).ready(function() {
     // initialise the map
     map = T5.Map({
-        container: 'mapCanvas'
+        container: 'mapContainer'
     });
 
     map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {

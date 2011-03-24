@@ -1,0 +1,54 @@
+---
+layout: article
+title:  More Animation Tweaks
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+Late last week [I posted](/news/animation-refinements) about some refinements to animation that I was making in Tile5.  Since that time I have found and fixed a number of bugs that show up in one browser or another, so if you are interested it might be worth taking another look if you opened one of the demos and saw nothing interesting (sorry). 
+
+One thing I will say is that if you are working with the `requestAnimationFrame` event in browsers is to make sure that you not only implement the appropriate polyfill (see [Paul Irish's article](http://paulirish.com/2011/requestanimationframe-for-smart-animating/) which explains the code below):
+
+{% highlight js %}
+window.animFrame = (function() {
+    return  window.requestAnimationFrame       || 
+            window.webkitRequestAnimationFrame || 
+            window.mozRequestAnimationFrame    || 
+            window.oRequestAnimationFrame      || 
+            window.msRequestAnimationFrame     || 
+            function(callback){
+                setTimeout(function() {
+                    callback(new Date().getTime());
+                }, 1000 / 60);
+            };
+})();
+{% endhighlight %}
+
+But also code for the different implementations of the request animation frame that might be implemented in browsers.  In my case I made the mistake of assuming that a the current tick count would be passed through in all cases where the function existed, but this just isn't the case.  As such you should always check for the `undefined` case in your `requestAnimationFrame` handlers:
+
+{% highlight js %}
+function loop(ticks) {
+	ticks = ticks ? ticks : new Date().getTime();
+	
+	// do your thing :)
+} // loop
+
+animFrame(loop);
+{% endhighlight %}
+
+Live and learn, eh?  Any way, if you would like to have a look at some of the demos, the following are worth a look:
+
+- [Japan's Earthquakes Visualized](/demos/run/#!/visualization-earthquakes?controls=visualization-earthquakes&version=dev) 
+
+- [GeoJSON World](/demos/run/#!/geojson-world?controls=geojson-world&version=dev)
+
+- [Marker Hit Test](/demos/run/#!/marker-hit-test?controls=&version=dev)
+
+- [Walmart Stores Opening](/demos/run/#!/visualization-walmart?controls=visualization-walmart&version=)
+
+If you don't see animation, please ping me on [twitter](http://twitter.com/DamonOehlman) or leave a comment below with details of your browser and I will definitely take a look.
+
+Additionally, for the moment I have switched the Tile5 site to use the current development branch of Tile5 (which will end up being the `0.9.5` release), hopefully it doesn't break all the older demos...

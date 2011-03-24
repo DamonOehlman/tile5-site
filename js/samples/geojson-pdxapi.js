@@ -1,4 +1,4 @@
-PDXDEMO = (function() {
+DEMO.Sample = (function() {
     // define constants
     var PDXAPI = 'http://pdxapi.com/{0}/geojson?bbox={1},{2},{3},{4}',
         MAXDIST = 40;
@@ -21,7 +21,7 @@ PDXDEMO = (function() {
         };
         
         $('#datasources').append(COG.formatStr(
-            '<tr><td id="{0}_title">{0}</td>' +
+            '<tr class="datasource"><td id="{0}_title">{0}</td>' +
             '<td align="center"><input id="{0}_check" type="checkbox" value="{0}" /></td>' + 
             '</tr>', dsid));
         
@@ -29,6 +29,28 @@ PDXDEMO = (function() {
             toggleLayer(this.value);
         });
     } // defineLayer
+    
+    function initLayers() {
+        // remove the existing layers
+        $('#datasources tr.datasource').remove();
+        
+        // defineLayer('bicycle_network', 'path.bike');
+        defineLayer('bridges');
+        // defineLayer('business_associations');
+        // defineLayer('buslines');
+        // defineLayer('council');
+        // defineLayer('counties');
+        defineLayer('guardrails');
+        defineLayer('neighborhoods', 'area.general');
+        defineLayer('parks', 'area.parkland');
+        // defineLayer('parks_taxlots');
+        // defineLayer('parks_trails');
+        // defineLayer('pavement_moratorium');
+        defineLayer('pedestrian_districts', 'area.general');        
+        // defineLayer('schools');
+        // defineLayer('redline_1938');
+        // defineLayer('zipcode');
+    } // initLayers
         
     function retrieveData(dsid, bounds) {
         var requestId, 
@@ -125,62 +147,28 @@ PDXDEMO = (function() {
         } // for
     } // updateLayers
     
-    var module = {
-        map: map,
+    return {
+        styles: ['map-overlays'],
         
-        select: function(dsid) {
-            currentDataset = dsid;
-            retrieveData(dsid, map.getBoundingBox());
-        }
-    };
-    
-    $(document).ready(function() {
-        DEMO.loadStyle('map-overlays');
-        
-        // defineLayer('bicycle_network', 'path.bike');
-        defineLayer('bridges');
-        // defineLayer('business_associations');
-        // defineLayer('buslines');
-        // defineLayer('council');
-        // defineLayer('counties');
-        defineLayer('guardrails');
-        defineLayer('neighborhoods', 'area.general');
-        defineLayer('parks', 'area.parkland');
-        // defineLayer('parks_taxlots');
-        // defineLayer('parks_trails');
-        // defineLayer('pavement_moratorium');
-        defineLayer('pedestrian_districts', 'area.general');
-        // defineLayer('schools');
-        // defineLayer('redline_1938');
-        // defineLayer('zipcode');
-        
-        $('#provider-selector').hide();
-        // $("#pdxCanvas").attr('width', $("#main").width());
-        $('#datasets').change(function() {
-            module.select($(this).val());
-        });
-        
-        map = new T5.Map({
-            container: 'mapCanvas',
-            clipping: true,
-            minZoom: 11,
-            maxZoom: 17
-        });
-        
-        map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
-                // demo api key, register for an API key
-                // at http://dev.cloudmade.com/
-                apikey: '7960daaf55f84bfdb166014d0b9f8d41'
-        }));
-        
-        map.gotoPosition(T5.Geo.Position.init(45.5280, -122.6646), 15, function() {
-            map.bind('boundsChange', function(evt, bounds) {
-                updateLayers(bounds);
+        run: function(container, renderer, generatorType, generatorOpts) {
+            initLayers();
+
+            map = new T5.Map({
+                container: container,
+                renderer: renderer,
+                minZoom: 11,
+                maxZoom: 17
             });
-        });
-        
-        module.map = map;
-    });
-    
-    return module;
+
+            map.setLayer('tiles', new T5.ImageLayer(generatorType, generatorOpts));
+
+            map.gotoPosition(T5.Geo.Position.init(45.5280, -122.6646), 15, function() {
+                map.bind('boundsChange', function(evt, bounds) {
+                    updateLayers(bounds);
+                });
+            });
+            
+            return map;
+        } 
+    };
 })();

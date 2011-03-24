@@ -810,13 +810,13 @@ T5.Geo.Decarta = (function() {
                            '&N=' + (yTile + yy - 1) +
                            '&E=' + (xTile + xx);
                            
-                        images[images.length] = T5.Tiling.init(
-                            (numTilesHalf + xTile + xx) * tileSize,
-                            (numTilesHalf + yTile*-1 - yy) * tileSize, 
-                            tileSize,
-                            tileSize, {
-                                url: tileUrl
-                            });
+                        images[images.length] = {
+                            x: (numTilesHalf + xTile + xx) * tileSize,
+                            y: (numTilesHalf + yTile*-1 - yy) * tileSize,
+                            width: tileSize,
+                            height: tileSize,
+                            url: tileUrl
+                        };
                     } // for
                 } // for
                     
@@ -857,6 +857,8 @@ T5.Geo.Decarta = (function() {
         } // run
         
         /* define the generator */
+        
+        T5.userMessage('ack', 'decarta', '&copy; deCarta, Inc. Map and Imagery Data &copy; NAVTEQ or Tele Atlas or DigitalGlobe');
         
         // initialise the generator
         var _self = COG.extend(new T5.ImageGenerator(params), {

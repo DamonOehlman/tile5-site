@@ -185,7 +185,7 @@ BEACHWATCH = (function() {
     $(document).ready(function() {
         map = T5.Map({
             // Point to which canvas element to draw in
-            container: 'mapCanvas',
+            container: 'mapContainer',
             // set clipping on to prevent redraw where tiles are not displayed
             clipping: false,
             minZoom: 3

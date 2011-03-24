@@ -14,7 +14,7 @@ T5.Generator.register('osm.topo', function(params) {
 
 // initialise the map
 var map = new T5.Map({
-    container: 'mapCanvas'
+    container: 'mapContainer'
 });
 
 map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {

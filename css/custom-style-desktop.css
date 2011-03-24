@@ -32,5 +32,35 @@ ul.nav {
     -moz-border-radius: 0 0 8px 8px;
 }
 
+#viz-info {
+    display: block;
+    position: absolute;
+    width: 160px;
+    padding: 10px;
+    margin: -380px 0 0 700px;
+    background: rgba(30, 30, 30, 0.6);
+    color: white;
+    font: 0.8em Arial;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    z-index: 100;
+}
+
+#viz-info label {
+    display: inline-block;
+    width: 100px;
+    font-weight: bold;
+}
+
+#viz-info span {
+    display: inline-block;
+    width: 60px;
+}
+
+#viz-info span.numeric {
+    text-align: right;
+}
+
 ul.tabs {
 }

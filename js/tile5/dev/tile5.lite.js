@@ -223,7 +223,9 @@ var wordExists = exports.wordExists = function(stringToCheck, word) {
     var callbackCounter = 0;
 
     function getHandlers(target) {
-        return target.obsHandlers;
+        return target.hasOwnProperty('obsHandlers') ?
+                target.obsHandlers :
+                null;
     } // getHandlers
 
     function getHandlersForName(target, eventName) {
@@ -247,7 +249,7 @@ var wordExists = exports.wordExists = function(stringToCheck, word) {
             target.obsHandlers = {};
         } // if
 
-        var attached = target.bind || target.trigger || target.unbind;
+        var attached = target.hasOwnProperty('bind');
         if (! attached) {
             target.bind = function(eventName, callback) {
                 var callbackId = "callback" + (callbackCounter++);
@@ -632,6 +634,8 @@ http://www.nonobtrusive.com/2010/05/20/lightweight-jsonp-without-any-3rd-party-l
             tween = {};
 
         function runTween(tickCount) {
+            tickCount = tickCount ? tickCount : new Date().getTime();
+
             if (lastTicks + ANI_WAIT < tickCount) {
                 var elapsed = tickCount - startTicks,
                     updatedValue = fn(elapsed, startValue, change, duration),
@@ -892,12 +896,14 @@ var CANI = {};
 register('canvas', function(results, callback) {
 
     var testCanvas = document.createElement('canvas'),
-        testContext = testCanvas.getContext('2d');
+        isFlashCanvas = typeof FlashCanvas != 'undefined',
+        isExplorerCanvas = typeof G_vmlCanvasManager != 'undefnined';
 
     /* define test functions */
 
     function checkPointInPath() {
-        var transformed;
+        var transformed,
+            testContext = testCanvas.getContext('2d');
 
         testContext.save();
         try {
@@ -920,7 +926,7 @@ register('canvas', function(results, callback) {
     testCanvas.width = 200;
     testCanvas.height = 200;
 
-    results.pipTransformed = checkPointInPath();
+    results.pipTransformed = isFlashCanvas || isExplorerCanvas ? false : checkPointInPath();
 
     callback();
 });
@@ -1264,8 +1270,8 @@ function getOffset(obj) {
     } // if
 
     return {
-        x: calcLeft,
-        y: calcTop
+        left: calcLeft,
+        top: calcTop
     };
 } // getOffset
 
@@ -1287,8 +1293,8 @@ function matchTarget(evt, targetElement) {
 
 function pointerOffset(absPoint, offset) {
     return {
-        x: absPoint.x - (offset ? offset.x : 0),
-        y: absPoint.y - (offset ? offset.y : 0)
+        x: absPoint.x - (offset ? offset.left : 0),
+        y: absPoint.y - (offset ? offset.top : 0)
     };
 } // triggerPositionEvent
 
@@ -1312,7 +1318,6 @@ var MouseHandler = function(targetElement, observable, opts) {
         isFlashCanvas = typeof FlashCanvas != 'undefined',
         buttonDown = false,
         start,
-        offset,
         currentX,
         currentY,
         lastX,
@@ -1320,11 +1325,28 @@ var MouseHandler = function(targetElement, observable, opts) {
 
     /* internal functions */
 
+    function getPagePos(evt) {
+        if (evt.pageX && evt.pageY) {
+            return point(evt.pageX, evt.pageY);
+        }
+        else {
+            var doc = document.documentElement,
+    			body = document.body;
+
+            return point(
+                evt.clientX +
+                    (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+                    (doc && doc.clientLeft || body && body.clientLeft || 0),
+                evt.clientY +
+                    (doc && doc.scrollTop  || body && body.scrollTop  || 0) -
+                    (doc && doc.clientTop  || body && body.clientTop  || 0)
+            );
+        } // if
+    } // getPagePos
+
     function handleClick(evt) {
         if (matchTarget(evt, targetElement)) {
-            var clickXY = point(
-                evt.pageX ? evt.pageX : evt.screenX,
-                evt.pageY ? evt.pageY : evt.screenY);
+            var clickXY = getPagePos(evt);
 
             observable.triggerCustom(
                 'tap',
@@ -1339,11 +1361,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         COG.info('captured double click');
 
         if (matchTarget(evt, targetElement)) {
-            var clickXY = point(
-                evt.pageX ? evt.pageX : evt.screenX,
-                evt.pageY ? evt.pageY : evt.screenY);
-
-            COG.info('captured double click + target matched');
+            var clickXY = getPagePos(evt);
 
             observable.triggerCustom(
                 'doubleTap',
@@ -1359,27 +1377,30 @@ var MouseHandler = function(targetElement, observable, opts) {
             buttonDown = isLeftButton(evt);
 
             if (buttonDown) {
+                var pagePos = getPagePos(evt);
+
                 targetElement.style.cursor = 'move';
                 preventDefault(evt);
 
-                lastX = evt.pageX ? evt.pageX : evt.screenX;
-                lastY = evt.pageY ? evt.pageY : evt.screenY;
+                lastX = pagePos.x;
+                lastY = pagePos.y;
                 start = point(lastX, lastY);
-                offset = getOffset(targetElement);
 
                 observable.triggerCustom(
                     'pointerDown',
                     genEventProps('mouse', evt),
                     start,
-                    pointerOffset(start, offset)
+                    pointerOffset(start, getOffset(targetElement))
                 );
             }
         } // if
     } // mouseDown
 
     function handleMouseMove(evt) {
-        currentX = evt.pageX ? evt.pageX : evt.screenX;
-        currentY = evt.pageY ? evt.pageY : evt.screenY;
+        var pagePos = getPagePos(evt);
+
+        currentX = pagePos.x;
+        currentY = pagePos.y;
 
         if (matchTarget(evt, targetElement)) {
             triggerCurrent(evt, buttonDown ? 'pointerMove' : 'pointerHover');
@@ -1444,15 +1465,11 @@ var MouseHandler = function(targetElement, observable, opts) {
             deltaY = evtY - lastY,
             current = point(evtX, evtY);
 
-        if (! offset) {
-            offset = getOffset(targetElement);
-        } // if
-
         observable.triggerCustom(
             eventName,
             genEventProps('mouse', evt),
             current,
-            pointerOffset(current, offset),
+            pointerOffset(current, getOffset(targetElement)),
             point(deltaX, deltaY)
         );
 
@@ -1618,7 +1635,7 @@ var TouchHandler = function(targetElement, observable, opts) {
             offset = getOffset(targetElement);
 
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                relTouches = copyTouches(changedTouches, offset.x, offset.y);
+                relTouches = copyTouches(changedTouches, offset.left, offset.top);
 
             if (! touchesStart) {
                 touchMode = TOUCH_MODE_TAP;
@@ -1703,7 +1720,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                         'pointerMove',
                         genEventProps('touch', evt),
                         touchesCurrent,
-                        copyTouches(touchesCurrent, offset.x, offset.y),
+                        copyTouches(touchesCurrent, offset.left, offset.top),
                         point(
                             touchesCurrent.x - touchesLast.x,
                             touchesCurrent.y - touchesLast.y)
@@ -1715,7 +1732,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                         'pointerMoveMulti',
                         genEventProps('touch', evt),
                         touchesCurrent,
-                        copyTouches(touchesCurrent, offset.x, offset.y)
+                        copyTouches(touchesCurrent, offset.left, offset.top)
                     );
                 } // if
             } // if
@@ -1727,7 +1744,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     function handleTouchEnd(evt) {
         if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                offsetTouches = copyTouches(changedTouches, offset.x, offset.y);
+                offsetTouches = copyTouches(changedTouches, offset.left, offset.top);
 
             touchesCurrent = getTouchData(evt);
 
@@ -1826,7 +1843,23 @@ var abs = Math.abs,
     acos = Math.acos,
     tan = Math.tan,
     atan = Math.atan,
-    atan2 = Math.atan2;
+    atan2 = Math.atan2,
+
+    proto = 'prototype',
+    has = 'hasOwnProperty',
+    isnan = {'NaN': 1, 'Infinity': 1, '-Infinity': 1},
+    lowerCase = String[proto].toLowerCase,
+    objectToString = Object[proto].toString,
+
+    typeUndefined = 'undefined',
+    typeFunction = 'function',
+    typeString = 'string',
+    typeObject = 'object',
+    typeNumber = 'number',
+    typeArray = 'array',
+
+    isExplorerCanvas = typeof G_vmlCanvasManager != typeUndefined,
+    isFlashCanvas = typeof FlashCanvas != typeUndefined;
 /**
 # T5
 The T5 core module contains classes and functionality that support basic drawing
@@ -1852,6 +1885,21 @@ function userMessage(msgType, msgKey, msgHtml) {
     exports.trigger('userMessage', msgType, msgKey, msgHtml);
 } // userMessage
 
+/*
+Dmitry Baranovskiy's wonderful is function, sourced from RaphaelJS:
+https://github.com/DmitryBaranovskiy/raphael
+*/
+function isType(o, type) {
+    type = lowerCase.call(type);
+    if (type == "finite") {
+        return !isnan[has](+o);
+    }
+    return  (type == "null" && o === null) ||
+            (type == typeof o) ||
+            (type == "object" && o === Object(o)) ||
+            (type == "array" && Array.isArray && Array.isArray(o)) ||
+            objectToString.call(o).slice(8, -1).toLowerCase() == type;
+}; // is
 
 /**
 # T5.XY
@@ -1915,33 +1963,29 @@ var XY = (function() {
     ### edges(points, count)
     */
     function edges(points, count) {
-        if (! count) {
-            count = points.length;
-        } // if
-
+        count = count || points.length;
         if (count <= 1) {
-            throw new Error("Cannot determine edge " +
-                "distances for a vector array of only one vector");
+            return null;
         } // if
 
-        var fnresult = {
-            edges: new Array(count - 1),
-            accrued: new Array(count - 1),
-            total: 0
-        };
+        var edgeData = new Array(count - 1),
+            accrued = new Array(count - 1),
+            total = 0,
+            diff;
 
         for (var ii = 0; ii < count - 1; ii++) {
-            var diff = difference(points[ii], points[ii + 1]);
+            diff = difference(points[ii], points[ii + 1]);
 
-            fnresult.edges[ii] =
-                sqrt((diff.x * diff.x) + (diff.y * diff.y));
-            fnresult.accrued[ii] =
-                fnresult.total + fnresult.edges[ii];
+            edgeData[ii] = sqrt(diff.x * diff.x + diff.y * diff.y);
 
-            fnresult.total += fnresult.edges[ii];
+            accrued[ii] = total += edgeData[ii];
         } // for
 
-        return fnresult;
+        return {
+            edges: edgeData,
+            accrued: accrued,
+            tota: total
+        };
     } // edges
 
     /**
@@ -1958,8 +2002,8 @@ var XY = (function() {
     ### extendBy(xy, theta, delta)
     */
     function extendBy(xy, theta, delta) {
-        var xDelta = cos(theta) * delta,
-            yDelta = sin(theta) * delta;
+        var xDelta = cos(theta) * delta | 0,
+            yDelta = sin(theta) * delta | 0;
 
         return init(xy.x - xDelta, xy.y - yDelta);
     } // extendBy
@@ -1989,11 +2033,11 @@ var XY = (function() {
         for (var ii = points.length; ii--; ) {
             var xy = points[ii];
 
-            minX = (typeof minX === 'undefined') || xy.x < minX ? xy.x : minX;
-            minY = (typeof minY === 'undefined') || xy.y < minY ? xy.y : minY;
+            minX = isType(minX, typeUndefined) || xy.x < minX ? xy.x : minX;
+            minY = isType(minY, typeUndefined) || xy.y < minY ? xy.y : minY;
 
-            maxX = (typeof maxX === 'undefined') || xy.x > maxX ? xy.x : maxX;
-            maxY = (typeof maxY === 'undefined') || xy.y > maxY ? xy.y : maxY;
+            maxX = isType(maxX, typeUndefined) || xy.x > maxX ? xy.x : maxX;
+            maxY = isType(maxY, typeUndefined) || xy.y > maxY ? xy.y : maxY;
         } // for
 
         return XYRect.init(minX, minY, maxX, maxY);
@@ -2008,8 +2052,8 @@ var XY = (function() {
     */
     function init(initX, initY) {
         return {
-            x: initX ? initX : 0,
-            y: initY ? initY : 0
+            x: initX || 0,
+            y: initY || 0
         };
     } // init
 
@@ -2045,7 +2089,7 @@ var XY = (function() {
     Return a new composite xy which is offset by the specified amount.
     */
     function offset(xy, offsetX, offsetY) {
-        return init(xy.x + offsetX, xy.y + (offsetY ? offsetY : offsetX));
+        return init(xy.x + offsetX, xy.y + (offsetY || offsetX));
     } // offset
 
     /**
@@ -2233,6 +2277,18 @@ var XYRect = (function() {
     /* exports */
 
     /**
+    ### buffer(rect, bufferX, bufferY)
+    */
+    function buffer(rect, bufferX, bufferY) {
+        return XY.init(
+            rect.x1 - bufferX,
+            rect.y1 - (bufferY || bufferX),
+            rect.x1 + bufferX,
+            rect.y1 + (bufferY || bufferX)
+        );
+    } // buffer
+
+    /**
     ### center(rect)
     Return a xy composite for the center of the rect
     */
@@ -2277,10 +2333,10 @@ var XYRect = (function() {
     Create a new XYRect composite object
     */
     function init(x1, y1, x2, y2) {
-        x1 = x1 ? x1 : 0;
-        y1 = y1 ? y1 : 0;
-        x2 = typeof x2 !== 'undefined' ? x2 : x1;
-        y2 = typeof y2 !== 'undefined '? y2 : y2;
+        x1 = x1 || 0;
+        y1 = y1 || 0;
+        x2 = x2 || x1;
+        y2 = y2 || y1;
 
         return {
             x1: x1,
@@ -2340,6 +2396,7 @@ var XYRect = (function() {
     /* module definition */
 
     return {
+        buffer: buffer,
         center: center,
         copy: copy,
         diagonalSize: diagonalSize,
@@ -2465,14 +2522,12 @@ Hits = (function() {
     /**
     ### initHit(type, target, opts)
     */
-    function initHit(type, target, opts) {
-        opts = COG.extend({
+    function initHit(type, target, drag) {
+        return {
             type: type,
             target: target,
-            drag: false
-        }, opts);
-
-        return opts;
+            drag: drag
+        };
     } // initHit
 
     /**
@@ -2499,521 +2554,120 @@ Hits = (function() {
         triggerEvent: triggerEvent
     };
 })();
-var deviceConfigs = null,
-    deviceCheckOrder = [],
-    detectedConfig = null,
-    urlBridgeTimeout = 0,
-    queuedBridgeUrls = [],
-    bridgeIgnoreMessages = ['view.wake', 'tile.loaded'];
+var INTERVAL_LOADCHECK = 10,
+    INTERVAL_CACHECHECK = 10000,
+    LOAD_TIMEOUT = 30000,
+    imageCache = {},
+    imageCount = 0,
+    lastCacheCheck = new Date().getTime(),
+    loadingData = {},
+    loadingUrls = [];
 
-function processUrlBridgeNotifications() {
-    while (queuedBridgeUrls.length > 0) {
-        var notificationUrl = queuedBridgeUrls.shift();
-        document.location = notificationUrl;
+/* internals */
+
+function checkImageLoads(tickCount) {
+    tickCount = tickCount || new Date().getTime();
+
+    var ii = 0;
+    while (ii < loadingUrls.length) {
+        var url = loadingUrls[ii],
+            imageData = loadingData[url],
+            imageToCheck = loadingData[url].image,
+            imageLoaded = isLoaded(imageToCheck),
+            requestAge = tickCount - imageData.start,
+            removeItem = imageLoaded || requestAge >= LOAD_TIMEOUT,
+            callbacks;
+
+        if (imageLoaded) {
+            callbacks = imageData.callbacks;
+
+            imageCache[url] = imageData.image;
+
+            for (var cbIdx = 0; cbIdx < callbacks.length; cbIdx++) {
+                callbacks[cbIdx](imageData.image, true);
+            } // for
+        } // if
+
+        if (removeItem) {
+            loadingUrls.splice(ii, 1);
+            delete loadingData[url];
+        }
+        else {
+            ii++;
+        } // if..else
     } // while
 
-    urlBridgeTimeout = 0;
-} // processUrlBridgeNotifications
-
-function shouldBridgeMessage(message) {
-    var shouldBridge = true;
-    for (var ii = bridgeIgnoreMessages.length; ii--; ) {
-        shouldBridge = shouldBridge && (message != bridgeIgnoreMessages[ii]);
-    } // for
-
-    return shouldBridge;
-} // shouldBridgeMessage
-
-function messageToUrl(message, args) {
-    var params = [];
-
-    for (var key in args) {
-        if (key) {
-            params.push(key + "=" + escape(args[key]));
-        }
-    } // for
-
-    return "tile5://" + message + "/" + (params.length > 0 ? "?" + params.join("&") : "");
-} // messageToUrl
-
-function bridgeNotifyLog(message, args) {
-    if (shouldBridgeMessage(message)) {
-        COG.info("would push url: " + messageToUrl(message, args));
+    if (loadingUrls.length > 0) {
+        animFrame(checkImageLoads);
     } // if
-} // bridgeCommandEmpty
+} // imageLoadWorker
 
-function bridgeNotifyUrl(message, args) {
-    if (shouldBridgeMessage(message)) {
-        queuedBridgeUrls.push(messageToUrl(message, args));
+function isLoaded(image) {
+    return image && (isFlashCanvas || (image.complete && image.width > 0));
+} // isLoaded
 
-        if (! urlBridgeTimeout) {
-            urlBridgeTimeout = setTimeout(processUrlBridgeNotifications, 100);
-        } // if
-    } // if
-} // bridgeNotifyUrlScheme
+function loadImage(url, callback) {
+    var data = loadingData[url];
 
-/* event binding functions */
+    if (data) {
+        data.callbacks.push(callback);
+    }
+    else {
+        var imageToLoad = new Image();
 
-function genBindDoc(useBody) {
-    return function(evtName, callback, customTarget) {
-        var target = customTarget ? customTarget : (useBody ? document.body : document);
+        imageToLoad.id = '_ldimg' + (++imageCount);
 
-        target.addEventListener(evtName, callback, false);
-    };
-} // bindDoc
+        loadingData[url] = {
+            start: new Date().getTime(),
+            image: imageToLoad,
+            callbacks: [callback]
+        };
 
-function genUnbindDoc(useBody) {
-    return function(evtName, callback, customTarget) {
-        var target = customTarget ? customTarget : (useBody ? document.body : document);
+        imageToLoad.src = url;
 
-        target.removeEventListener(evtName, callback, false);
-    };
-} // unbindDoc
+        loadingUrls[loadingUrls.length] = url;
+    } // if..else
 
-function bindIE(evtName, callback, customTarget) {
-    (customTarget ? customTarget : document).attachEvent('on' + evtName, callback);
-} // bindIE
 
-function unbindIE(evtName, callback, customTarget) {
-    (customTarget ? customTarget : document).detachEvent('on' + evtName, callback);
-} // unbindIE
+    animFrame(checkImageLoads);
+} // loadImage
 
-/* load the device config */
-
-function loadDeviceConfigs() {
-    deviceConfigs = {
-        base: {
-            name: "Unknown",
-
-            /* default event binding implementation */
-            bindEvent: genBindDoc(),
-            unbindEvent: genUnbindDoc(),
-
-            supportsTouch: 'ontouchstart' in window,
-            imageCacheMaxSize: null,
-            getScaling: function() {
-                return 1;
-            },
-            maxImageLoads: null,
-            requireFastDraw: false,
-            bridgeNotify: bridgeNotifyLog,
-            targetFps: null
-        },
-
-        ie: {
-            name: "MSIE",
-            regex: /msie/i,
-
-            bindEvent: bindIE,
-            unbindEvent: unbindIE,
-
-            requireFastDraw: false,
-            targetFps: 25
-        },
-
-        ipod: {
-            name: "iPod Touch",
-            regex: /ipod/i,
-            imageCacheMaxSize: 6 * 1024,
-            maxImageLoads: 4,
-            requireFastDraw: false,
-            bridgeNotify: bridgeNotifyUrl,
-            targetFps: 25
-        },
-
-        iphone: {
-            name: "iPhone",
-            regex: /iphone/i,
-            imageCacheMaxSize: 6 * 1024,
-            maxImageLoads: 4,
-            bridgeNotify: bridgeNotifyUrl
-        },
-
-        ipad: {
-            name: "iPad",
-            regex: /ipad/i,
-            imageCacheMaxSize: 6 * 1024,
-            bridgeNotify: bridgeNotifyUrl
-        },
-
-        android: {
-            name: "Android OS <= 2.1",
-            regex: /android/i,
-
-            /* document event binding (use body) */
-            bindEvent: genBindDoc(true),
-            unbindEvent: genUnbindDoc(true),
-
-            supportsTouch: true,
-            getScaling: function() {
-                return 1 / window.devicePixelRatio;
-            },
-            bridgeNotify: bridgeNotifyUrl
-        },
-
-        froyo: {
-            name: "Android OS >= 2.2",
-            regex: /froyo/i,
-            eventTarget: document.body,
-            supportsTouch: true,
-            bridgeNotify: bridgeNotifyUrl
-        }
-    };
-
-    deviceCheckOrder = [
-        deviceConfigs.froyo,
-        deviceConfigs.android,
-        deviceConfigs.ipod,
-        deviceConfigs.iphone,
-        deviceConfigs.ipad,
-        deviceConfigs.ie
-    ];
-} // loadDeviceConfigs
-
-function getConfig() {
-    if (! deviceConfigs) {
-        loadDeviceConfigs();
-    } // if
-
-    if (! detectedConfig) {
-        COG.info("ATTEMPTING TO DETECT PLATFORM: UserAgent = " + navigator.userAgent);
-
-        for (var ii = 0; ii < deviceCheckOrder.length; ii++) {
-            var testPlatform = deviceCheckOrder[ii];
-
-            if (testPlatform.regex && testPlatform.regex.test(navigator.userAgent)) {
-                detectedConfig = COG.extend({}, deviceConfigs.base, testPlatform);
-                COG.info("PLATFORM DETECTED AS: " + detectedConfig.name);
-                break;
-            } // if
-        } // for
-
-        if (! detectedConfig) {
-            COG.warn("UNABLE TO DETECT PLATFORM, REVERTING TO BASE CONFIGURATION");
-            detectedConfig = deviceConfigs.base;
-        }
-
-        COG.info("CURRENT DEVICE PIXEL RATIO = " + window.devicePixelRatio);
-    } // if
-
-    return detectedConfig;
-} // getConfig
 /**
-# T5.Images
-_module_
-
-
-The T5.Images module provides image loading support for the rest of the
-Tile5 library.
-
-
-## Module Functions
+# T5.getImage(url, callback)
+This function is used to load an image and fire a callback when the image
+is loaded.  The callback fires when the image is _really_ loaded (not
+when the onload event handler fires).
 */
-var Images = (function() {
-    var TIMEOUT_CHECK_INTERVAL = 10000;
-
-    var images = {},
-        canvasCounter = 0,
-        loadWatchers = {},
-        imageCounter = 0,
-        queuedImages = [],
-        loadingImages = [],
-        cachedImages = [],
-        imageCacheFullness = 0,
-        lastTimeoutCheck = 0,
-        clearingCache = false;
-
-    /* internal functions */
-
-    function loadNextImage() {
-        var maxImageLoads = getConfig().maxImageLoads;
-
-        if ((! maxImageLoads) || (loadingImages.length < maxImageLoads)) {
-            var imageData = queuedImages.shift(),
-                tickCount = T5.ticks();
-
-            if (imageData) {
-                loadingImages[loadingImages.length] = imageData;
-
-                imageData.image.onload = handleImageLoad;
-                imageData.image.src = imageData.url;
-                imageData.requested = tickCount;
-            } // if..else
-
-            if (tickCount - lastTimeoutCheck > TIMEOUT_CHECK_INTERVAL) {
-                checkTimeoutsAndCache(tickCount);
-            } // if
-        } // if
-
-    } // loadNextImage
-
-    function cleanupImageCache() {
-        clearingCache = true;
-        try {
-            var halfLen = cachedImages.length >> 1;
-            if (halfLen > 0) {
-                cachedImages.sort(function(itemA, itemB) {
-                    return itemA.created - itemB.created;
-                });
-
-                for (var ii = halfLen; ii--; ) {
-                    delete images[cachedImages[ii].url];
-                } // for
-
-                cachedImages.splice(0, halfLen);
-            } // if
-        }
-        finally {
-            clearingCache = false;
-        } // try..finally
-
-        module.trigger('cacheCleared');
-    } // cleanupImageCache
-
-    function checkTimeoutsAndCache(currentTickCount) {
-        var timedOutLoad = false, ii = 0,
-            config = getConfig();
-
-        while (ii < loadingImages.length) {
-            var loadingTime = currentTickCount - loadingImages[ii].requested;
-            if (loadingTime > (module.loadTimeout * 1000)) {
-                loadingImages.splice(ii, 1);
-                timedOutLoad = true;
-            }
-            else {
-                ii++;
-            } // if..else
-        } // while
-
-        if (timedOutLoad) {
-            loadNextImage();
-        } // if
-
-        if (config && config.imageCacheMaxSize) {
-            imageCacheFullness = (cachedImages.length * module.avgImageSize) / config.imageCacheMaxSize;
-            if (imageCacheFullness >= 1) {
-                cleanupImageCache();
-            } // if
-        } // if
-
-        lastTimeoutCheck = currentTickCount;
-    } // checkTimeoutsAndCache
-
-    function postProcess(imageData) {
-        if (! imageData.image) { return; }
-
-        globalImageData = imageData;
-
-        var width = imageData.realSize ? imageData.realSize.width : imageData.image.width,
-            height = imageData.realSize ? imageData.realSize.height : imageData.image.height,
-            canvas = newCanvas(width, height),
-            context = canvas.getContext('2d'),
-            offset = imageData.offset ? imageData.offset : T5.XY.init();
-
-        if (imageData.background) {
-            context.drawImage(imageData.background, 0, 0);
-        } // if
-
-        if (imageData.drawBackground) {
-            imageData.drawBackground(context);
-        } // if
-
-        if (imageData.customDraw) {
-            imageData.customDraw(context, imageData);
-        }
-        else {
-            context.drawImage(imageData.image, offset.x, offset.y);
-        } // if..else
-
-        if (imageData.postProcess) {
-            imageData.postProcess(context, imageData);
-        }
-        imageData.image = canvas;
-    } // applyBackground
-
-    /* event handlers */
-
-    function handleImageLoad() {
-        var imageData = loadWatchers[this.id],
-            ii;
-
-        if (imageData && isLoaded(imageData.image)) {
-            imageData.loaded = true;
-            imageData.hitCount = 1;
-
-            for (ii = loadingImages.length; ii--; ) {
-                if (loadingImages[ii].image.src == this.src) {
-                    loadingImages.splice(ii, 1);
-                    break;
-                } // if
-            } // for
-
-            if (imageData.background || imageData.postProcess || imageData.drawBackground || imageData.customDraw) {
-                postProcess(imageData);
-            } // if
-
-            for (ii = imageData.callbacks.length; ii--; ) {
-                if (imageData.callbacks[ii]) {
-                    imageData.callbacks[ii](this, false);
-                } // if
-            } // for
-
-            imageData.callbacks = [];
-
-            cachedImages[cachedImages.length] = {
-                url: this.src,
-                created: imageData.requested
-            };
-
-            delete loadWatchers[this.id];
-
-            loadNextImage();
-        } // if
-    } // handleImageLoad
-
-    function isLoaded(image) {
-        return image.complete && image.width > 0;
-    } // isLoaded
-
-    /* exports */
-
-    /**
-    ### cancelLoad()
-    */
-    function cancelLoad() {
-        var ii;
-
-        for (ii = loadingImages.length; ii--; ) {
-            delete images[loadingImages[ii].url];
-        } // for
-
-        loadingImages = [];
-
-        for (ii = queuedImages.length; ii--; ) {
-            delete images[queuedImages[ii].url];
-        } // for
-
-        queuedImages = [];
-    } // cancelLoad
-
-    /**
-    ### get(url)
-    This function is used to retrieve the image specified by the url.  If the image
-    has already been loaded, then the image is automatically returned from the
-    function but if not, then a null value is returned.
-
-    If an optional `callback` argument is provided, then this indicates to the function
-    that if the image is not already loaded, it should be loaded and this the is passed
-    through to the load method function.
-
-    #### Example Code
-    ~ var image = T5.Images.get('testimage.jpg', function(image) {
-    ~
-    ~ });
-    */
-    function get(url, callback, loadArgs) {
-        var imageData = null,
-            image = null;
-
-        if (! clearingCache) {
-            imageData = images[url];
-        } // if
-
-        image = imageData ? imageData.image : null;
-
-        if (image && (image.getContext || isLoaded(image))) {
-            return image;
-        }
-        else if (callback) {
-            load(url, callback, loadArgs);
-        } // if..else
-
-        return null;
-    } // get
-
-    /**
-    ### load(url, callback, loadArgs)
-    */
-    function load(url, callback, loadArgs) {
-        var imageData = images[url];
-
-        if (! imageData) {
-            imageData = COG.extend({
-                url: url,
-                image: new Image(),
-                loaded: false,
-                created: T5.ticks(),
-                requested: null,
-                hitCount: 0,
-                callbacks: [callback]
-            }, loadArgs);
-
-
-            imageData.image.id = "resourceLoaderImage" + (imageCounter++);
-
-            images[url] = imageData;
-            loadWatchers[imageData.image.id] = imageData;
-
-            queuedImages[queuedImages.length] = imageData;
-
-            loadNextImage();
-        }
-        else {
-            imageData.hitCount++;
-            if (isLoaded(imageData.image) && callback) {
-                callback(imageData.image, true);
-            }
-            else {
-                imageData.callbacks.push(callback);
-            } // if..else
-        }
-
-        return imageData;
-    } // load
-
-    /**
-    ### newCanvas(width, height)
-    */
-    function newCanvas(width, height) {
-        var tmpCanvas = document.createElement('canvas');
-        COG.info('creating new canvas');
-
-        tmpCanvas.width = width ? width : 0;
-        tmpCanvas.height = height ? height : 0;
-
-        if (typeof FlashCanvas != 'undefined') {
-            document.body.appendChild(tmpCanvas);
-            FlashCanvas.initElement(tmpCanvas);
-        } // if
-
-        return tmpCanvas;
-    } // newCanvas
-
-    var module = {
-        avgImageSize: 25,
-        loadTimeout: 10,
-
-        cancelLoad: cancelLoad,
-        get: get,
-        load: load,
-        newCanvas: newCanvas,
-
-        reset: function() {
-            images = {};
-        },
-
-        stats: function() {
-            return {
-                imageLoadingCount: loadingImages.length,
-                queuedImageCount: queuedImages.length,
-                imageCacheFullness: imageCacheFullness
-            };
-        }
-    }; //
-
-    COG.observable(module);
-    return module;
-})();
+var getImage = T5.getImage = function(url, callback) {
+    var image = url && callback ? imageCache[url] : null;
+
+    if (image && isLoaded(image)) {
+        callback(image);
+    }
+    else {
+        loadImage(url, callback);
+    } // if..else
+};
+/**
+# T5.newCanvas(width, height)
+*/
+var newCanvas = T5.newCanvas = function(width, height) {
+    var tmpCanvas = document.createElement('canvas');
+
+    tmpCanvas.width = width ? width : 0;
+    tmpCanvas.height = height ? height : 0;
+
+    if (isFlashCanvas) {
+        document.body.appendChild(tmpCanvas);
+        FlashCanvas.initElement(tmpCanvas);
+    } // if
+
+    if (isExplorerCanvas) {
+        G_vmlCanvasManager.initElement(tmpCanvas);
+    } // if
+
+    return tmpCanvas;
+};
 /**
 # T5.Generator
 The generator module is used to manage the registration and creation
@@ -3042,182 +2696,652 @@ var Generator = (function() {
         generatorRegistry[id] = creatorFn;
     } // register
 
-    /* generator template definition */
-
-    var Template = function(params) {
-
-    }; // Template
-
     /* module definition */
 
     return {
         init: init,
-        register: register,
-
-        Template: Template
+        register: register
     };
 })();
 
 /**
-# T5.Style
-The T5.Style module is used to define and apply styles.
-
-## Functions
+# T5.Renderer
 */
-var Style = (function() {
+var Renderer = function(view, container, params) {
 
-    var previousStyles = {},
-        styles = {};
-
-    /* internal functions */
+    /* internals */
 
     /* exports */
 
-    /**
-    ### apply(context, styleId)
-    */
-    function apply(context, styleId) {
-        var style = styles[styleId] ? styles[styleId] : styles.basic,
-            previousStyle;
+    return {
+        /**
+        ### applyStyle(style: T5.Style): string
+        */
+        applyStyle: function(style) {
+        },
 
-        if (context && context.canvas) {
-            previousStyle = previousStyles[context.canvas.id];
-            previousStyles[context.canvas.id] = styleId;
+        /**
+        ### applyTransform(drawable: T5.Drawable, offsetX: int, offsetY: int)
+        */
+        applyTransform: function(drawable, offsetX, offsetY) {
+            return {
+                restore: null,
+                x: offsetX,
+                y: offsetY
+            };
+        },
+
+        checkSize: function() {
+        },
+
+        /**
+        ### getDimensions()
+        */
+        getDimensions: function() {
+            return {
+                width: 0,
+                height: 0
+            };
+        },
+
+        /**
+        ### getOffset()
+        */
+        getOffset: function() {
+            return XY.init(0, 0);
+        },
+
+        /**
+        ### getViewport()
+        */
+        getViewport: function() {
+        },
+
+        /**
+        ### hitTest(drawData, hitX, hitY): boolean
+        */
+        hitTest: function(drawData, hitX, hitY) {
+            return false;
+        },
+
+        /**
+        ### prepare(layers, state, tickCount, hitData)
+        */
+        prepare: function(layers, state, tickCount, hitData) {
+        },
+
+        /**
+        ### render
+        */
+        render: function() {
+        },
+
+        /**
+        ### reset()
+        */
+        reset: function() {
+        }
+    };
+};
+
+var rendererRegistry = {};
+
+/**
+# T5.registerRenderer(id, creatorFn)
+*/
+var registerRenderer = exports.registerRenderer = function(id, creatorFn) {
+    rendererRegistry[id] = creatorFn;
+};
+
+/**
+# T5.attachRenderer(id, view, container, params)
+*/
+var attachRenderer = exports.attachRenderer = function(id, view, container, params) {
+    var ids = id.split('/'),
+        renderer = new Renderer(view, container, params);
+
+    for (var ii = 0; ii < ids.length; ii++) {
+        var rClass = rendererRegistry[ids[ii]];
+        if (rClass) {
+            renderer = new rClass(view, container, params, renderer);
         } // if
+    } // for
 
-        style.applyToContext(context);
+    return renderer;
+};
+registerRenderer('canvas', function(view, container, params, baseRenderer) {
+    params = COG.extend({
+    }, params);
 
-        return previousStyle;
-    } // apply
+    /* internals */
 
-    /**
-    ### define(styleId, data)
-    */
-    function define(styleId, data) {
-        styles[styleId] = init(data);
+    var vpWidth,
+        vpHeight,
+        canvas,
+        context,
+        viewport,
+        drawOffsetX = 0,
+        drawOffsetY = 0,
+        transform = null,
+        pipTransformed = CANI.canvas.pipTransformed,
+        previousStyles = {},
 
-        return styleId;
-    } // define
-
-    /**
-    ### defineMany(data)
-    */
-    function defineMany(data) {
-        for (var styleId in data) {
-            define(styleId, data[styleId]);
-        } // for
-    } // defineMany
-
-    function get(styleId) {
-        return styles[styleId];
-    } // get
-
-    /**
-    ### init(params)
-    */
-    function init(params) {
-        params = COG.extend({
-            lineWidth: undefined,
-            lineCap: undefined,
-            lineJoin: undefined,
-            miterLimit: undefined,
-            lineStyle: undefined,
-
-            fillStyle: undefined,
-
-            globalAlpha: undefined,
-            globalCompositeOperation: undefined
-        }, params);
-
-        var mods = [];
-
-        /* internal functions */
-
-        function fillMods(keyName) {
-            var paramVal = params[keyName];
-
-            if (typeof paramVal !== 'undefined') {
-                mods.push(function(context) {
-                    context[keyName] = paramVal;
-                });
+        defaultDrawFn = function(drawData) {
+            if (this.fill) {
+                 context.fill();
             } // if
-        } // fillMods
 
-        function reloadMods() {
-            mods = [];
-
-            for (var keyName in params) {
-                fillMods(keyName);
-            } // for
-        } // reloadMods
-
-        /* exports */
-
-        function update(keyName, keyVal) {
-            params[keyName] = keyVal;
-            reloadMods();
-        } // update
-
-        /* define _self */
-
-        var _self = {
-            applyToContext: function(context) {
-                for (var ii = mods.length; ii--; ) {
-                    mods[ii](context);
-                } // for
-            },
-
-            update: update
+            if (this.stroke) {
+                context.stroke();
+            } // if
         };
 
-        /* initialize */
+    function drawTile(tile, x, y) {
+        getImage(tile.url, function(image, loaded) {
+            view.redraw = loaded;
+            if (! loaded) {
+                context.drawImage(image, x, y);
+            } // if
+        });
+    } // drawTile
 
-        reloadMods();
-        return _self;
-    } // init
+    function createCanvas() {
+        if (container) {
+            var isCanvas = container.tagName == 'CANVAS',
+                sizeTarget = isCanvas ? container.parentNode : container;
+
+            vpWidth = view.width = sizeTarget.offsetWidth;
+            vpHeight = view.height = sizeTarget.offsetHeight;
+
+            if (! isCanvas) {
+                canvas = newCanvas(vpWidth, vpHeight);
+                canvas.style.cssText = 'position: absolute; z-index: 1;';
+
+                container.appendChild(canvas);
+            }
+            else {
+                canvas = container;
+                canvas.width = vpWidth;
+                canvas.height = vpHeight;
+
+                if (isFlashCanvas) {
+                    FlashCanvas.initElement(canvas);
+                } // if
+            } // if..else
+
+            context = null;
+        } // if
+    } // createCanvas
+
+    function initDrawData(hitData, state, drawFn) {
+        var isHit = false;
+
+        if (hitData) {
+            var hitX = pipTransformed ? hitData.x - drawOffsetX : hitData.relXY.x,
+                hitY = pipTransformed ? hitData.y - drawOffsetY : hitData.relXY.y;
+
+            isHit = context.isPointInPath(hitX, hitY);
+        } // if
+
+        return {
+            draw: drawFn || defaultDrawFn,
+            state: state,
+            hit: isHit,
+            vpX: drawOffsetX,
+            vpY: drawOffsetY,
+
+            context: context
+        };
+    } // initDrawData
+
+    /* exports */
+
+    function applyStyle(styleId) {
+        var nextStyle = getStyle(styleId),
+            previousStyle = nextStyle && context && context.canvas ?
+                previousStyles[context.canvas.id] :
+                null;
+
+        if (nextStyle) {
+            previousStyles[context.canvas.id] = styleId;
+
+            nextStyle.applyToContext(context);
+
+            return previousStyle;
+        } // if
+    } // applyStyle
+
+    function applyTransform(drawable) {
+        var translated = drawable.translateX || drawable.translateY,
+            transformed = translated || drawable.scaling !== 1 || drawable.rotatation;
+
+        if (transformed) {
+            context.save();
+
+            transform = {
+                undo: function() {
+                    context.restore();
+                    transform = null;
+                },
+
+                x: drawable.xy.x,
+                y: drawable.xy.y
+            };
+
+            context.translate(
+                drawable.xy.x - drawOffsetX + drawable.translateX,
+                drawable.xy.y - drawOffsetY + drawable.translateY
+            );
+
+            if (drawable.rotation !== 0) {
+                context.rotate(drawable.rotation);
+            } // if
+
+            if (drawable.scaling !== 1) {
+                context.scale(drawable.scaling, drawable.scaling);
+            } // if
+        } // if
+
+        return transform;
+    } // applyTransform
+
+    function drawTiles(tiles) {
+        var tile,
+            inViewport,
+            minX = drawOffsetX - 256,
+            minY = drawOffsetY - 256,
+            maxX = viewport.x2,
+            maxY = viewport.y2;
+
+        for (var ii = tiles.length; ii--; ) {
+            tile = tiles[ii];
+
+            inViewport = tile.x >= minX && tile.x <= maxX &&
+                tile.y >= minY && tile.y <= maxY;
+
+            if (inViewport) {
+                drawTile(tile, tile.x - drawOffsetX, tile.y - drawOffsetY);
+            } // if
+        } // for
+    } // drawTiles
 
     /**
-    ### load(path, callback)
+    ### hitTest(drawData, hitX, hitY): boolean
     */
-    function load(path, callback) {
-        COG.jsonp(path, function(data) {
-            defineMany(data);
-        });
-    } // load
+    function hitTest(drawData, hitX, hitY) {
+        return context.isPointInPath(hitX, hitY);
+    } // hitTest
 
-    /* module definition */
+    function prepare(layers, state, tickCount, hitData) {
+        var ii,
+            canClip = false,
+            viewOffset = view.getOffset(),
+            scaleFactor = view.getScaleFactor(),
+            viewX = viewOffset.x,
+            viewY = viewOffset.y;
 
-    var module = {
-        apply: apply,
-        define: define,
-        defineMany: defineMany,
-        get: get,
-        init: init,
-        load: load
-    };
+        if (context) {
+            context.restore();
+        }
+        else {
+            context = canvas.getContext('2d');
+        } // if..else
 
-    defineMany({
-        basic: {
-            lineWidth: 1,
-            strokeStyle: '#000',
-            fillStyle: '#fff'
+        for (ii = layers.length; ii--; ) {
+            canClip = canClip || layers[ii].clip;
+        } // for
+
+        viewport = XYRect.init(viewX, viewY, viewX + vpWidth, viewY + vpHeight);
+        viewport.scaleFactor = scaleFactor;
+
+        if (scaleFactor !== 1) {
+            var centerX = viewport.x1 + (vpWidth >> 1),
+                centerY = viewport.y1 + (vpHeight >> 1);
+
+            viewport = XYRect.fromCenter(
+                centerX,
+                centerY,
+                vpWidth / scaleFactor | 0,
+                vpHeight / scaleFactor | 0
+            );
+        } // if
+
+        drawOffsetX = viewport.x1;
+        drawOffsetY = viewport.y1;
+
+        if (context) {
+            if (! canClip) {
+                context.clearRect(0, 0, vpWidth, vpHeight);
+            } // if
+
+            context.save();
+
+            context.scale(scaleFactor, scaleFactor);
+        } // if
+
+        context.globalCompositeOperation = 'source-over';
+
+        return context;
+    } // prepare
+
+    /**
+    ### prepArc(drawable, hitData, state, opts)
+    */
+    function prepArc(drawable, hitData, state, opts) {
+        context.beginPath();
+        context.arc(
+            drawable.xy.x - (transform ? transform.x : drawOffsetX),
+            drawable.xy.y - (transform ? transform.y : drawOffsetY),
+            drawable.size >> 1,
+            drawable.startAngle,
+            drawable.endAngle,
+            false
+        );
+
+        return initDrawData(hitData, state);
+    } // prepArc
+
+    /**
+    ### prepImage(drawable, hitData, state, opts)
+    */
+    function prepImage(drawable, hitData, state, opts) {
+        var realX = (opts.x || drawable.xy.x) - (transform ? transform.x : drawOffsetX),
+            realY = (opts.y || drawable.xy.y) - (transform ? transform.y : drawOffsetY),
+            image = opts.image || drawable.image;
+
+        if (image) {
+            context.beginPath();
+            context.rect(
+                realX,
+                realY,
+                opts.width || image.width,
+                opts.height || image.height
+            );
+
+            return initDrawData(hitData, state, function(drawData) {
+                context.drawImage(
+                    image,
+                    realX,
+                    realY,
+                    opts.width || image.width,
+                    opts.height || image.height
+                );
+            });
+        }
+    } // prepImage
+
+    /**
+    ### prepPoly(drawable, hitData, state, opts)
+    */
+    function prepPoly(drawable, hitData, state, opts) {
+        var first = true,
+            points = opts.points || drawable.points,
+            offsetX = transform ? transform.x : drawOffsetX,
+            offsetY = transform ? transform.y : drawOffsetY;
+
+        context.beginPath();
+
+        for (var ii = points.length; ii--; ) {
+            var x = points[ii].x - offsetX,
+                y = points[ii].y - offsetY;
+
+            if (first) {
+                context.moveTo(x, y);
+                first = false;
+            }
+            else {
+                context.lineTo(x, y);
+            } // if..else
+        } // for
+
+        return initDrawData(hitData, state);
+    } // prepPoly
+
+    /* initialization */
+
+    createCanvas();
+
+    var _this = COG.extend(baseRenderer, {
+        interactTarget: canvas,
+
+        applyStyle: applyStyle,
+        applyTransform: applyTransform,
+        drawTiles: drawTiles,
+
+        hitTest: hitTest,
+        prepare: prepare,
+
+        prepArc: prepArc,
+        prepImage: prepImage,
+        prepPoly: prepPoly,
+
+        getContext: function() {
+            return context;
         },
 
-        waypoints: {
-            lineWidth: 4,
-            strokeStyle: 'rgba(0, 51, 119, 0.9)',
-            fillStyle: '#FFF'
+        getDimensions: function() {
+            return {
+                width: vpWidth,
+                height: vpHeight
+            };
         },
 
-        waypointsHover: {
-            lineWidth: 4,
-            strokeStyle: '#f00',
-            fillStyle: '#FFF'
+        getOffset: function() {
+            return XY.init(drawOffsetX, drawOffsetY);
+        },
+
+        getViewport: function() {
+            return viewport;
         }
     });
 
-    return module;
-})();
+    return _this;
+});
+registerRenderer('dom', function(view, container, params, baseRenderer) {
+
+    /* internals */
+
+    var PROP_WK_TRANSFORM = '-webkit-transform',
+        supportTransforms = typeof container.style[PROP_WK_TRANSFORM] != 'undefined',
+        imageDiv = null;
+
+    function createImageContainer() {
+        imageDiv = document.createElement('div');
+        imageDiv.id = COG.objId('domImages');
+        imageDiv.style.cssText = COG.formatStr(
+            'position: absolute; overflow: hidden; width: {0}px; height: {1}px;',
+            container.offsetWidth,
+            container.offsetHeight);
+
+        container.insertBefore(imageDiv, baseRenderer.interactTarget);
+    } // createImageContainer
+
+    /* exports */
+
+    function drawTiles(tiles) {
+        var tile,
+            image,
+            offset = _this.getOffset(),
+            viewport = _this.getViewport(),
+            inViewport,
+            offsetX = offset.x,
+            offsetY = offset.y,
+            minX = offsetX - 256,
+            minY = offsetY - 256,
+            maxX = offsetX + viewport.width,
+            maxY = offsetY + viewport.height,
+            relX, relY;
+
+        for (var ii = tiles.length; ii--; ) {
+            tile = tiles[ii];
+            image = tile.image;
+
+            inViewport = tile.x >= minX && tile.x <= maxX &&
+                tile.y >= minY && tile.y <= maxY;
+
+            relX = tile.x - offsetX;
+            relY = tile.y - offsetY;
+
+            if (! image) {
+                image = tile.image = new Image();
+                image.src = tile.url;
+
+                imageDiv.appendChild(image);
+                image.style.cssText = '-webkit-user-select: none; -webkit-box-shadow: none; -moz-box-shadow: none; box-shadow: none; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; border-style: initial; border-color: initial; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; position: absolute;';
+            } // if
+
+            if (supportTransforms) {
+                image.style[PROP_WK_TRANSFORM] = 'translate3d(' + relX +'px, ' + relY + 'px, 0px)';
+            }
+            else {
+                image.style.left = relX + 'px';
+                image.style.top = relY + 'px';
+            } // if..else
+
+            image.style.display = 'block'; // inViewport ? 'block' : 'none';
+        } // for
+    } // drawTiles
+
+    function reset() {
+        imageDiv.innerHTML = '';
+    } // reset
+
+    /* initialization */
+
+    createImageContainer();
+
+    var _this = COG.extend(baseRenderer, {
+        drawTiles: drawTiles,
+        reset: reset
+    });
+
+    return _this;
+});
+
+/* internals */
+
+var styleRegistry = {};
+
+/**
+### createStyle(params)
+*/
+function createStyle(params) {
+    params = COG.extend({
+        lineWidth: undefined,
+        lineCap: undefined,
+        lineJoin: undefined,
+        miterLimit: undefined,
+        lineStyle: undefined,
+
+        fillStyle: undefined,
+
+        globalAlpha: undefined,
+        globalCompositeOperation: undefined
+    }, params);
+
+    var mods = [];
+
+    /* internal functions */
+
+    function fillMods(keyName) {
+        var paramVal = params[keyName];
+
+        if (! isType(paramVal, typeUndefined)) {
+            mods.push(function(context) {
+                context[keyName] = paramVal;
+            });
+        } // if
+    } // fillMods
+
+    function reloadMods() {
+        mods = [];
+
+        for (var keyName in params) {
+            fillMods(keyName);
+        } // for
+    } // reloadMods
+
+    /* exports */
+
+    function update(keyName, keyVal) {
+        params[keyName] = keyVal;
+        reloadMods();
+    } // update
+
+    /* define _self */
+
+    var _self = {
+        applyToContext: function(context) {
+            for (var ii = mods.length; ii--; ) {
+                mods[ii](context);
+            } // for
+        },
+
+        update: update
+    };
+
+    /* initialize */
+
+    reloadMods();
+    return _self;
+} // createStyle
+
+/* exports */
+
+/**
+# T5.defineStyle(id, data)
+*/
+var defineStyle = exports.defineStyle = function(id, data) {
+    styleRegistry[id] = createStyle(data);
+
+    return id;
+};
+
+/**
+# T5.defineStyles(data)
+*/
+var defineStyles = exports.defineStyles = function(data) {
+    for (var styleId in data) {
+        defineStyle(styleId, data[styleId]);
+    } // for
+};
+
+/**
+# T5.getStyle(id)
+*/
+var getStyle = exports.getStyle = function(id) {
+    return styleRegistry[id];
+}; // getStyle
+
+/**
+# T5.loadStyles(path, callback)
+*/
+var loadStyles = exports.loadStyles = function(path) {
+    COG.jsonp(path, function(data) {
+        defineStyles(data);
+    });
+}; // loadStyles
+
+
+defineStyles({
+    basic: {
+        lineWidth: 1,
+        strokeStyle: '#000',
+        fillStyle: '#fff'
+    },
+
+    waypoints: {
+        lineWidth: 4,
+        strokeStyle: 'rgba(0, 51, 119, 0.9)',
+        fillStyle: '#FFF'
+    },
+
+    waypointsHover: {
+        lineWidth: 4,
+        strokeStyle: '#f00',
+        fillStyle: '#FFF'
+    }
+});
 var viewStates = {
     NONE: 0,
     ACTIVE: 1,
@@ -3350,15 +3474,6 @@ view.bind('tapHit', function(evt, elements, absXY, relXY, offsetXY) {
 ### hoverHit
 As per the tapHit event, but triggered through a mouse-over event.
 
-### resize
-This event is fired when the view has been resized (either manually or
-automatically).
-<pre>
-view.bind('resize', function(evt, width, height) {
-
-});
-</pre>
-
 ### refresh
 This event is fired once the view has gone into an idle state or every second
 (configurable).
@@ -3399,7 +3514,6 @@ var View = function(params) {
         container: "",
         captureHover: true,
         captureDrag: false,
-        fastDraw: false,
         inertia: true,
         minRefresh: 1000,
         pannable: false,
@@ -3416,6 +3530,7 @@ var View = function(params) {
 
         minZoom: 1,
         maxZoom: 1,
+        renderer: 'canvas',
         zoomEasing: COG.easing('quad.out'),
         zoomDuration: 300,
         zoomLevel: 1
@@ -3423,13 +3538,14 @@ var View = function(params) {
 
     var TURBO_CLEAR_INTERVAL = 500;
 
-    var layers = [],
+    var caps = {},
+        layers = [],
         layerCount = 0,
-        canvas = document.getElementById(params.container),
+        container = document.getElementById(params.container),
         dragObject = null,
+        frameIndex = 0,
         mainContext = null,
-        isIE = typeof window.attachEvent != 'undefined',
-        flashPolyfill,
+        isIE = isType(window.attachEvent, typeFunction),
         hitFlagged = false,
         minRefresh = params.minRefresh,
         offsetX = 0,
@@ -3441,20 +3557,12 @@ var View = function(params) {
         offsetWrapX = false,
         offsetWrapY = false,
         clipping = params.clipping,
-        cycleRect = null,
-        cycling = false,
-        drawRect,
         guides = params.guides,
-        deviceScaling = 1,
         wakeTriggers = 0,
-        halfWidth = 0,
-        halfHeight = 0,
         hitData = null,
         interactOffset = null,
         interactCenter = null,
         interacting = false,
-        layerMinXY = null,
-        layerMaxXY = null,
         lastRefresh = 0,
         lastClear = 0,
         lastHitData = null,
@@ -3464,12 +3572,9 @@ var View = function(params) {
         scaleTween = null,
         lastScaleFactor = 0,
         lastCycleTicks = 0,
-        sizeChanged = false,
         eventMonitor = null,
         turbo = params.turbo,
         tweeningOffset = false,
-        viewHeight,
-        viewWidth,
         cycleDelay = 1000 / params.fps | 0,
         viewChanges = 0,
         zoomX, zoomY,
@@ -3506,34 +3611,24 @@ var View = function(params) {
             setZoomLevel(zoomLevel + scaleFactorExp, zoomX, zoomY);
         }
 
-        invalidate();
+        _self.redraw = true;
     } // scaleView
 
     function setZoomCenter(xy) {
-        if (! xy) {
-            xy = XY.init(halfWidth, halfHeight);
-        } // if
-
-        interactOffset = XY.init(offsetX, offsetY);
-        interactCenter = XY.offset(xy, offsetX, offsetY);
-
-        zoomX = interactCenter.x;
-        zoomY = interactCenter.y;
-
     } // setZoomCenter
 
     function getScaledOffset(srcX, srcY) {
-        var invScaleFactor = 1 / scaleFactor,
-            scaledX = drawRect.x1 + srcX * invScaleFactor,
-            scaledY = drawRect.y1 + srcY * invScaleFactor;
+        var viewport = _self.getViewport(),
+            invScaleFactor = 1 / scaleFactor,
+            scaledX = viewport ? (viewport.x1 + srcX * invScaleFactor) : srcX,
+            scaledY = viewport ? (viewport.y1 + srcY * invScaleFactor) : srcY;
 
         return XY.init(scaledX, scaledY);
     } // getScaledOffset
 
     function handleContainerUpdate(name, value) {
-        canvas = document.getElementById(value);
-
-        attachToCanvas();
+        container = document.getElementById(value);
+        createRenderer();
     } // handleContainerUpdate
 
     function handleDoubleTap(evt, absXY, relXY) {
@@ -3544,7 +3639,12 @@ var View = function(params) {
             getScaledOffset(relXY.x, relXY.y));
 
         if (params.scalable) {
-            scale(2, relXY, params.zoomEasing, null, params.zoomDuration);
+            scale(
+                2,
+                getScaledOffset(relXY.x, relXY.y),
+                params.zoomEasing,
+                null,
+                params.zoomDuration);
         } // if
     } // handleDoubleTap
 
@@ -3552,30 +3652,10 @@ var View = function(params) {
         dragObject = null;
 
         initHitData('down', absXY, relXY);
-
-        /*
-        elements = hitTest(absXY, relXY, downX, downY);
-
-        for (var ii = elements.length; ii--; ) {
-            if (dragStart(elements[ii], downX, downY)) {
-                break;
-            } // if
-        } // for
-
-        COG.info('pointer down on ' + elements.length + ' elements');
-        */
     } // handlePointerDown
 
     function handlePointerHover(evt, absXY, relXY) {
         initHitData('hover', absXY, relXY);
-
-        /*
-
-        var scaledOffset = getScaledOffset(relXY.x, relXY.y);
-
-        hitData = initHitData('hover', scaledOffset.x, )
-        hitTest(absXY, relXY, hoverOffset.x, hoverOffset.y, 'hover');
-        */
     } // handlePointerHover
 
     function handlePointerMove(evt, absXY, relXY) {
@@ -3588,12 +3668,12 @@ var View = function(params) {
 
     function handleResize(evt) {
         clearTimeout(resizeCanvasTimeout);
-        resizeCanvasTimeout = setTimeout(attachToCanvas, 250);
+        resizeCanvasTimeout = setTimeout(function() {
+            renderer.checkSize();
+        }, 250);
     } // handleResize
 
     function handleResync(evt, view) {
-        layerMinXY = null;
-        layerMaxXY = null;
     } // handleResync
 
     function handleRotationUpdate(name, value) {
@@ -3608,66 +3688,18 @@ var View = function(params) {
 
     /* private functions */
 
-    function attachToCanvas(newWidth, newHeight) {
-        var ii;
+    function createRenderer() {
+        renderer = attachRenderer(params.renderer, _self, container);
 
-        flashPolyfill = typeof FlashCanvas !== 'undefined';
-        COG.info('is flash = ' + flashPolyfill);
-
-        if (canvas) {
-            if (params.autoSize && canvas.parentNode) {
-                newWidth = canvas.parentNode.offsetWidth;
-                newHeight = canvas.parentNode.offsetHeight;
-            } // if
-
-            try {
-                if (! canvas.id) {
-                    canvas.id = params.id + '_canvas';
-                } // if
-
-                mainContext = canvas.getContext('2d');
-            }
-            catch (e) {
-                COG.exception(e);
-                throw new Error("Could not initialise canvas on specified view element");
-            }
-
-            if ((newWidth && newHeight) && (viewHeight !== newHeight || viewWidth !== newWidth)) {
-                sizeChanged = true;
-
-                viewWidth = newWidth;
-                viewHeight = newHeight;
-                halfWidth = viewWidth >> 1;
-                halfHeight = viewHeight >> 1;
-
-                _self.trigger('resize', viewWidth, viewHeight);
-
-                for (ii = layerCount; ii--; ) {
-                    layers[ii].trigger('resize', viewWidth, viewHeight);
-                } // for
-            } // if
-
-            for (ii = layerCount; ii--; ) {
-                layerContextChanged(layers[ii]);
-            } // for
-
-            invalidate();
-
-            captureInteractionEvents();
-        } // if
-    } // attachToCanvas
+        captureInteractionEvents();
+    } // createRenderer
 
     function addLayer(id, value) {
-        value.setId(id);
+        value.id = id;
         value.added = ticks();
 
-        value.bind('remove', function() {
-            _self.removeLayer(id);
-        });
-
-        layerContextChanged(value);
-
-        value.setParent(_self);
+        value.view = _self;
+        value.trigger('parentChange', _self, container, mainContext);
 
         layers.push(value);
 
@@ -3689,26 +3721,28 @@ var View = function(params) {
             eventMonitor.unbind();
         } // if
 
-        eventMonitor = INTERACT.watch(canvas);
+        if (renderer) {
+            eventMonitor = INTERACT.watch(renderer.interactTarget);
 
-        if (params.pannable) {
-            eventMonitor.pannable().bind('pan', handlePan);
+            if (params.pannable) {
+                eventMonitor.pannable().bind('pan', handlePan);
+            } // if
+
+            if (params.scalable) {
+                eventMonitor.bind('zoom', handleZoom);
+                eventMonitor.bind('doubleTap', handleDoubleTap);
+            } // if
+
+            eventMonitor.bind('pointerDown', handlePointerDown);
+            eventMonitor.bind('pointerMove', handlePointerMove);
+            eventMonitor.bind('pointerUp', handlePointerUp);
+
+            if (params.captureHover) {
+                eventMonitor.bind('pointerHover', handlePointerHover);
+            } // if
+
+            eventMonitor.bind('tap', handlePointerTap);
         } // if
-
-        if (params.scalable) {
-            eventMonitor.bind('zoom', handleZoom);
-            eventMonitor.bind('doubleTap', handleDoubleTap);
-        } // if
-
-        eventMonitor.bind('pointerDown', handlePointerDown);
-        eventMonitor.bind('pointerMove', handlePointerMove);
-        eventMonitor.bind('pointerUp', handlePointerUp);
-
-        if (params.captureHover) {
-            eventMonitor.bind('pointerHover', handlePointerHover);
-        } // if
-
-        eventMonitor.bind('tap', handlePointerTap);
     } // captureInteractionEvents
 
     /*
@@ -3716,9 +3750,15 @@ var View = function(params) {
     offset using wrapping if allowed.  The function is much more 'if / then / elsey'
     than I would like, and might be optimized at some stage, but it does what it needs to
     */
-    function constrainOffset(allowWrap) {
-        var testX = offsetWrapX ? offsetX + halfWidth : offsetX,
-            testY = offsetWrapY ? offsetY + halfHeight : offsetY;
+    function constrainOffset(viewport, allowWrap) {
+        if (! viewport) {
+            return;
+        } // if
+
+        var testX = offsetWrapX ? offsetX + (viewport.width >> 1) : offsetX,
+            testY = offsetWrapY ? offsetY + (viewport.height >> 1) : offsetY,
+            viewWidth = viewport.width,
+            viewHeight = viewport.height;
 
         if (offsetMaxX && offsetMaxX > viewWidth) {
             if (testX + viewWidth > offsetMaxX) {
@@ -3760,7 +3800,7 @@ var View = function(params) {
                     drop);
 
             if (dragOk) {
-                invalidate();
+                _self.redraw = true;
             } // if
 
             if (drop) {
@@ -3785,7 +3825,7 @@ var View = function(params) {
 
     function getLayerIndex(id) {
         for (var ii = layerCount; ii--; ) {
-            if (layers[ii].getId() == id) {
+            if (layers[ii].id === id) {
                 return ii;
             } // if
         } // for
@@ -3822,93 +3862,28 @@ var View = function(params) {
         } // if
     } // calcZoomRect
 
-    function drawView(drawState, rect, canClip, tickCount) {
+    function drawView() {
         var drawLayer,
             rectCenter = XYRect.center(rect),
             rotation = Math.PI,
             ii = 0;
 
-        if (scaleFactor !== 1) {
-            drawRect = calcZoomRect(rect);
-        }
-        else {
-            drawRect = XYRect.copy(rect);
-        } // if..else
+        /* first pass clip */
 
-        if (! canClip) {
-            mainContext.clearRect(0, 0, viewWidth, viewHeight);
-        } // if
-
-        drawRect.scaleFactor = scaleFactor;
-
-        mainContext.save();
-
-        try {
-            if (scaleFactor !== 1) {
-                mainContext.scale(scaleFactor, scaleFactor);
-            } // if
-
-            layerMinXY = null;
-            layerMaxXY = null;
-
-            if (canClip) {
-                mainContext.beginPath();
-
-                for (ii = layerCount; ii--; ) {
-                    if (layers[ii].clip) {
-                        layers[ii].clip(mainContext, drawRect, drawState, _self, tickCount);
-                    } // if
-                } // for
-
-                mainContext.closePath();
-                mainContext.clip();
-            } // if
-
-            /* second pass - draw */
-
-            mainContext.globalCompositeOperation = 'source-over';
+        if (canClip) {
+            mainContext.beginPath();
 
             for (ii = layerCount; ii--; ) {
-                drawLayer = layers[ii];
-
-                if (drawLayer.shouldDraw(state, cycleRect)) {
-                    var layerStyle = drawLayer.style,
-                        previousStyle = layerStyle ? Style.apply(mainContext, layerStyle) : null;
-
-                    /*
-                    TODO: fix the constraining (more appropriate within the constrain offset I would think now)
-                    if (drawLayer.minXY) {
-                        layerMinXY = layerMinXY ?
-                            XY.min(layerMinXY, drawLayer.minXY) :
-                            XY.copy(drawLayer.minXY);
-                    } // if
-
-                    if (drawLayer.maxXY) {
-                        layerMaxXY = layerMaxXY ?
-                            XY.max(layerMaxXY, drawLayer.maxXY) :
-                            XY.copy(drawLayer.maxXY);
-                    } // if
-                    */
-
-                    drawLayer.draw(
-                        mainContext,
-                        drawRect,
-                        drawState,
-                        _self,
-                        tickCount,
-                        hitData);
-
-                    if (previousStyle) {
-                        Style.apply(mainContext, previousStyle);
-                    } // if
-
+                if (layers[ii].clip) {
+                    layers[ii].clip(mainContext, drawRect, drawState, _self, tickCount);
                 } // if
             } // for
 
-        }
-        finally {
-            mainContext.restore();
-        } // try..finally
+            mainContext.closePath();
+            mainContext.clip();
+        } // if
+
+        /* second pass - draw */
 
         viewChanges = 0;
 
@@ -3949,14 +3924,23 @@ var View = function(params) {
     function cycle(tickCount) {
         var redrawBG,
             panning,
-            clippable = false;
+            newFrame = false;
 
-        if (! (viewChanges | flashPolyfill)) {
-            cycling = false;
-            return;
+        tickCount = tickCount ? tickCount : new Date().getTime();
+
+        newFrame = tickCount - lastCycleTicks > cycleDelay;
+
+        if (newFrame) {
+            _self.trigger('enterFrame', tickCount, frameIndex++);
+
+            if (tickCount - lastRefresh > minRefresh) {
+                refresh();
+            } // if
+
+            lastCycleTicks = tickCount;
         }
 
-        if (true || tickCount - lastCycleTicks > cycleDelay) {
+        if (newFrame && _self.redraw) {
             panning = offsetX !== lastOffsetX || offsetY !== lastOffsetY;
 
             state = stateActive |
@@ -3967,55 +3951,64 @@ var View = function(params) {
             redrawBG = (state & (stateZoom | statePan)) !== 0;
             interacting = redrawBG && (state & stateAnimating) === 0;
 
-            if (sizeChanged && canvas) {
-                if (flashPolyfill) {
-                    FlashCanvas.initElement(canvas);
-                } // if
-
-                canvas.width = viewWidth;
-                canvas.height = viewHeight;
-
-                canvas.style.width = viewWidth + 'px';
-                canvas.style.height = viewHeight + 'px';
-
-                sizeChanged = false;
-            } // if
-
             /*
             if (offsetMaxX || offsetMaxY) {
                 constrainOffset();
             } // if
             */
 
-            cycleRect = getViewRect();
 
+            if (renderer.prepare(layers, state, tickCount, hitData)) {
+                var viewport = renderer.getViewport();
 
-            for (var ii = layerCount; ii--; ) {
-                state = state | (layers[ii].animated ? stateAnimating : 0);
+                /*
+                for (var ii = layerCount; ii--; ) {
+                    state = state | (layers[ii].animated ? stateAnimating : 0);
 
-                layers[ii].cycle(tickCount, cycleRect, state);
+                    layers[ii].cycle(tickCount, viewport, state);
+                } // for
+                */
 
-                clippable = layers[ii].clip || clippable;
-            } // for
+                for (ii = layerCount; ii--; ) {
+                    var drawLayer = layers[ii];
 
+                    if ((state & drawLayer.validStates) !== 0) {
+                        var previousStyle = drawLayer.style ?
+                                renderer.applyStyle(drawLayer.style) :
+                                null;
+
+                        drawLayer.draw(
+                            renderer,
+                            state,
+                            _self,
+                            tickCount,
+                            hitData);
+
+                        if (previousStyle) {
+                            renderer.applyStyle(previousStyle);
+                        } // if
+                    } // if
+                } // for
+
+                renderer.render();
+            } // if
+
+            /*
             drawView(
                 state,
                 cycleRect,
                 clipping && clippable && (! redrawBG),
                 tickCount);
+            */
 
             if (hitData) {
                 checkHits();
                 hitData = null;
             } // if
 
-            if (tickCount - lastRefresh > minRefresh) {
-                refresh();
-            } // if
-
-            lastCycleTicks = tickCount;
             lastOffsetX = offsetX;
             lastOffsetY = offsetY;
+            _self.redraw = false;
         } // if
 
         animFrame(cycle);
@@ -4031,13 +4024,9 @@ var View = function(params) {
         } // for
 
         if (hitFlagged) {
-            invalidate();
+            _self.redraw = true;
         } // if
     } // initHitData
-
-    function layerContextChanged(layer) {
-        layer.trigger("contextChanged", mainContext);
-    } // layerContextChanged
 
     /* exports */
 
@@ -4063,30 +4052,13 @@ var View = function(params) {
         } // for
     } // eachLayer
 
-    function invalidate() {
-        viewChanges += 1;
-
-        if (! cycling) {
-            cycling = true;
-            animFrame(cycle);
-        } // if
-    } // invalidate
-
-    /**
-    ### getDimensions(): T5.Dimensions
-    Return the Dimensions of the View
-    */
-    function getDimensions() {
-        return Dimensions.init(viewWidth, viewHeight);
-    } // getDimensions
-
     /**
     ### getLayer(id: String): T5.ViewLayer
     Get the ViewLayer with the specified id, return null if not found
     */
     function getLayer(id) {
         for (var ii = 0; ii < layerCount; ii++) {
-            if (layers[ii].getId() == id) {
+            if (layers[ii].id === id) {
                 return layers[ii];
             } // if
         } // for
@@ -4103,12 +4075,31 @@ var View = function(params) {
     } // getOffset
 
     /**
+    ### getRenderer(): T5.Renderer
+    */
+    function getRenderer() {
+        return renderer;
+    } // getRenderer
+
+    /**
+    ### getScaleFactor(): float
+    Return the current scaling factor
+    */
+    function getScaleFactor() {
+        return scaleFactor;
+    } // getScaleFactor
+
+    /**
     ### getZoomLevel(): int
     Return the current zoom level of the view, for views that do not support
     zooming, this will always return a value of 1
     */
     function getZoomLevel() {
         return zoomLevel;
+    }
+
+    function invalidate() {
+        _self.redraw = true;
     }
 
     /**
@@ -4120,21 +4111,33 @@ var View = function(params) {
         offsetMaxX = maxX;
         offsetMaxY = maxY;
 
-        offsetWrapX = typeof wrapX != 'undefined' ? wrapX : false;
-        offsetWrapY = typeof wrapY != 'undefined' ? wrapY : false;
+        offsetWrapX = wrapX;
+        offsetWrapY = wrapY;
     } // setMaxOffset
 
     /**
-    ### getViewRect(): T5.XYRect
+    ### getViewport(): T5.XYRect
     Return a T5.XYRect for the last drawn view rect
     */
-    function getViewRect() {
-        return XYRect.init(
-            offsetX,
-            offsetY,
-            offsetX + viewWidth,
-            offsetY + viewHeight);
-    } // getViewRect
+    function getViewport() {
+        var viewport, dimensions;
+
+        if (renderer) {
+            viewport = renderer.getViewport();
+
+            if (! viewport) {
+                dimensions = renderer.getDimensions();
+                viewport = XYRect.init(
+                    offsetX,
+                    offsetY,
+                    offsetX + dimensions.width,
+                    offsetY + dimensions.height
+                );
+            }
+        } // if
+
+        return viewport;
+    } // getViewport
 
     /**
     ### pan(x: int, y: int, tweenFn: EasingFn, tweenDuration: int, callback: fn)
@@ -4155,7 +4158,7 @@ var View = function(params) {
     */
     function setLayer(id, value) {
         for (var ii = 0; ii < layerCount; ii++) {
-            if (layers[ii].getId() === id) {
+            if (layers[ii].id === id) {
                 layers.splice(ii, 1);
                 break;
             } // if
@@ -4163,10 +4166,9 @@ var View = function(params) {
 
         if (value) {
             addLayer(id, value);
-            value.trigger('refresh', _self, getViewRect());
         } // if
 
-        invalidate();
+        refresh();
 
         return value;
     } // setLayer
@@ -4177,14 +4179,18 @@ var View = function(params) {
     events and will do some of their recalculations when this is called.
     */
     function refresh() {
-        if (offsetMaxX || offsetMaxY) {
-            constrainOffset(true);
+        var viewport = renderer ? renderer.getViewport() : null;
+
+        if (viewport) {
+            if (offsetMaxX || offsetMaxY) {
+                constrainOffset(viewport);
+            } // if
+
+            lastRefresh = new Date().getTime();
+            triggerAll('refresh', _self, viewport);
+
+            _self.redraw = true;
         } // if
-
-        lastRefresh = new Date().getTime();
-        triggerAll('refresh', _self, getViewRect());
-
-        invalidate();
     } // refresh
 
     /**
@@ -4197,7 +4203,7 @@ var View = function(params) {
             _self.trigger('layerRemoved', layers[layerIndex]);
 
             layers.splice(layerIndex, 1);
-            invalidate();
+            _self.redraw = true;
         } // if
 
         layerCount = layers.length;
@@ -4206,21 +4212,6 @@ var View = function(params) {
     function resetScale() {
         scaleFactor = 1;
     } // resetScale
-
-    /**
-    ### resize(width: Int, height: Int)
-    Perform a manual resize of the canvas associated with the view.  If the
-    view was originally marked as `autosize` this will override that instruction.
-    */
-    function resize(width, height) {
-        if (canvas) {
-            params.autoSize = false;
-
-            if (viewWidth !== width || viewHeight !== height) {
-                attachToCanvas(width, height);
-            } // if
-        } // if
-    } // resize
 
     /**
     ### scale(targetScaling: float, targetXY: T5.XY, tweenFn: EasingFn, callback: fn)
@@ -4266,6 +4257,8 @@ var View = function(params) {
         value = max(params.minZoom, min(params.maxZoom, value));
         if (value !== zoomLevel) {
             var scaling = pow(2, value - zoomLevel),
+                halfWidth = _self.width >> 1,
+                halfHeight = _self.height >> 1,
                 scaledHalfWidth = halfWidth / scaling | 0,
                 scaledHalfHeight = halfHeight / scaling | 0;
 
@@ -4283,7 +4276,10 @@ var View = function(params) {
 
             scaleFactor = 1;
 
+            renderer.reset();
+
             refresh();
+            _self.redraw = true;
         } // if
     } // setZoomLevel
 
@@ -4322,9 +4318,7 @@ var View = function(params) {
     */
     function updateOffset(x, y, tweenFn, tweenDuration, callback) {
 
-        var tweensComplete = 0,
-            minXYOffset = layerMinXY ? XY.offset(layerMinXY, -halfWidth, -halfHeight) : null,
-            maxXYOffset = layerMaxXY ? XY.offset(layerMaxXY, -halfWidth, -halfHeight) : null;
+        var tweensComplete = 0;
 
         function endTween() {
             tweensComplete += 1;
@@ -4337,16 +4331,6 @@ var View = function(params) {
                 } // if
             } // if
         } // endOffsetUpdate
-
-        if (minXYOffset) {
-            x = x < minXYOffset.x ? minXYOffset.x : x;
-            y = y < minXYOffset.y ? minXYOffset.y : y;
-        } // if
-
-        if (maxXYOffset) {
-            x = x > maxXYOffset.x ? maxXYOffset.x : x;
-            y = y > maxXYOffset.y ? maxXYOffset.y : y;
-        } // if
 
         if (tweenFn) {
             if ((state & statePan) !== 0) {
@@ -4373,7 +4357,7 @@ var View = function(params) {
             offsetX = x | 0;
             offsetY = y | 0;
 
-            invalidate();
+            _self.redraw = true;
 
             if (callback) {
                 callback();
@@ -4381,32 +4365,19 @@ var View = function(params) {
         } // if..else
     } // updateOffset
 
-    function triggerAllUntilCancelled() {
-        var cancel = _self.trigger.apply(null, arguments).cancel;
-        for (var ii = layers.length; ii--; ) {
-            cancel = layers[ii].trigger.apply(null, arguments).cancel || cancel;
-        } // for
-
-        return (! cancel);
-    } // triggerAllUntilCancelled
-
     /* object definition */
 
     var _self = {
         id: params.id,
-        deviceScaling: deviceScaling,
-        fastDraw: params.fastDraw || getConfig().requireFastDraw,
 
         detach: detach,
         eachLayer: eachLayer,
-        getDimensions: getDimensions,
         getLayer: getLayer,
         getZoomLevel: getZoomLevel,
         setLayer: setLayer,
         invalidate: invalidate,
         refresh: refresh,
         resetScale: resetScale,
-        resize: resize,
         scale: scale,
         setZoomLevel: setZoomLevel,
         syncXY: syncXY,
@@ -4416,19 +4387,15 @@ var View = function(params) {
         /* offset methods */
 
         getOffset: getOffset,
+        getRenderer: getRenderer,
+        getScaleFactor: getScaleFactor,
         setMaxOffset: setMaxOffset,
-        getViewRect: getViewRect,
+        getViewport: getViewport,
         updateOffset: updateOffset,
         pan: pan
     };
 
-    deviceScaling = getConfig().getScaling();
-
     COG.observable(_self);
-
-    _self.bind('invalidate', function(evt) {
-        invalidate();
-    });
 
     _self.bind('resync', handleResync);
 
@@ -4458,420 +4425,28 @@ var View = function(params) {
             zindex: 20
         }));
 
+        caps = testResults;
+        createRenderer();
+
+        /*
         canvasCaps = testResults.canvas;
 
         attachToCanvas();
+        */
 
-        if (params.autoSize) {
-            if (isIE) {
-                window.attachEvent('onresize', handleResize);
-            }
-            else {
-                window.addEventListener('resize', handleResize, false);
-            }
-        } // if
+        if (isIE) {
+            window.attachEvent('onresize', handleResize);
+        }
+        else {
+            window.addEventListener('resize', handleResize, false);
+        }
     });
+
+    animFrame(cycle);
 
     return _self;
 }; // T5.View
 
-/**
-# T5.ViewLayer
-
-In and of it_self, a View does nothing.  Not without a
-ViewLayer at least.  A view is made up of one or more of these
-layers and they are drawn in order of *zindex*.
-
-## Constructor
-`T5.ViewLayer(params)`
-
-### Initialization Parameters
-
-- `id` - the id that has been assigned to the layer, this value
-can be used when later accessing the layer from a View.
-
-- `zindex` (default: 0) - a zindex in Tile5 means the same thing it does in CSS
-
-- `supportsFastDraw` (default: false) - The supportsFastDraw parameter specifies
-whether a layer will be drawn on in particular graphic states on devices that
-require fastDraw mode to perform at an optimal level.  For instance, if a layer does
-not support fastDraw and the View is panning or scaling, the layer will not be drawn
-so it's important when defining new layer classes to set this parameter to true if you
-want the layer visible during these operations.  Be aware though that layers that require
-some time to render will impact performance on slower devices.
-
-- `validStates` - the a bitmask of DisplayState that the layer will be drawn for
-
-
-## Events
-
-### changed
-This event is fired in response to the `changed` method being called.  This method is
-called primarily when you have made modifications to the layer in code and need to
-flag to the containing T5.View that an redraw is required.  Any objects that need to
-perform updates in response to this layer changing (including overriden implementations)
-can do this by binding to the change method
-
-~ layer.bind('change', function(evt, layer) {
-~   // do your updates here...
-~ });
-
-### parentChange
-This event is fired with the parent of the layer has been changed
-
-<pre>
-layer.bind('parentChange', function(evt, parent) {
-);
-</pre>
-
-## Methods
-
-*/
-var ViewLayer = function(params) {
-    params = COG.extend({
-        id: "",
-        zindex: 0,
-        supportFastDraw: false,
-        animated: false,
-        validStates: viewState('ACTIVE', 'ANIMATING', 'PAN', 'ZOOM'),
-        style: null,
-        minXY: null,
-        maxXY: null
-    }, params);
-
-    var parent = null,
-        parentFastDraw = false,
-        changed = false,
-        supportFastDraw = params.supportFastDraw,
-        id = params.id,
-        activeState = viewState("ACTIVE"),
-        validStates = params.validStates,
-        lastOffsetX = 0,
-        lastOffsetY = 0;
-
-    var _self = COG.extend({
-        /**
-        ### addToView(view)
-        Used to add the layer to a view.  This simply calls T5.View.setLayer
-        */
-        addToView: function(view) {
-            view.setLayer(id, _self);
-        },
-
-        /**
-        ### shouldDraw(displayState)
-
-        Called by a View that contains the layer to determine
-        whether or not the layer should be drawn for the current display state.
-        The default implementation of this method first checks the fastDraw status,
-        and then continues to do a bitmask operation against the validStates property
-        to see if the current display state is acceptable.
-        */
-        shouldDraw: function(displayState, viewRect) {
-            return ((displayState & validStates) !== 0);
-        },
-
-        /**
-        ### clip(context, offset, dimensions, state)
-        */
-        clip: null,
-
-        /**
-        ### cycle(tickCount, offset, state)
-
-        Called in the View method of the same name, each layer has an opportunity
-        to update it_self in the current animation cycle before it is drawn.
-        */
-        cycle: function(tickCount, offset, state) {
-        },
-
-        /**
-        ### draw(context, offset, dimensions, state, view)
-
-        The business end of layer drawing.  This method is called when a layer needs to be
-        drawn and the following parameters are passed to the method:
-
-            - context - the canvas context that we are drawing to
-            - viewRect - the current view rect
-            - state - the current DisplayState of the view
-            - view - a reference to the View
-            - tickCount - the current tick count
-            - hitData - an object that contains information regarding the current hit data
-        */
-        draw: function(context, viewRect, state, view, tickCount, hitData) {
-        },
-
-        /**
-        ### hitGuess(hitX, hitY, state, view)
-        The hitGuess function is used to determine if a layer would return elements for
-        a more granular hitTest.  Essentially, hitGuess calls are used when events such
-        as hover and tap events occur on a view and then if a positive result is detected
-        the canvas is invalidated and checked in detail during the view layer `draw` operation.
-        By doing this we can just do simple geometry operations in the hitGuess function
-        and then make use of canvas functions such as `isPointInPath` to do most of the heavy
-        lifting for us
-        */
-        hitGuess: null,
-
-        /**
-        ### remove()
-
-        The remove method enables a view to flag that it is ready or should be removed
-        from any views that it is contained in.  This was introduced specifically for
-        animation layers that should only exist as long as an animation is active.
-        */
-        remove: function() {
-            _self.trigger('remove', _self);
-        },
-
-        /**
-        ### changed()
-
-        The changed method is used to flag the layer has been modified and will require
-        a redraw
-
-        */
-        changed: function() {
-            changed = true;
-
-            if (parent) {
-                parent.invalidate();
-            } // if
-        },
-
-        /**
-        ### hitTest(offsetX, offsetY, state, view)
-        */
-        hitTest: null,
-
-        /**
-        ### getId()
-
-        */
-        getId: function() {
-            return id;
-        },
-
-        /**
-        ### setId(string)
-
-        */
-        setId: function(value) {
-            id = value;
-        },
-
-        /**
-        ### getParent()
-
-        */
-        getParent: function() {
-            return parent;
-        },
-
-        /**
-        ### setParent(view: View)
-
-        */
-        setParent: function(view) {
-            parent = view;
-
-            parentFastDraw = parent ? (parent.fastDraw && (displayState !== activeState)) : false;
-
-            _self.trigger('parentChange', parent);
-        }
-    }, params); // _self
-
-    COG.observable(_self);
-
-    _self.bind('drawComplete', function(evt, viewRect, tickCount) {
-        changed = false;
-
-        lastOffsetX = viewRect.x1;
-        lastOffsetY = viewRect.y1;
-    });
-
-    _self.bind('resync', function(evt, view) {
-       if (_self.minXY) {
-           view.syncXY(_self.minXY);
-       } // if
-
-       if (_self.maxXY) {
-           view.syncXY(_self.maxXY);
-       } // if
-    });
-
-    return _self;
-}; // T5.ViewLayer
-/**
-# T5.ImageLayer
-*/
-var ImageLayer = function(genId, params) {
-    params = COG.extend({
-        imageLoadArgs: {}
-    }, params);
-
-    var generator = genId ? Generator.init(genId, params) : null,
-        generateCount = 0,
-        images = [],
-        loadArgs = params.imageLoadArgs;
-
-    /* private internal functions */
-
-    function eachImage(viewRect, viewState, callback) {
-        for (var ii = images.length; ii--; ) {
-            var imageData = images[ii],
-                xx = imageData.x,
-                yy = imageData.y,
-                imageRect = XYRect.init(
-                    imageData.x,
-                    imageData.y,
-                    imageData.x + imageData.width,
-                    imageData.y + imageData.height);
-
-            if (callback && XYRect.intersect(viewRect, imageRect)) {
-                var image = Images.get(imageData.url, function(loadedImage) {
-                    _self.changed();
-                }, loadArgs);
-
-                if (image) {
-                    callback(image, xx, yy, imageData.width, imageData.height);
-                } // if
-            } // if
-        } // for
-    } // eachImage
-
-    /* every library should have a regenerate function - here's mine ;) */
-    function regenerate(viewRect) {
-        var sequenceId = ++generateCount,
-            view = _self.getParent();
-
-        if (generator) {
-
-            generator.run(view, viewRect, function(newImages) {
-                if (sequenceId == generateCount) {
-                    images = [].concat(newImages);
-                    view.invalidate();
-                } // if
-            });
-        } // if
-    } // regenerate
-
-    /* event handlers */
-
-    function handleRefresh(evt, view, viewRect) {
-        regenerate(viewRect);
-    } // handleViewIdle
-
-    function handleTap(evt, absXY, relXY, offsetXY) {
-        var tappedImages = [],
-            offsetX = offsetXY.x,
-            offsetY = offsetXY.y,
-            genImage,
-            tapped;
-
-        if (images) {
-            for (var ii = images.length; ii--; ) {
-                genImage = images[ii];
-
-                tapped = offsetX >= genImage.x &&
-                    offsetX <= genImage.x + genImage.width &&
-                    offsetY >= genImage.y &&
-                    offsetY <= genImage.y + genImage.height;
-
-                if (tapped) {
-                    tappedImages[tappedImages.length] = genImage;
-                } // if
-            } // for
-        } // if
-
-        if (tappedImages.length > 0) {
-            _self.trigger('tapImage', tappedImages, absXY, relXY, offsetXY);
-        } // if
-    } // handleTap
-
-    /* exports */
-
-    /**
-    ### changeGenerator(generatorId, args)
-    */
-    function changeGenerator(generatorId, args) {
-        generator = Generator.init(generatorId, COG.extend({}, params, args));
-
-        images = null;
-        regenerate(_self.getParent().getViewRect());
-    } // changeGenerator
-
-    function clip(context, viewRect, state, view) {
-        var offsetX = viewRect.x1,
-            offsetY = viewRect.y1;
-
-        eachImage(viewRect, state, function(image, x, y, width, height) {
-            context.rect(x - offsetX, y - offsetY, width, height);
-        });
-    } // clip
-
-    function draw(context, viewRect, state, view) {
-        var offsetX = viewRect.x1,
-            offsetY = viewRect.y1;
-
-        eachImage(viewRect, state, function(image, x, y, width, height) {
-            context.drawImage(
-                image,
-                x - offsetX,
-                y - offsetY,
-                image.width,
-                image.height);
-        });
-    } // draw
-
-    function mask(context, viewRect, state, view) {
-        eachImage(viewRect, state, function(image, x, y, width, height) {
-            COG.info('clearing rect @ x = ' + x + ', y = ' + y + ', width = ' + width + ', height = ' + height);
-            context.clearRect(x, y, width, height);
-        });
-    } // mask
-
-    /* definition */
-
-    var _self = COG.extend(new ViewLayer(params), {
-        changeGenerator: changeGenerator,
-        clip: clip,
-        draw: draw,
-        mask: mask
-    });
-
-    _self.bind('refresh', handleRefresh);
-    _self.bind('tap', handleTap);
-
-    return _self;
-};
-/**
-# T5.ImageGenerator
-
-## Events
-
-### update
-*/
-var ImageGenerator = function(params) {
-    params = COG.extend({
-        relative: false,
-        padding: 2
-    }, params);
-
-    /**
-    ### run(viewRect, view, callback)
-    */
-    function run(view, viewRect, callback) {
-        COG.warn('running base generator - this should be overriden');
-    } // run
-
-    var _self = {
-        run: run
-    };
-
-    COG.observable(_self);
-    return _self;
-};
 
 /**
 # T5.Drawable
@@ -4892,31 +4467,40 @@ var Drawable = function(params) {
         xy: null,
         size: null,
         fill: false,
+        stroke: true,
         draggable: false,
         observable: true, // TODO: should this be true or false by default
         properties: {},
-        type: 'shape',
-        transformable: false
+        typeName: 'Shape'
     }, params);
 
     COG.extend(this, params);
 
-    this.id = COG.objId(this.type);
+    this.id = COG.objId(this.typeName);
     this.bounds = null;
+    this.view = null;
+
+    this.animations = 0;
+    this.rotation = 0;
+    this.scaling = 1;
+    this.translateX = 0;
+    this.translateY = 0;
 
     if (this.observable) {
         COG.observable(this);
     } // if
-
-    if (this.transformable) {
-        transformable(this);
-    } // if
-
-    this.transformed = false;
 };
 
 Drawable.prototype = {
     constructor: Drawable,
+
+    /**
+    ### animate(fn, argsStart, argsEnd, opts)
+    */
+    animate: function(fn, argsStart, argsEnd, opts) {
+        animateDrawable(this, fn, argsStart, argsEnd, opts);
+    },
+
 
     /**
     ### drag(dragData, dragX, dragY, drop)
@@ -4924,29 +4508,21 @@ Drawable.prototype = {
     drag: null,
 
     /**
-    ### draw(context, x, y, width, height, state)
+    ### draw(renderer, drawData)
+    The draw method is provided for custom drawables. Internal drawables will delegate
+    their drawing to the function that is returned from the various prep* methods of the
+    renderer, however, when building some applications this really isn't suitable and
+    more is required.  Thus if required a custom draw method can be implemented to implement
+    the required functionality.
     */
-    draw: function(context, x, y, width, height, state) {
-        if (this.fill) {
-            context.fill();
-        } // if
-
-        context.stroke();
-    },
-
-    invalidate: function() {
-        var view = this.layer ? this.layer.getParent() : null;
-        if (view) {
-            view.invalidate();
-        } // if
-    },
+    draw: null,
 
     /**
-    ### prepPath(context, x, y, width, height, state)
-    Prepping the path for a shape is the main
+    ### getProps(renderer, state)
+    Get the drawable item properties that will be passed to the renderer during
+    the prepare and draw phase
     */
-    prepPath: function(context, x, y, width, height, state) {
-    },
+    getProps: null,
 
     /**
     ### resync(view)
@@ -4963,16 +4539,27 @@ Drawable.prototype = {
     },
 
     /**
-    ### setTransformable(boolean)
-    Update the transformable state
+    ### rotate(value)
     */
-    setTransformable: function(flag) {
-        if (flag && (! this.transformable)) {
-            transformable(this);
-        } // if
-
-        this.transformable = flag;
+    rotate: function(value) {
+        this.rotation = value;
     },
+
+    /**
+    ### scale(value)
+    */
+    scale: function(value) {
+        this.scaling = value;
+    },
+
+    /**
+    ### translate(x, y)
+    */
+    translate: function(x, y) {
+        this.translateX = x;
+        this.translateY = y;
+    },
+
 
     /**
     ### updateBounds(bounds: XYRect, updateXY: boolean)
@@ -4985,6 +4572,118 @@ Drawable.prototype = {
         } // if
     }
 };
+var ANI_WAIT = 1000 / 60 | 0,
+    animateCallbacks = [],
+    lastAniTicks = 0;
+
+function runAnimationCallbacks(tickCount) {
+    tickCount = tickCount ? tickCount : new Date().getTime();
+
+    if (tickCount - lastAniTicks > ANI_WAIT) {
+        var callbacks = animateCallbacks.splice(0);
+
+        for (var ii = callbacks.length; ii--; ) {
+            callbacks[ii](tickCount);
+        } // for
+
+        lastAniTicks = tickCount;
+    } // if
+
+    if (animateCallbacks.length) {
+        animFrame(runAnimationCallbacks);
+    } // if
+} // runAnimationCallback
+
+function registerAnimationCallback(fn) {
+    var scheduleCallbacks = animateCallbacks.length == 0;
+
+    animateCallbacks[animateCallbacks.length] = fn;
+
+    if (scheduleCallbacks) {
+        animFrame(runAnimationCallbacks);
+    } // if
+} // registerAnimationCallback
+
+function animateDrawable(target, fn, argsStart, argsEnd, opts) {
+    opts = COG.extend({
+        easing: 'sine.out',
+        duration: 1000,
+        progress: null,
+        complete: null,
+        autoInvalidate: true
+    }, opts);
+
+    var startTicks = new Date().getTime(),
+        lastTicks = 0,
+        targetFn = target[fn],
+        floorValue = fn == 'translate',
+        argsComplete = 0,
+        autoInvalidate = opts.autoInvalidate,
+        animateValid = argsStart.length && argsEnd.length &&
+            argsStart.length == argsEnd.length,
+        argsCount = animateValid ? argsStart.length : 0,
+        argsChange = new Array(argsCount),
+        argsCurrent = new Array(argsCount),
+        easingFn = COG.easing(opts.easing),
+        duration = opts.duration,
+        callback = opts.progress,
+        ii,
+
+        runTween = function(tickCount) {
+            var elapsed = tickCount - startTicks,
+                complete = startTicks + duration <= tickCount,
+                view = target.layer ? target.layer.view : null,
+                easedValue;
+
+            for (var ii = argsCount; ii--; ) {
+                easedValue = easingFn(
+                    elapsed,
+                    argsStart[ii],
+                    argsChange[ii],
+                    duration);
+
+                argsCurrent[ii] = floorValue ? easedValue | 0 : easedValue;
+            } // for
+
+            targetFn.apply(target, argsCurrent);
+
+            if (autoInvalidate && view) {
+                view.redraw = true;
+            } // if
+
+            if (callback) {
+                var cbArgs = [].concat(complete ? argsEnd : argsCurrent);
+
+                cbArgs.unshift(complete);
+
+                callback.apply(target, cbArgs);
+            } // if
+
+            if (! complete) {
+                registerAnimationCallback(runTween);
+            }
+            else {
+                target.animations--;
+                targetFn.apply(target, argsEnd);
+
+                if (opts.complete) {
+                    opts.complete.apply(target, argsEnd);
+                } // if
+            } // if..else
+        };
+
+    if (targetFn && targetFn.apply && argsCount > 0) {
+        duration = duration ? duration : DEFAULT_DURATION;
+
+        for (ii = argsCount; ii--; ) {
+            argsChange[ii] = argsEnd[ii] - argsStart[ii];
+        } // for
+
+        target.animations++;
+
+        registerAnimationCallback(runTween);
+    } // if
+} // animate
 function checkOffsetAndBounds(drawable, image) {
     var x, y;
 
@@ -5004,114 +4703,20 @@ function checkOffsetAndBounds(drawable, image) {
         } // if
     } // if
 } // checkOffsetAndBounds
+/**
+### T5.Marker(params)
+*/
+function Marker(params) {
+    Drawable.call(this, params);
+};
 
-function transformable(target) {
+Marker.prototype = COG.extend(Drawable.prototype, {
+    constructor: Marker,
 
-    /* internals */
-    var DEFAULT_DURATION = 1000,
-        ANI_WAIT = 1000 / 60 | 0,
-        rotation = 0,
-        scale = 1,
-        transX = 0,
-        transY = 0;
-
-    function checkTransformed() {
-        target.transformed = (scale !== 1) ||
-            (rotation % TWO_PI !== 0) ||
-            (transX !== 0) || (transY !== 0);
-    } // isTransformed
-
-    /* exports */
-
-    function animate(fn, argsStart, argsEnd, easing, duration, callback) {
-        var startTicks = new Date().getTime(),
-            lastTicks = 0,
-            targetFn = target[fn],
-            argsComplete = 0,
-            animateValid = argsStart.length && argsEnd.length &&
-                argsStart.length == argsEnd.length,
-            argsCount = animateValid ? argsStart.length : 0,
-            argsChange = new Array(argsCount),
-            argsCurrent = new Array(argsCount),
-            easingFn = COG.easing(easing ? easing : 'sine.out'),
-            ii,
-
-            runTween = function(tickCount) {
-                if (tickCount - lastTicks > ANI_WAIT) {
-                    var elapsed = tickCount - startTicks,
-                        complete = startTicks + duration <= tickCount;
-
-                    for (var ii = argsCount; ii--; ) {
-                        argsCurrent[ii] = easingFn(
-                            elapsed,
-                            argsStart[ii],
-                            argsChange[ii],
-                            duration);
-                    } // for
-
-                    targetFn.apply(target, argsCurrent);
-                    target.invalidate.call(target);
-
-                    if (! complete) {
-                        animFrame(runTween);
-                    }
-                    else {
-                        targetFn.apply(target, argsEnd);
-                        target.invalidate.call(target);
-
-                        if (callback) {
-                            callback();
-                        } // if
-                    } // if..else
-                } // if
-            };
-
-        if (targetFn && targetFn.apply && argsCount > 0) {
-            duration = duration ? duration : DEFAULT_DURATION;
-
-            for (ii = argsCount; ii--; ) {
-                argsChange[ii] = argsEnd[ii] - argsStart[ii];
-            } // for
-
-            animFrame(runTween);
-        } // if
-    } // animate
-
-    function transform(context, offsetX, offsetY) {
-        context.save();
-        context.translate(target.xy.x - offsetX + transX, target.xy.y - offsetY + transY);
-
-        if (rotation !== 0) {
-            context.rotate(rotation);
-        } // if
-
-        if (scale !== 1) {
-            context.scale(scale, scale);
-        } // if
-    } // transform
-
-    COG.extend(target, {
-        animate: animate,
-
-        rotate: function(value) {
-            rotation = value;
-            checkTransformed();
-        },
-
-        scale: function(value) {
-            scale = value;
-            checkTransformed();
-        },
-
-        translate: function(x, y) {
-            transX = x;
-            transY = y;
-            checkTransformed();
-        },
-
-        transform: transform
-    });
-}
+    prep: function(renderer, offsetX, offsetY, state) {
+        return renderer.arc(this.xy.x, this.xy.y, this.size >> 1, 0, Math.PI * 2);
+    } // prep
+});
 /**
 # T5.Poly
 __extends__: T5.Shape
@@ -5133,73 +4738,35 @@ is specified then the style of the T5.PolyLayer is used.
 
 ## Methods
 */
-var Poly = function(points, params) {
+function Poly(points, params) {
     params = COG.extend({
-        simplify: false
+        simplify: false,
+        typeName: 'Poly'
     }, params);
 
-    var haveData = false,
-        simplify = params.simplify,
-        stateZoom = viewState('ZOOM'),
-        drawPoints = [];
-
-    params.type = params.fill ? 'polygon' : 'line';
+    var simplify = params.simplify;
 
     /* exported functions */
-
-    /**
-    ### animatePath(easing, duration, drawFn, callback)
-    */
-    function animatePath(easing, duration, drawFn, callback) {
-
-    } // animatePath
-
-    /**
-    ### prepPath(context, offsetX, offsetY, width, height, state, hitData)
-    Prepare the path that will draw the polygon to the canvas
-    */
-    function prepPath(context, offsetX, offsetY, width, height, state) {
-        if (haveData) {
-            var first = true;
-
-            context.beginPath();
-
-            for (var ii = drawPoints.length; ii--; ) {
-                var x = drawPoints[ii].x - offsetX,
-                    y = drawPoints[ii].y - offsetY;
-
-                if (first) {
-                    context.moveTo(x, y);
-                    first = false;
-                }
-                else {
-                    context.lineTo(x, y);
-                } // if..else
-            } // for
-        } // if
-
-        return haveData;
-    } // prepPath
 
     /**
     ### resync(view)
     Used to synchronize the points of the poly to the grid.
     */
     function resync(view) {
-        var x, y, maxX, maxY, minX, minY;
+        var x, y, maxX, maxY, minX, minY, drawPoints;
 
         view.syncXY(points);
 
-        drawPoints = XY.floor(simplify ? XY.simplify(points) : points);
+        drawPoints = this.points = XY.floor(simplify ? XY.simplify(points) : points);
 
         for (var ii = drawPoints.length; ii--; ) {
             x = drawPoints[ii].x;
             y = drawPoints[ii].y;
 
-            minX = typeof minX == 'undefined' || x < minX ? x : minX;
-            minY = typeof minY == 'undefined' || y < minY ? y : minY;
-            maxX = typeof maxX == 'undefined' || x > maxX ? x : maxX;
-            maxY = typeof maxY == 'undefined' || y > maxY ? y : maxY;
+            minX = isType(minX, typeUndefined) || x < minX ? x : minX;
+            minY = isType(minY, typeUndefined) || y < minY ? y : minY;
+            maxX = isType(maxX, typeUndefined) || x > maxX ? x : maxX;
+            maxY = isType(maxY, typeUndefined) || y > maxY ? y : maxY;
         } // for
 
         this.updateBounds(XYRect.init(minX, minY, maxX, maxY), true);
@@ -5208,24 +4775,25 @@ var Poly = function(points, params) {
     Drawable.call(this, params);
 
     COG.extend(this, {
-        animatePath: animatePath,
-        prepPath: prepPath,
         resync: resync
     });
 
-    haveData = points && (points.length >= 2);
+    this.haveData = points && (points.length >= 2);
 };
 
-Poly.prototype = COG.extend(Drawable.prototype, {
+Poly.prototype = COG.extend({}, Drawable.prototype, {
     constructor: Poly
 });
-var Line = function(points, params) {
+/**
+### T5.Line(points, params)
+*/
+function Line(points, params) {
     params.fill = false;
 
     Poly.call(this, points, params);
 };
 
-Line.prototype = new Poly();
+Line.prototype = COG.extend({}, Poly.prototype);
 /**
 # T5.ImageDrawable
 _extends:_ T5.Drawable
@@ -5271,17 +4839,20 @@ overhead as the canvas context needs to be saved and restored as part of the ope
 
 ## Methods
 */
-var ImageDrawable = function(params) {
+function ImageDrawable(params) {
     params = COG.extend({
         image: null,
         imageUrl: null,
-        imageOffset: null
+        imageOffset: null,
+        typeName: 'Image'
     }, params);
 
     var dragOffset = null,
         drawableUpdateBounds = Drawable.prototype.updateBounds,
         drawX,
         drawY,
+        imgOffsetX = 0,
+        imgOffsetY = 0,
         image = params.image;
 
     /* exports */
@@ -5290,13 +4861,15 @@ var ImageDrawable = function(params) {
         this.imageUrl = imageUrl;
 
         if (this.imageUrl) {
-            image = Images.get(this.imageUrl, function(loadedImage) {
-                var view = _self.layer ? _self.layer.getParent() : null;
+            getImage(this.imageUrl, function(retrievedImage, loaded) {
+                image = retrievedImage;
 
-                image = loadedImage;
+                if (loaded) {
+                    var view = _self.layer ? _self.layer.view : null;
 
-                if (view) {
-                    view.invalidate();
+                    if (view) {
+                        view.redraw = true;
+                    } // if
                 } // if
             });
         } // if
@@ -5322,7 +4895,7 @@ var ImageDrawable = function(params) {
 
 
             if (this.layer) {
-                var view = this.layer.getParent();
+                var view = this.layer.view;
                 if (view) {
                     view.syncXY([this.xy], true);
                 } // if
@@ -5335,31 +4908,21 @@ var ImageDrawable = function(params) {
     } // drag
 
     /**
-    ### draw(context, x, y, width, height, state)
+    ### getProps(renderer, state)
+    Get the drawable item properties that will be passed to the renderer during
+    the prepare and draw phase
     */
-    function draw(context, offsetX, offsetY, width, height, state) {
-        context.drawImage(image, drawX, drawY);
-    } // draw
-
-    /**
-    ### prepPath(context, offsetX, offsetY, width, height, state, hitData)
-    Prepare the path that will draw the polygon to the canvas
-    */
-    function prepPath(context, offsetX, offsetY, width, height, state) {
-        var draw = image && image.width > 0;
-
-        if (draw) {
+    function getProps(renderer, state) {
+        if (! this.bounds) {
             checkOffsetAndBounds(this, image);
-
-            drawX = this.xy.x + this.imageOffset.x - offsetX;
-            drawY = this.xy.y + this.imageOffset.y - offsetY;
-
-            context.beginPath();
-            context.rect(drawX, drawY, image.width, image.height);
         } // if
 
-        return draw;
-    } // prepPath
+        return {
+            image: image,
+            x: this.xy.x + imgOffsetX,
+            y: this.xy.y + imgOffsetY
+        };
+    } // getProps
 
     /**
     ### updateBounds(bounds: XYRect, updateXY: boolean)
@@ -5375,19 +4938,27 @@ var ImageDrawable = function(params) {
     var _self = COG.extend(this, {
         changeImage: changeImage,
         drag: drag,
-        draw: draw,
-        prepPath: prepPath,
+        getProps: getProps,
         updateBounds: updateBounds
     });
 
     if (! image) {
         changeImage(this.imageUrl);
     } // if
+
+    if (this.imageOffset) {
+        imgOffsetX = this.imageOffset.x;
+        imgOffsetY = this.imageOffset.y;
+    } // if
 };
 
-ImageDrawable.prototype = new Drawable();
-ImageDrawable.prototype.constructor = ImageDrawable;
-var ImageMarker = function(params) {
+ImageDrawable.prototype = COG.extend({}, Drawable.prototype, {
+    constructor: ImageDrawable
+});
+/**
+### T5.ImageMarker(params)
+*/
+function ImageMarker(params) {
     params = COG.extend({
         imageAnchor: null
     }, params);
@@ -5399,11 +4970,353 @@ var ImageMarker = function(params) {
     ImageDrawable.call(this, params);
 };
 
-ImageMarker.prototype = new ImageDrawable();
-ImageMarker.prototype.constructor = ImageMarker;
+ImageMarker.prototype = COG.extend({}, ImageDrawable.prototype, {
+    constructor: ImageMarker
+});
+/**
+### T5.Arc(params)
+*/
+function Arc(params) {
+    params = COG.extend({
+        startAngle: 0,
+        endAngle: Math.PI * 2,
+        typeName: 'Arc'
+    }, params);
+
+    Drawable.call(this, params);
+};
+
+Arc.prototype = COG.extend(Drawable.prototype, {
+    constructor: Arc
+});
+
+/**
+# T5.ImageGenerator
+
+## Events
+
+### update
+*/
+var ImageGenerator = function(params) {
+    params = COG.extend({
+        relative: false,
+        padding: 2
+    }, params);
+
+    /**
+    ### run(viewRect, view, callback)
+    */
+    function run(view, viewRect, callback) {
+        COG.warn('running base generator - this should be overriden');
+    } // run
+
+    var _self = {
+        run: run
+    };
+
+    COG.observable(_self);
+    return _self;
+};
+/**
+# T5.ViewLayer
+
+In and of it_self, a View does nothing.  Not without a
+ViewLayer at least.  A view is made up of one or more of these
+layers and they are drawn in order of *zindex*.
+
+## Constructor
+`T5.ViewLayer(params)`
+
+### Initialization Parameters
+
+- `id` - the id that has been assigned to the layer, this value
+can be used when later accessing the layer from a View.
+
+- `zindex` (default: 0) - a zindex in Tile5 means the same thing it does in CSS
+
+- `validStates` - the a bitmask of DisplayState that the layer will be drawn for
+
+
+## Events
+
+### changed
+This event is fired in response to the `changed` method being called.  This method is
+called primarily when you have made modifications to the layer in code and need to
+flag to the containing T5.View that an redraw is required.  Any objects that need to
+perform updates in response to this layer changing (including overriden implementations)
+can do this by binding to the change method
+
+~ layer.bind('change', function(evt, layer) {
+~   // do your updates here...
+~ });
+
+### parentChange
+This event is fired with the parent of the layer has been changed
+
+<pre>
+layer.bind('parentChange', function(evt, parent) {
+);
+</pre>
+
+## Methods
+
+*/
+function ViewLayer(params) {
+    params = COG.extend({
+        id: COG.objId('layer'),
+        zindex: 0,
+        animated: false,
+        validStates: viewState('ACTIVE', 'ANIMATING', 'PAN', 'ZOOM'),
+        style: null,
+        minXY: null,
+        maxXY: null
+    }, params);
+
+    this.view = null;
+
+    COG.observable(COG.extend(this, params));
+}; // ViewLayer constructor
+
+ViewLayer.prototype = {
+    constructor: ViewLayer,
+
+    /**
+    ### clip(context, offset, dimensions, state)
+    */
+    clip: null,
+
+    /**
+    ### cycle(tickCount, offset, state)
+
+    Called in the View method of the same name, each layer has an opportunity
+    to update it_self in the current animation cycle before it is drawn.
+    */
+    cycle: function(tickCount, offset, state) {
+    },
+
+    /**
+    ### draw(context, offset, dimensions, state, view)
+
+    The business end of layer drawing.  This method is called when a layer needs to be
+    drawn and the following parameters are passed to the method:
+
+        - renderer - the renderer that will be drawing the viewlayer
+        - state - the current DisplayState of the view
+        - view - a reference to the View
+        - tickCount - the current tick count
+        - hitData - an object that contains information regarding the current hit data
+    */
+    draw: function(renderer, state, view, tickCount, hitData) {
+    },
+
+    /**
+    ### hitGuess(hitX, hitY, state, view)
+    The hitGuess function is used to determine if a layer would return elements for
+    a more granular hitTest.  Essentially, hitGuess calls are used when events such
+    as hover and tap events occur on a view and then if a positive result is detected
+    the canvas is invalidated and checked in detail during the view layer `draw` operation.
+    By doing this we can just do simple geometry operations in the hitGuess function
+    and then make use of canvas functions such as `isPointInPath` to do most of the heavy
+    lifting for us
+    */
+    hitGuess: null
+}; // ViewLayer.prototype
+/**
+# T5.ImageLayer
+*/
+var ImageLayer = function(genId, params) {
+    params = COG.extend({
+        imageLoadArgs: {}
+    }, params);
+
+    var genFn = genId ? Generator.init(genId, params).run : null,
+        generating = false,
+        lastGenX = 0,
+        lastGenY = 0,
+        loadArgs = params.imageLoadArgs,
+        regenTimeout = 0,
+        regenViewRect = null,
+        tiles = [];
+
+    /* private internal functions */
+
+    function regenerate(view, viewRect) {
+        var xyDiff = max(abs(viewRect.x1 - lastGenX), abs(viewRect.y1 - lastGenY)),
+            regen = xyDiff >= 128 && genFn && (! generating);
+
+        if (regen) {
+            generating = true;
+
+            var tickCount = new Date().getTime();
+
+            genFn(view, viewRect, function(newTiles) {
+                lastGenX = viewRect.x1;
+                lastGenY = viewRect.y1;
+
+                tiles = [].concat(newTiles);
+
+                generating = false;
+                view.redraw = true;
+                COG.info('GEN COMPLETED IN ' + (new Date().getTime() - tickCount) + ' ms');
+            });
+        } // if
+    } // regenerate
+
+    /* event handlers */
+
+    function handleRefresh(evt, view, viewRect) {
+        regenerate(view, viewRect);
+    } // handleViewIdle
+
+    /* exports */
+
+    /**
+    ### draw(renderer)
+    */
+    function draw(renderer) {
+        renderer.drawTiles(tiles);
+    } // draw
+
+    /* definition */
+
+    var _self = COG.extend(new ViewLayer(params), {
+        draw: draw
+    });
+
+    _self.bind('refresh', handleRefresh);
+
+    return _self;
+};
+/**
+# T5.DrawLayer
+_extends:_ T5.ViewLayer
+
+
+The DrawLayer is a generic layer that handles drawing, hit testing and syncing a list
+of drawables.  A T5.DrawLayer itself is never meant to be implemented as it has no
+internal `T5.Drawable` storage, but rather relies on descendants to implement storage and
+provide the drawables by the `loadDrawables` method.
+
+## Methods
+*/
+var DrawLayer = function(params) {
+    params = COG.extend({
+        zindex: 10
+    }, params);
+
+    var drawables = [];
+
+    /* private functions */
+
+    function quickHitCheck(drawable, hitX, hitY) {
+        var bounds = drawable.bounds;
+
+        return (bounds &&
+            hitX >= bounds.x1 && hitX <= bounds.x2 &&
+            hitY >= bounds.y1 && hitY <= bounds.y2);
+    } // quickHitCheck
+
+    /* event handlers */
+
+    function handleRefresh(evt, view, viewRect) {
+        drawables = _self.getDrawables(view, viewRect);
+    } // handleViewIdle
+
+    /* exports */
+
+    function draw(renderer, state, view, tickCount, hitData) {
+        var emptyProps = {
+            };
+
+        for (var ii = drawables.length; ii--; ) {
+            var drawable = drawables[ii],
+                overrideStyle = drawable.style || _self.style,
+                styleType,
+                previousStyle,
+                transform = renderer.applyTransform(drawable),
+                drawProps = drawable.getProps ? drawable.getProps(renderer, state) : emptyProps,
+
+                prepFn = renderer['prep' + drawable.typeName],
+                drawFn,
+
+                drawData = prepFn ? prepFn.call(renderer,
+                    drawable,
+                    hitData,
+                    state,
+                    drawProps) : null;
+
+            if (drawData) {
+                if (drawData.hit) {
+                    hitData.elements.push(Hits.initHit(
+                        drawable.type,
+                        drawable,
+                        drawable.draggable ? drawable.drag : null)
+                    );
+
+                    styleType = hitData.type + 'Style';
+
+                    overrideStyle = drawable[styleType] || _self[styleType] || overrideStyle;
+                } // if
+
+                previousStyle = overrideStyle ? renderer.applyStyle(overrideStyle) : null;
+
+                drawFn = drawable.draw || drawData.draw;
+
+                if (drawFn) {
+                    drawFn.call(drawable, drawData);
+                } // if
+
+                if (previousStyle) {
+                    renderer.applyStyle(previousStyle);
+                } // if
+            } // if
+
+            if (transform && transform.undo) {
+                transform.undo();
+            } // if
+        } // for
+    } // draw
+
+    /**
+    ### getDrawables(view, viewRect)
+    */
+    function getDrawables(view, viewRect) {
+        return [];
+    } // getDrawables
+
+    /**
+    ### hitGuess(hitX, hitY, state, view)
+    Return true if any of the markers are hit, additionally, store the hit elements
+    so we don't have to do the work again when drawing
+    */
+    function hitGuess(hitX, hitY, state, view) {
+        var hit = false;
+
+        for (var ii = drawables.length; (! hit) && ii--; ) {
+            var drawable = drawables[ii],
+                bounds = drawable.bounds;
+
+            hit = hit || quickHitCheck(drawable, hitX, hitY);
+        } // for
+
+        return hit;
+    } // hitGuess
+
+    /* initialise _self */
+
+    var _self = COG.extend(new ViewLayer(params), {
+        draw: draw,
+        getDrawables: getDrawables,
+        hitGuess: hitGuess
+    });
+
+    _self.bind('refresh', handleRefresh);
+
+    return _self;
+};
 /**
 # T5.ShapeLayer
-_extends:_ T5.ViewLayer
+_extends:_ T5.DrawLayer
 
 
 The ShapeLayer is designed to facilitate the storage and display of multiple
@@ -5417,8 +5330,7 @@ var ShapeLayer = function(params) {
         zindex: 10
     }, params);
 
-    var shapes = [],
-        pipTransformed = CANI.canvas.pipTransformed;
+    var shapes = [];
 
     /* private functions */
 
@@ -5432,7 +5344,7 @@ var ShapeLayer = function(params) {
             return diff != 0 ? diff : shapeB.xy.x - shapeA.xy.y;
         });
 
-        _self.changed();
+        view.redraw = true;
     } // performSync
 
     /* event handlers */
@@ -5443,65 +5355,6 @@ var ShapeLayer = function(params) {
 
     /* exports */
 
-    function draw(context, viewRect, state, view, tickCount, hitData) {
-        var viewX = viewRect.x1,
-            viewY = viewRect.y1,
-            hitX = hitData ? (pipTransformed ? hitData.x - viewX : hitData.relXY.x) : 0,
-            hitY = hitData ? (pipTransformed ? hitData.y - viewY : hitData.relXY.y) : 0,
-            viewWidth = viewRect.width,
-            viewHeight = viewRect.height;
-
-        for (var ii = shapes.length; ii--; ) {
-            var shape = shapes[ii],
-                overrideStyle = shape.style,
-                styleType,
-                previousStyle,
-                prepped,
-                transformed = shape.transformed;
-
-            if (transformed) {
-                shape.transform(context, viewX, viewY);
-
-                if (pipTransformed) {
-                    hitX -= shape.xy.x;
-                    hitY -= shape.xy.y;
-                } // if
-            } // if
-
-            prepped = shape.prepPath(
-                context,
-                transformed ? shape.xy.x : viewX,
-                transformed ? shape.xy.y : viewY,
-                viewWidth,
-                viewHeight,
-                state);
-
-            if (prepped) {
-                if (hitData && context.isPointInPath(hitX, hitY)) {
-                    hitData.elements.push(Hits.initHit(shape.type, shape, {
-                        drag: shape.draggable ? shape.drag : null
-                    }));
-
-                    styleType = hitData.type + 'Style';
-
-                    overrideStyle = shape[styleType] || _self[styleType] || overrideStyle;
-                } // if
-
-                previousStyle = overrideStyle ? Style.apply(context, overrideStyle) : null;
-
-                shape.draw(context, viewX, viewY, viewWidth, viewHeight, state);
-
-                if (previousStyle) {
-                    Style.apply(context, previousStyle);
-                } // if
-            } // if
-
-            if (transformed) {
-                context.restore();
-            } // if
-        } // for
-    } // draw
-
     /**
     ### find(selector: String)
     The find method will eventually support retrieving all the shapes from the shape
@@ -5511,45 +5364,29 @@ var ShapeLayer = function(params) {
         return [].concat(shapes);
     } // find
 
-    /**
-    ### hitGuess(hitX, hitY, state, view)
-    Return true if any of the markers are hit, additionally, store the hit elements
-    so we don't have to do the work again when drawing
-    */
-    function hitGuess(hitX, hitY, state, view) {
-        var hit = false;
-
-        for (var ii = shapes.length; (! hit) && ii--; ) {
-            var shape = shapes[ii],
-                bounds = shape.bounds;
-
-            hit = hit || (bounds &&
-                hitX >= bounds.x1 && hitX <= bounds.x2 &&
-                hitY >= bounds.y1 && hitY <= bounds.y2);
-        } // for
-
-        return hit;
-    } // hitGuess
-
     /* initialise _self */
 
-    var _self = COG.extend(new ViewLayer(params), {
+    var _self = COG.extend(new DrawLayer(params), {
         /**
         ### add(poly)
         Used to add a T5.Poly to the layer
         */
-        add: function(shape) {
+        add: function(shape, prepend) {
             if (shape) {
                 shape.layer = _self;
 
-                var view = _self.getParent();
+                var view = _self.view;
                 if (view) {
-                    shape.resync(_self.getParent());
-
-                    view.invalidate();
+                    shape.resync(view);
+                    view.redraw = true;
                 } // if
 
-                shapes[shapes.length] = shape;
+                if (prepend) {
+                    shapes.unshift(shape);
+                }
+                else {
+                    shapes[shapes.length] = shape;
+                } // if..else
             } // if
         },
 
@@ -5557,9 +5394,11 @@ var ShapeLayer = function(params) {
             shapes = [];
         },
 
-        draw: draw,
         find: find,
-        hitGuess: hitGuess
+
+        getDrawables: function(view, viewRect) {
+            return shapes;
+        }
     });
 
     _self.bind('parentChange', handleResync);
@@ -5568,36 +5407,10 @@ var ShapeLayer = function(params) {
     return _self;
 };
 
-/**
-# T5.Tiling
-*/
-var Tiling = (function() {
-
-    /* internal functions */
-
-    /* exports */
-
-    function init(x, y, width, height, data) {
-        return COG.extend({
-            x: x,
-            y: y,
-            width: width,
-            height: height
-        }, data);
-    } // init
-
-    /* module definition */
-
-    return {
-        tileSize: 256,
-        init: init
-    };
-})();
-
     COG.extend(exports, {
         ex: COG.extend,
+        is: isType,
         ticks: ticks,
-        getConfig: getConfig,
         userMessage: userMessage,
 
         XY: XY,
@@ -5606,16 +5419,11 @@ var Tiling = (function() {
         Vector: Vector,
         Hits: Hits,
 
-        Images: Images,
-
         Generator: Generator,
 
-        tween: COG.tween,
         tweenValue: COG.tweenValue,
         easing: COG.easing,
-        Tween: COG.Tween,
 
-        Style: Style,
         viewState: viewState,
         View: View,
         ViewLayer: ViewLayer,
@@ -5623,15 +5431,15 @@ var Tiling = (function() {
         ImageGenerator: ImageGenerator,
 
         Drawable: Drawable,
+        Marker: Marker,
         Poly: Poly,
         Line: Line,
+        Arc: Arc,
         ImageDrawable: ImageDrawable,
         ImageMarker: ImageMarker,
-        ShapeLayer: ShapeLayer,
 
-        transformable: transformable,
-
-        Tiling: Tiling
+        DrawLayer: DrawLayer,
+        ShapeLayer: ShapeLayer
     });
 
     COG.observable(exports);

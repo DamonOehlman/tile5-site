@@ -5,21 +5,28 @@ title:  Tile5 Demo
 
 <div id="statusMessage"></div>
 
-<!--
-<ul id="mapTools">
+<ul id="mapTools" style="display:block;">
 	<li>
 		<label for="mapEngine">Map Engine:</label>
 		<select id="mapEngine">
 			<option>Cloudmade</option>
 		</select>
 	</li>
+	<li>
+		<label for="renderer">Renderer:</label>
+		<select id="renderer">
+			<option value="canvas">Canvas</option>
+			<option value="canvas/dom">Canvas + DOM</option>
+			<option value="three:webgl">WebGL (via Three)</option>
+			<option value="webgl">WebGL</option>
+			<option value="raphael">RaphaëlJS</option>
+		</select>
+	</li>
 </ul>
--->
 <div id="mapContainer">
-	<div id="demoStats" style="position: absolute;"></div>
-	<canvas id="mapCanvas"></canvas>
+	<div id="demoStats" style="position: absolute; z-index: 10;"></div>
 </div>
-<div id="demoControls"><button id="prefs">Preferences</button></div>
+<div id="demoControls"></div>
 
 <script>
 $LAB
@@ -27,11 +34,13 @@ $LAB
 	UsePreloading: false,
 	UseCachePreload: false
 })
+//.script('/js/tile5/dev/tile5.js').wait()
+//.script('/js/tile5/dev/plugins/renderer.webgl.js?v=={{ site.time | date_to_xmlschema }}')
 .script('/js/t5demos.js?v={{ site.time | date_to_xmlschema }}').wait(function() {
 	// run the demo
 	DEMO.run();
 })
-.script('https://github.com/mrdoob/stats.js/raw/master/build/Stats.js').wait(function() {
+.script('/js/libs/Stats.js').wait(function() {
 	var stats = new Stats();
 
 	// add the stats display to the dom

@@ -1,0 +1,39 @@
+---
+layout: sample
+title:  Beachwatch Visualization
+sample: visualization-beachwatch
+
+categories:
+ - demo-inprogress
+
+thumbnail: /img/samples/geojson-world.png
+controls: visualization-beachwatch
+---
+
+For the Apps4NSW competition, some great time based data geolocation data was made available in the form of [Beach Quality Data](http://www.environment.nsw.gov.au/beachsoeapp/).
+
+<style type="text/css">
+ul#years {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
+ul#years li {
+	-webkit-border-radius: 6px;
+	-webkit-box-shadow: inset #888 0 0 5px;
+	background: #333;
+	color: white;
+	padding: 4px 10px;
+}
+</style>
+
+<div>
+Year: 
+<select id="newYear">
+</select>
+<button id="visualize">Visualize</button>
+</div>
+
+<ul id="years">
+</ul>

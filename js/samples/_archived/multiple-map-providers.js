@@ -1,10 +1,4 @@
 var map,
-    styleA = T5.Style.get(T5.Style.define('a', {
-        globalAlpha: 1
-    })),
-    styleB = T5.Style.get(T5.Style.define('b', {
-        globalAlpha: 0
-    })),
     tween;
 
 $(document).ready(function() {
@@ -26,7 +20,7 @@ $(document).ready(function() {
     
     // initialise the map
     map = T5.Map({
-        container: 'mapCanvas'
+        container: 'mapContainer'
     });
     
     /*

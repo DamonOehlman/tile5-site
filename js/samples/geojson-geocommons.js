@@ -1,4 +1,4 @@
-GEOCOMMONS_DEMO = (function() {
+DEMO.Sample = (function() {
     // define constants
     var BASEURL = 'http://geocommons.com/overlays/{0}/features.json?geojson=1',
         REQUEST_TIMEOUT = 15000;
@@ -109,41 +109,30 @@ GEOCOMMONS_DEMO = (function() {
     
     /* module definition */
     
-    var module = {
-        load: load,
-        select: function(dsid) {
-            currentDataset = dsid;
-            retrieveData(dsid, map.getBoundingBox());
+    $('#geojson-samples a').each(function() {
+        var layerId = $(this).attr('data-layerid');
+        
+        $(this).click(function() {
+            load(layerId);
+            return false;
+        });
+        
+        $(this).after(' <a class="geocommons" target="_blank" href="http://geocommons.com/overlays/' + layerId + '">geocommons</a>');
+    });
+
+    return {
+        styles: ['map-overlays'],
+        
+        run: function(container, renderer, generatorType, generatorOpts) {
+            map = new T5.Map({
+                container: container,
+                renderer: renderer
+            });
+
+            map.setLayer('tiles', new T5.ImageLayer(generatorType, generatorOpts));
+            resetMap();
+            
+            return map;
         }
     };
-    
-    $(document).ready(function() {
-        DEMO.loadStyle('map-overlays');
-
-        map = new T5.Map({
-            container: "mapCanvas"
-        });
-        
-        map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
-                // demo api key, register for an API key
-                // at http://dev.cloudmade.com/
-                apikey: '7960daaf55f84bfdb166014d0b9f8d41'
-        }));
-        
-        resetMap();
-        module.map = map;
-        
-        $('#geojson-samples a').each(function() {
-            var layerId = $(this).attr('data-layerid');
-            
-            $(this).click(function() {
-                load(layerId);
-                return false;
-            });
-            
-            $(this).after(' <a class="geocommons" target="_blank" href="http://geocommons.com/overlays/' + layerId + '">geocommons</a>');
-        });
-    });
-    
-    return module;
 })();

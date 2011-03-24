@@ -4,7 +4,7 @@ title:  Fantasy Map
 sample: fantasy-map
 
 categories:
- - demo-mapping
+ - demo-disabled
 
 thumbnail: /img/samples/fantasy-map.jpg
 ---

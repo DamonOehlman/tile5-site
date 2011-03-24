@@ -1,0 +1,27 @@
+---
+layout: sample
+title:  Bug Catch
+sample: games-bugcatch
+version: dev
+
+categories:
+ - demo-games
+
+thumbnail: /img/samples/games-bugcatch.png
+controls: games-bugcatch
+---
+
+<div id="viz-info">
+	<label>Bugs:</label><span id="bug_count" class="numeric"></span><br />
+</div>
+
+<div id="demoControls">
+	<button onclick="BUGCATCH.createBugs(10);">I can haz more bugs?</button>
+</div>
+
+A simple game that demonstrates how you can use the `T5.ImageDrawable` and transformations to do some simple spriting :)
+
+It's just a start, but you get the idea.  There might be another similar game out there somewhere that doesn't run so well in most HTML5 powered browsers...
+
+The ability to implement catching the bugs isn't implemented yet, so maybe it shouldn't be called Bug Catch, just yet...
+

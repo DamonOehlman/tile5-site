@@ -8319,7 +8319,7 @@ the map.
 <pre lang='javascript'>
 // create the map
 map = new T5.Map({
-    container: 'mapCanvas',
+    container: 'mapContainer',
     provider: new T5.Geo.Decarta.MapProvider();
 });
 </pre>

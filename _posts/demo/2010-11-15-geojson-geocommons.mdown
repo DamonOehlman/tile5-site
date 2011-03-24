@@ -10,6 +10,24 @@ thumbnail: /img/samples/geojson-geocommons.png
 controls: geojson-geocommons
 ---
 
+<div id="demoControls">
+	<div id='geojson'> 
+		<label for='layerid'>GeoCommons Layer ID</label> 
+		<div> 
+		<input maxlength='10' size='7' id='layerid' type='text' value='' /> 
+		<small>Allow Cached</small> 
+		<input id='allowcached' type='checkbox' /> 
+		</div> 
+		<button id="btnDisplay">Display</button>
+	</div> 
+	<h4 id='some_sample_sets'>Some Sample Sets</h4> 
+	<ul id='geojson-samples'> 
+		<li><a href='#' data-layerid='2646'>Major Climates of Africa</a></li> 
+		<li><a href='#' data-layerid='76035'>Last flight of Amelia Earhart</a></li> 
+		<li><a href='#' data-layerid='78664'>Black Friday Tweets</a></li> 
+	</ul>
+</div>	
+
 This is a demo showing Tile5 GeoJSON support (in progress) working with GeoJSON output from [Geocommons](http://geocommons.com/). For more information on how to retrieve GeoJSON output from GeoCommons - see this [blog post on how to integrate GeoCommons with Polymaps](http://developer.geoiq.com/blog/2010/12/08/integrating-geocommons-datasets-with-polymaps/).
 
 ### Current Limitations
