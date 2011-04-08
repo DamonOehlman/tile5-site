@@ -1,0 +1,32 @@
+---
+layout: article
+title:  Zoom Controls Added
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+This one is just a quick note to say that I have finally gotten around to including a zoom slider as part of the [plugins under development in the current Tile5 dev branch](https://github.com/sidelab/tile5/tree/dev/src/js/plugins).  I've also updated the demos to use the slider so you can get a look at it.
+
+![Finally - some zoom controls](/img/posts/zoombar-introduced.png)
+
+It's pretty similar to most map zoom controls, except I still have some more work to do to implement the simple +/- buttons that you see on most zoom sliders.
+
+In terms of implementation, the "zoombar" has been implemented as a Tile5 renderer. I realise this sounds a little strange, but I think "renderer hacks" will prove to be  a really solid way to add things like controls to Tile5 maps.  This is all made possible through using [Renderer Chaining](/news/decoupling-renderers-past-present-and-future), which is proving to be really useful.
+
+Essentially, to use the zoombar plugin you would include the core `tile5.js` library and then also `plugins/renderer.zoombar.js` into your HTML (or JS build process).  Then when creating the map you would manually specify the renderer and _chain in_ the zoombar:
+
+{% highlight js %}
+var map = new T5.Map({
+	container: 'mapContainer',
+	renderer: 'canvas/zoombar'
+});
+{% endhighlight %}
+
+Admittedly this is probably a little obscure for people used to working with other mapping APIs that include zoom controls by default, so I may consider including the zoombar as part of the core and having a initialization parameter of `zoombar` that will default to true.  That way you get a zoombar by default, and have to manually disable it.  Internally the renderer chaining would still be used, but that would be transparent to the developer using Tile5.
+
+I'd certainly be interested in getting some feedback on this.  As previously stated, my main goal is to provide __the smallest and fastest HTML5 mapping library__ (or at least one of the smallest and fastest), but allow for developers to pull in additional functionality they might require / desire (such as alternative renderers).  
+
+I can certainly see the zoom control being useful in most mapping apps (given that very few mobile devices support multi-touch in the browser) and also given that it's something that people are used to in desktop mapping APIs.  Thoughts?

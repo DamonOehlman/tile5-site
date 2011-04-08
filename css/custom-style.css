@@ -20,6 +20,11 @@
     margin: 0 10px 5px 20px;
 }
 
+#main div.article img {
+    float: none;
+    margin-left: 0px;
+}
+
 #main img.demothumb {
     background-size: 100%;
 }

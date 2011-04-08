@@ -1,0 +1,56 @@
+---
+layout: raw
+title:  Tile5 Demo
+---
+
+<script src="/js/LAB.min.js"></script>
+<!--[if lt IE 9]>
+    <script type="text/javascript" src="/js/flashcanvas/flashcanvas.js"></script>
+<![endif]-->
+<script>
+if (typeof FlashCanvas != "undefined") {
+    FlashCanvas.setOptions({
+        turbo: true,
+        delay: 20,
+		usePolicyFile: true,
+		imageCacheSize: 500
+    });
+}
+</script>
+<div id="mapContainer" style="background: black;">
+</div>
+<script>
+var version = 'dev',
+	map;
+
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/tile5/' + version + '/tile5.js').wait()
+.script('/js/tile5/' + version + '/plugins/renderer.dom.js')
+.script('/js/tile5/' + version + '/geo/osm.js').wait(function() {
+	map = new T5.Map({
+        // Point to which canvas element to draw in
+        container: 'mapContainer',
+		renderer: 'canvas/dom'
+    });
+
+    map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
+            // demo api key, register for an API key
+            // at http://dev.cloudmade.com/
+            apikey: '7960daaf55f84bfdb166014d0b9f8d41'
+    }));
+
+    // start in london for something difference
+    map.gotoPosition(T5.Geo.Position.init(51.52, -0.13), 4, function() {
+        map.markers.add(new T5.ImageMarker({
+            imageUrl: "/img/pins/pin-158935-1-24.png",
+            imageAnchor: T5.XY.init(8, 24),
+            xy: T5.GeoXY.init(map.getCenterPosition()),
+            tweenIn: COG.easing('sine.out')
+        }));
+	});
+});
+</script>

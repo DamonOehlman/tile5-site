@@ -1,7 +1,7 @@
 ---
 layout: sample
-title:  Animated Route
-sample: routing-animated
+title:  Route Tools Plugin Demo
+sample: plugins-routetools
 version: dev
 
 categories:

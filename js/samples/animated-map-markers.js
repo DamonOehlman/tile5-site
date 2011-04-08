@@ -28,12 +28,12 @@ DEMO.Sample = (function() {
             T5.GeoXY.updatePos(plane.xy, newPosition);
 
             plane.rotate(TWO_PI - angle);
-            map.panToPosition(newPosition);
+            // map.panToPosition(newPosition);
             map.invalidate();
         }
 
         lastTickCount = tickCount;
-        map.invalidate();
+        // map.invalidate();
     } // movePlane
 
 
@@ -60,11 +60,27 @@ DEMO.Sample = (function() {
             COG.info('plane start position = ', planeStart);
 
             // create the plane marker
-            plane = new T5.ImageMarker({
-                xy: T5.GeoXY.init(planeStart),
-                imageUrl: '/img/fly/plane.png',
-                transformable: true
-            });
+            if (renderer === 'three:webgl') {
+                T5.defineStyle('ship', {
+                    fill: '#444444'
+                });
+                
+                plane = new T5.Marker({
+                    xy: T5.GeoXY.init(planeStart),
+                    markerStyle: 'model.ascii',
+                    style: 'ship',
+                    modelUrl: '/models/rusty_ship.js',
+                    z: 30
+                });
+            }
+            else {
+                plane = new T5.Marker({
+                    xy: T5.GeoXY.init(planeStart),
+                    markerStyle: 'image',
+                    size: 100,
+                    imageUrl: '/img/fly/plane.png'
+                });
+            }
 
             // make the plane transformable
             plane.scale(getPlaneScale());

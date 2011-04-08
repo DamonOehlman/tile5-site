@@ -18,7 +18,8 @@ T5.Geo.OSM = (function() {
         params = COG.extend({
             flipY: false,
             tileSize: 256,
-            tilePath: '{0}/{1}/{2}.png'
+            tilePath: '{0}/{1}/{2}.png',
+            osmDataAck: true
         }, params);
         
         // initialise variables
@@ -49,7 +50,7 @@ T5.Geo.OSM = (function() {
                 lon = x / numTiles * 360 - 180,
                 lat = RADIANS_TO_DEGREES * Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
             
-            return T5.Geo.Position.init(lat, lon);
+            return new T5.Pos(lat, lon);
         } // calculatePosition
         
         function getTileXY(x, y, numTiles, radsPerPixel) {
@@ -82,57 +83,78 @@ T5.Geo.OSM = (function() {
             } // if
         } // buildTileUrl
         
-        function run(view, viewRect, callback) {
+        function run(view, viewport, store, callback) {
             var zoomLevel = view.getZoomLevel ? view.getZoomLevel() : 0;
             
             if (zoomLevel) {
                 var numTiles = 2 << (zoomLevel - 1),
                     tileSize = params.tileSize,
                     radsPerPixel = (Math.PI * 2) / (tileSize << zoomLevel),
-                    position = T5.GeoXY.toPos(T5.XY.init(viewRect.x1 - tileSize, viewRect.y1 - tileSize), radsPerPixel),
+                    minX = viewport.x,
+                    minY = viewport.y,
+                    xTiles = (viewport.w  / tileSize | 0) + 1,
+                    yTiles = (viewport.h / tileSize | 0) + 1,
+                    position = T5.GeoXY.toPos(T5.XY.init(minX, minY), radsPerPixel),
                     tileOffset = calculateTileOffset(position.lat, position.lon, numTiles),
                     tilePixels = getTileXY(tileOffset.x, tileOffset.y, numTiles, radsPerPixel),
-                    xTiles = (viewRect.width  / tileSize | 0) + 2,
-                    yTiles = (viewRect.height / tileSize | 0) + 2,
-                    images = [],
-                    flipY = params.flipY;
+                    flipY = params.flipY,
+                    // get the current tiles in the tree
+                    tiles = store.search({
+                        x: tilePixels.x,
+                        y: tilePixels.y,
+                        w: xTiles * tileSize,
+                        h: yTiles * tileSize
+                    }),
+                    tileIds = {},
+                    ii;
                     
-                if (tilePixels.x < 0) {
-                    xTiles += (tilePixels.x / tileSize | 0) + 1;
-                } // if
+                // iterate through the tiles and create the tile id index
+                for (ii = tiles.length; ii--; ) {
+                    tileIds[tiles[ii].id] = true;
+                } // for
                 
-                // COG.info('tile pixels = ' + T5.XY.toString(tilePixels) + ', viewrect.x1 = ' + viewRect.x1);
+                // COG.info('tile pixels = ' + T5.XY.toString(tilePixels) + ', viewrect.x1 = ' + viewport.x);
                     
                 // initialise the server details
                 serverDetails = _self.getServerDetails ? _self.getServerDetails() : null;
                 subDomains = serverDetails && serverDetails.subDomains ? 
                     serverDetails.subDomains : [];
                     
-                for (var xx = -1; xx <= xTiles; xx++) {
-                    for (var yy = -1; yy <= yTiles; yy++) {
-                        // build the tile url 
-                        tileUrl = _self.buildTileUrl(
-                            tileOffset.x + xx, 
-                            tileOffset.y + yy, 
-                            zoomLevel, 
-                            numTiles, 
-                            flipY);
+                for (var xx = 0; xx <= xTiles; xx++) {
+                    for (var yy = 0; yy <= yTiles; yy++) {
+                        var tileX = tileOffset.x + xx,
+                            tileY = tileOffset.y + yy,
+                            tileId = tileX + '_' + tileY,
+                            tile;
                             
-                        if (tileUrl) {
-                            images[images.length] = {
-                                x: tilePixels.x + xx * tileSize,
-                                y: tilePixels.y + yy * tileSize, 
-                                width: tileSize,
-                                height: tileSize,
-                                url: tileUrl
-                            };
+                        // if the tile is not in the index, then create
+                        if (! tileIds[tileId]) {
+                            // build the tile url 
+                            tileUrl = _self.buildTileUrl(
+                                tileOffset.x + xx, 
+                                tileOffset.y + yy, 
+                                zoomLevel, 
+                                numTiles, 
+                                flipY);
+                                
+                            // create the tile
+                            tile = new T5.Tile(
+                                tilePixels.x + xx * tileSize,
+                                tilePixels.y + yy * tileSize,
+                                tileUrl, 
+                                tileSize, 
+                                tileSize,
+                                tileId);
+
+                            // insert the tile - we can use the tile to specify bounds also :)
+                            store.insert(tile, tile);
                         } // if
                     } // for
                 } // for
-                    
+                
                 // if the callback is assigned, then pass back the creator
                 if (callback) {
-                    callback(images);
+                    callback();
                 } // if                
             } // if
         } // callback
@@ -140,13 +162,15 @@ T5.Geo.OSM = (function() {
         /* define the generator */
 
         // initialise the generator
-        var _self = COG.extend(new T5.ImageGenerator(params), {
+        var _self = {
             buildTileUrl: buildTileUrl,
             run: run
-        });
+        };
         
         // trigger an attribution requirement
-        T5.userMessage('ack', 'osm', 'Map data (c) <a href="http://openstreetmap.org/" target="_blank">OpenStreetMap</a> (and) contributors, CC-BY-SA');
+        if (params.osmDataAck) {
+            T5.userMessage('ack', 'osm', 'Map data (c) <a href="http://openstreetmap.org/" target="_blank">OpenStreetMap</a> (and) contributors, CC-BY-SA');
+        } // if
         
         // bind to generator events
         

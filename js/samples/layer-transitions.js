@@ -1,18 +1,18 @@
 DEMO.Sample = (function() {
     var map,
         styleA = T5.getStyle(T5.defineStyle('a', {
-            globalAlpha: 1
+            opacity: 1
         })),
         styleB = T5.getStyle(T5.defineStyle('b', {
-            globalAlpha: 0
+            opacity: 0
         })),
         tween;
 
     function tweenLayers(from, to) {
         COG.tweenValue(from, to, T5.easing('sine.in'), 2000, function(val, complete) {
             // update the style values
-            styleA.update('globalAlpha', val);
-            styleB.update('globalAlpha', 1 - val);
+            styleA.opacity = val;
+            styleB.opacity = 1 - val;
             map.invalidate();
 
             // if complete, then go again (in reverse)

@@ -1,4 +1,4 @@
-BEACHWATCH = (function() {
+DEMO.Sample = (function() {
     // initialise variables
     var map,
         vizYear = null,
@@ -182,49 +182,42 @@ BEACHWATCH = (function() {
         });
     });
 
-    $(document).ready(function() {
-        map = T5.Map({
-            // Point to which canvas element to draw in
-            container: 'mapContainer',
-            // set clipping on to prevent redraw where tiles are not displayed
-            clipping: false,
-            minZoom: 3
-        });
-
-        // load the beaches
-        $.ajax({
-            url: '/js/data/beachwatch/beaches.json',
-            dataType: 'json',
-            success: function(data) {
-                beaches = data;
-                
-                // pin the beaches
-                pinBeaches();
-            }
-        });
-
-        map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
-                // demo api key, register for an API key
-                // at http://dev.cloudmade.com/
-                apikey: '7960daaf55f84bfdb166014d0b9f8d41'
-        }));
-        // map.setLayer('tiles', new T5.ImageLayer('osm.local-demo'));
-        
-        map.gotoPosition(T5.Geo.Position.parse("-30.8 150"), 6);
-        
-        // initialise the years
-        var items = '';
-        for (var year = 1989; year < 2010; year++) {
-            items += '<option>' + year + '</option>';
-        } // for
-        
-        $('#newYear').html(items);
-        $('#addToMap').click(handleAddYear);
-        $('#visualize').click(handleVisualize);
-    });
-    
     return {
-        getMap: function() {
+        run: function(container, renderer, generatorType, generatorOpts) {
+            map = T5.Map({
+                // Point to which canvas element to draw in
+                container: container,
+                renderer: renderer
+            });
+
+            map.setLayer('tiles', new T5.ImageLayer(generatorType, $.extend({
+                    styleid: 3
+            }, generatorOpts)));
+
+            map.gotoPosition(T5.Geo.Position.parse("-30.8 150"), 6);
+
+            // load the beaches
+            $.ajax({
+                url: '/js/data/beachwatch/beaches.json',
+                dataType: 'json',
+                success: function(data) {
+                    beaches = data;
+
+                    // pin the beaches
+                    pinBeaches();
+                }
+            });
+            
+            // initialise the years
+            var items = '';
+            for (var year = 1989; year < 2010; year++) {
+                items += '<option>' + year + '</option>';
+            } // for
+
+            $('#newYear').html(items);
+            $('#addToMap').click(handleAddYear);
+            $('#visualize').click(handleVisualize);
+            
             return map;
         }
     };

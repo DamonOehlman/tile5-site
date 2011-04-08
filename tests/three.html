@@ -1,0 +1,23 @@
+---
+layout: raw
+title:  Tile5 Demo
+---
+
+<script src="/js/LAB.min.js"></script>
+<div id="mapContainer" style="background: black;">
+</div>
+<script>
+var version = 'dev',
+	renderer = 'three:webgl';
+
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/tile5/' + version + '/tile5.js').wait()
+.script('/js/libs/Three.js').wait()
+.script('/js/tile5/' + version + '/plugins/renderer.three.js').wait()
+.script('/js/tile5/' + version + '/geo/osm.js').wait()
+.script('renderer-test.js');
+</script>

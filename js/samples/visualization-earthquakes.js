@@ -1,5 +1,5 @@
 DEMO.Sample = (function() {
-    var YQL_QUERY = "http://query.yahooapis.com/v1/public/yql?format=json&q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.iris.edu%2Fservlet%2Feventserver%2FeventsXML.do%3Fpriority%3Dtime%26StartDate%3D20110311%26PointsMax%3D1000%26LatMax%3D82.81%26LatMin%3D-70.14%26LonMax%3D178.95%26LonMin%3D-171.21'",
+    var YQL_QUERY = "http://query.yahooapis.com/v1/public/yql?format=json&q=select%20*%20from%20xml%20where%20url%3D'http%3A%2F%2Fwww.iris.edu%2Fservlet%2Feventserver%2FeventsXML.do%3Fpriority%3Dtime%26StartDate%3D20110311%26PointsMax%3D2000%26LatMax%3D82.81%26LatMin%3D-70.14%26LonMax%3D178.95%26LonMin%3D-171.21'",
         TIME_INCREMENT = 60000,
         DAY_MILLIS = 86400000,
         HOUR_MILLIS = 3600000,

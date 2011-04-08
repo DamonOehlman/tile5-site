@@ -1,0 +1,41 @@
+---
+layout: raw
+title:  Tile5 Demo
+---
+
+<script src="/js/LAB.min.js"></script>
+<div id="mapContainer" style="background: black;">
+</div>
+<script>
+var version = 'dev',
+	map;
+
+if (location.hash) {
+	version = location.hash.replace('#', '');
+} // if
+
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/tile5/' + version + '/tile5.js').wait()
+.script('/js/libs/raphael.js').wait()
+.script('/js/tile5/' + version + '/plugins/renderer.raphael.js').wait()
+.script('/js/tile5/' + version + '/geo/osm.js').wait(function() {
+	map = new T5.Map({
+        // Point to which canvas element to draw in
+        container: 'mapContainer',
+		renderer: 'raphael'
+    });
+
+    map.setLayer('tiles', new T5.ImageLayer('osm.cloudmade', {
+            // demo api key, register for an API key
+            // at http://dev.cloudmade.com/
+            apikey: '7960daaf55f84bfdb166014d0b9f8d41'
+    }));
+
+    // start in london for something difference
+    map.gotoPosition(T5.Geo.Position.init(51.52, -0.13), 4);
+});
+</script>

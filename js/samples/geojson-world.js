@@ -51,7 +51,7 @@ DEMO.Sample = (function() {
     $('#animate').click(animate);
     
     return {
-        engines: [],
+        generators: [],        
         styles: ['map-overlays'],
         preventTileChange: true,
         
@@ -93,7 +93,7 @@ DEMO.Sample = (function() {
                     DEMO.status('Parsing GeoJSON');
 
                     T5.GeoJSON.parse(data, function(layers) {
-                        for (layerId in layers) {
+                        for (var layerId in layers) {
                             addLayer(layerId, layers[layerId]);
                         } // for
 

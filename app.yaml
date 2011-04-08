@@ -7,9 +7,9 @@ handlers:
 - url: /tile/.*
   script: tile.py
   
-- url: /(.*\.(html|js|css|gif|png|jpg|xml|json|txt|ico|swf))
+- url: /(.*\.(html|js|css|gif|png|jpg|xml|json|txt|ico|swf|mp3|ogg))
   static_files: \1
-  upload: (.*\.(html|js|css|gif|png|jpg|xml|json|txt|ico|swf))
+  upload: (.*\.(html|js|css|gif|png|jpg|xml|json|txt|ico|swf|mp3|ogg))
 
 - url: /tag/(.*/?)
   static_files: category/\1index.html

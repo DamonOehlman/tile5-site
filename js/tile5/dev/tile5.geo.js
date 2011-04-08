@@ -2819,7 +2819,6 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         vpHeight,
         canvas,
         context,
-        viewport,
         drawOffsetX = 0,
         drawOffsetY = 0,
         transform = null,
@@ -2838,10 +2837,12 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
 
     function drawTile(tile, x, y) {
         getImage(tile.url, function(image, loaded) {
-            view.redraw = loaded;
             if (! loaded) {
                 context.drawImage(image, x, y);
-            } // if
+            }
+            else {
+                view.invalidate();
+            }
         });
     } // drawTile
 
@@ -2873,7 +2874,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         } // if
     } // createCanvas
 
-    function initDrawData(hitData, state, drawFn) {
+    function initDrawData(viewport, hitData, state, drawFn) {
         var isHit = false;
 
         if (hitData) {
@@ -2885,6 +2886,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
 
         return {
             draw: drawFn || defaultDrawFn,
+            viewport: viewport,
             state: state,
             hit: isHit,
             vpX: drawOffsetX,
@@ -2912,8 +2914,8 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
     } // applyStyle
 
     function applyTransform(drawable) {
-        var translated = drawable.translateX || drawable.translateY,
-            transformed = translated || drawable.scaling !== 1 || drawable.rotatation;
+        var translated = drawable.translateX !== 0 || drawable.translateY !== 0,
+            transformed = translated || drawable.scaling !== 1 || drawable.rotation !== 0;
 
         if (transformed) {
             context.save();
@@ -2945,7 +2947,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         return transform;
     } // applyTransform
 
-    function drawTiles(tiles) {
+    function drawTiles(viewport, tiles) {
         var tile,
             inViewport,
             minX = drawOffsetX - 256,
@@ -2972,7 +2974,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         return context.isPointInPath(hitX, hitY);
     } // hitTest
 
-    function prepare(layers, state, tickCount, hitData) {
+    function prepare(layers, viewport, state, tickCount, hitData) {
         var ii,
             canClip = false,
             viewOffset = view.getOffset(),
@@ -2990,21 +2992,6 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         for (ii = layers.length; ii--; ) {
             canClip = canClip || layers[ii].clip;
         } // for
-
-        viewport = XYRect.init(viewX, viewY, viewX + vpWidth, viewY + vpHeight);
-        viewport.scaleFactor = scaleFactor;
-
-        if (scaleFactor !== 1) {
-            var centerX = viewport.x1 + (vpWidth >> 1),
-                centerY = viewport.y1 + (vpHeight >> 1);
-
-            viewport = XYRect.fromCenter(
-                centerX,
-                centerY,
-                vpWidth / scaleFactor | 0,
-                vpHeight / scaleFactor | 0
-            );
-        } // if
 
         drawOffsetX = viewport.x1;
         drawOffsetY = viewport.y1;
@@ -3025,9 +3012,9 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
     } // prepare
 
     /**
-    ### prepArc(drawable, hitData, state, opts)
+    ### prepArc(drawable, viewport, hitData, state, opts)
     */
-    function prepArc(drawable, hitData, state, opts) {
+    function prepArc(drawable, viewport, hitData, state, opts) {
         context.beginPath();
         context.arc(
             drawable.xy.x - (transform ? transform.x : drawOffsetX),
@@ -3038,13 +3025,13 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
             false
         );
 
-        return initDrawData(hitData, state);
+        return initDrawData(viewport, hitData, state);
     } // prepArc
 
     /**
-    ### prepImage(drawable, hitData, state, opts)
+    ### prepImage(drawable, viewport, hitData, state, opts)
     */
-    function prepImage(drawable, hitData, state, opts) {
+    function prepImage(drawable, viewport, hitData, state, opts) {
         var realX = (opts.x || drawable.xy.x) - (transform ? transform.x : drawOffsetX),
             realY = (opts.y || drawable.xy.y) - (transform ? transform.y : drawOffsetY),
             image = opts.image || drawable.image;
@@ -3058,7 +3045,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
                 opts.height || image.height
             );
 
-            return initDrawData(hitData, state, function(drawData) {
+            return initDrawData(viewport, hitData, state, function(drawData) {
                 context.drawImage(
                     image,
                     realX,
@@ -3071,9 +3058,9 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
     } // prepImage
 
     /**
-    ### prepPoly(drawable, hitData, state, opts)
+    ### prepPoly(drawable, viewport, hitData, state, opts)
     */
-    function prepPoly(drawable, hitData, state, opts) {
+    function prepPoly(drawable, viewport, hitData, state, opts) {
         var first = true,
             points = opts.points || drawable.points,
             offsetX = transform ? transform.x : drawOffsetX,
@@ -3094,7 +3081,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
             } // if..else
         } // for
 
-        return initDrawData(hitData, state);
+        return initDrawData(viewport, hitData, state);
     } // prepPoly
 
     /* initialization */
@@ -3128,10 +3115,6 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
 
         getOffset: function() {
             return XY.init(drawOffsetX, drawOffsetY);
-        },
-
-        getViewport: function() {
-            return viewport;
         }
     });
 
@@ -3158,14 +3141,13 @@ registerRenderer('dom', function(view, container, params, baseRenderer) {
 
     /* exports */
 
-    function drawTiles(tiles) {
+    function drawTiles(viewport, tiles) {
         var tile,
             image,
-            offset = _this.getOffset(),
-            viewport = _this.getViewport(),
+            scaleFactor = viewport.scaleFactor,
             inViewport,
-            offsetX = offset.x,
-            offsetY = offset.y,
+            offsetX = viewport.x1,
+            offsetY = viewport.y1,
             minX = offsetX - 256,
             minY = offsetY - 256,
             maxX = offsetX + viewport.width,
@@ -3198,7 +3180,7 @@ registerRenderer('dom', function(view, container, params, baseRenderer) {
                 image.style.top = relY + 'px';
             } // if..else
 
-            image.style.display = 'block'; // inViewport ? 'block' : 'none';
+            image.style.display = inViewport ? 'block' : 'none';
         } // for
     } // drawTiles
 
@@ -3515,7 +3497,7 @@ var View = function(params) {
         captureHover: true,
         captureDrag: false,
         inertia: true,
-        minRefresh: 1000,
+        refreshDistance: 256,
         pannable: false,
         clipping: true,
         scalable: false,
@@ -3536,9 +3518,9 @@ var View = function(params) {
         zoomLevel: 1
     }, params);
 
-    var TURBO_CLEAR_INTERVAL = 500;
+    var TURBO_CLEAR_INTERVAL = 500,
 
-    var caps = {},
+        caps = {},
         layers = [],
         layerCount = 0,
         container = document.getElementById(params.container),
@@ -3547,9 +3529,11 @@ var View = function(params) {
         mainContext = null,
         isIE = isType(window.attachEvent, typeFunction),
         hitFlagged = false,
-        minRefresh = params.minRefresh,
+        refreshDist = params.refreshDistance,
         offsetX = 0,
         offsetY = 0,
+        refreshX = 0,
+        refreshY = 0,
         lastOffsetX = 0,
         lastOffsetY = 0,
         offsetMaxX = null,
@@ -3611,7 +3595,7 @@ var View = function(params) {
             setZoomLevel(zoomLevel + scaleFactorExp, zoomX, zoomY);
         }
 
-        _self.redraw = true;
+        redraw = true;
     } // scaleView
 
     function setZoomCenter(xy) {
@@ -3800,7 +3784,7 @@ var View = function(params) {
                     drop);
 
             if (dragOk) {
-                _self.redraw = true;
+                redraw = true;
             } // if
 
             if (drop) {
@@ -3924,25 +3908,32 @@ var View = function(params) {
     function cycle(tickCount) {
         var redrawBG,
             panning,
-            newFrame = false;
+            newFrame = false,
+            viewport;
 
-        tickCount = tickCount ? tickCount : new Date().getTime();
+        tickCount = tickCount || new Date().getTime();
 
         newFrame = tickCount - lastCycleTicks > cycleDelay;
 
         if (newFrame) {
-            _self.trigger('enterFrame', tickCount, frameIndex++);
+            var refreshXDist = abs(offsetX - refreshX),
+                refreshYDist = abs(offsetY - refreshY);
 
-            if (tickCount - lastRefresh > minRefresh) {
+            panning = offsetX !== lastOffsetX || offsetY !== lastOffsetY;
+            if (panning) {
+                viewChanges++;
+            } // if
+
+            if (refreshXDist >= refreshDist || refreshYDist >= refreshDist) {
                 refresh();
             } // if
+
+            _self.trigger('enterFrame', tickCount, frameIndex++);
 
             lastCycleTicks = tickCount;
         }
 
-        if (newFrame && _self.redraw) {
-            panning = offsetX !== lastOffsetX || offsetY !== lastOffsetY;
-
+        if (newFrame && viewChanges) {
             state = stateActive |
                         (scaleFactor !== 1 ? stateZoom : 0) |
                         (panning ? statePan : 0) |
@@ -3951,6 +3942,8 @@ var View = function(params) {
             redrawBG = (state & (stateZoom | statePan)) !== 0;
             interacting = redrawBG && (state & stateAnimating) === 0;
 
+            viewport = getViewport();
+
             /*
             if (offsetMaxX || offsetMaxY) {
                 constrainOffset();
@@ -3958,8 +3951,8 @@ var View = function(params) {
             */
 
 
-            if (renderer.prepare(layers, state, tickCount, hitData)) {
-                var viewport = renderer.getViewport();
+            if (renderer.prepare(layers, viewport, state, tickCount, hitData)) {
+                viewChanges = 0;
 
                 /*
                 for (var ii = layerCount; ii--; ) {
@@ -3979,6 +3972,7 @@ var View = function(params) {
 
                         drawLayer.draw(
                             renderer,
+                            viewport,
                             state,
                             _self,
                             tickCount,
@@ -3991,6 +3985,9 @@ var View = function(params) {
                 } // for
 
                 renderer.render();
+
+                lastOffsetX = offsetX;
+                lastOffsetY = offsetY;
             } // if
 
             /*
@@ -4005,10 +4002,6 @@ var View = function(params) {
                 checkHits();
                 hitData = null;
             } // if
-
-            lastOffsetX = offsetX;
-            lastOffsetY = offsetY;
-            _self.redraw = false;
         } // if
 
         animFrame(cycle);
@@ -4024,7 +4017,7 @@ var View = function(params) {
         } // for
 
         if (hitFlagged) {
-            _self.redraw = true;
+            viewChanges++;
         } // if
     } // initHitData
 
@@ -4099,7 +4092,7 @@ var View = function(params) {
     }
 
     function invalidate() {
-        _self.redraw = true;
+        viewChanges++;
     }
 
     /**
@@ -4120,20 +4113,24 @@ var View = function(params) {
     Return a T5.XYRect for the last drawn view rect
     */
     function getViewport() {
-        var viewport, dimensions;
+        var viewport = XYRect.init(
+            offsetX,
+            offsetY,
+            offsetX + _self.width,
+            offsetY + _self.height);
 
-        if (renderer) {
-            viewport = renderer.getViewport();
+        viewport.scaleFactor = scaleFactor;
 
-            if (! viewport) {
-                dimensions = renderer.getDimensions();
-                viewport = XYRect.init(
-                    offsetX,
-                    offsetY,
-                    offsetX + dimensions.width,
-                    offsetY + dimensions.height
-                );
-            }
+        if (scaleFactor !== 1) {
+            var centerX = offsetX + (_self.width >> 1),
+                centerY = offsetY + (_self.height >> 1);
+
+            viewport = XYRect.fromCenter(
+                centerX,
+                centerY,
+                _self.width / scaleFactor | 0,
+                _self.height / scaleFactor | 0
+            );
         } // if
 
         return viewport;
@@ -4179,17 +4176,18 @@ var View = function(params) {
     events and will do some of their recalculations when this is called.
     */
     function refresh() {
-        var viewport = renderer ? renderer.getViewport() : null;
-
+        var viewport = getViewport();
         if (viewport) {
             if (offsetMaxX || offsetMaxY) {
                 constrainOffset(viewport);
             } // if
 
-            lastRefresh = new Date().getTime();
+            refreshX = offsetX;
+            refreshY = offsetY;
+
             triggerAll('refresh', _self, viewport);
 
-            _self.redraw = true;
+            viewChanges++;
         } // if
     } // refresh
 
@@ -4198,12 +4196,14 @@ var View = function(params) {
     Remove the T5.ViewLayer specified by the id
     */
     function removeLayer(id) {
+
+
         var layerIndex = getLayerIndex(id);
         if ((layerIndex >= 0) && (layerIndex < layerCount)) {
             _self.trigger('layerRemoved', layers[layerIndex]);
 
             layers.splice(layerIndex, 1);
-            _self.redraw = true;
+            viewChanges++;
         } // if
 
         layerCount = layers.length;
@@ -4271,6 +4271,8 @@ var View = function(params) {
 
             lastOffsetX = offsetX;
             lastOffsetY = offsetY;
+            refreshX = 0;
+            refreshY = 0;
 
             triggerAll('zoomLevelChange', value);
 
@@ -4279,7 +4281,6 @@ var View = function(params) {
             renderer.reset();
 
             refresh();
-            _self.redraw = true;
         } // if
     } // setZoomLevel
 
@@ -4357,8 +4358,6 @@ var View = function(params) {
             offsetX = x | 0;
             offsetY = y | 0;
 
-            _self.redraw = true;
-
             if (callback) {
                 callback();
             } // if
@@ -4427,12 +4426,6 @@ var View = function(params) {
 
         caps = testResults;
         createRenderer();
-
-        /*
-        canvasCaps = testResults.canvas;
-
-        attachToCanvas();
-        */
 
         if (isIE) {
             window.attachEvent('onresize', handleResize);
@@ -4604,7 +4597,7 @@ function registerAnimationCallback(fn) {
     } // if
 } // registerAnimationCallback
 
-function animateDrawable(target, fn, argsStart, argsEnd, opts) {
+function animateDrawable(target, fnName, argsStart, argsEnd, opts) {
     opts = COG.extend({
         easing: 'sine.out',
         duration: 1000,
@@ -4615,8 +4608,8 @@ function animateDrawable(target, fn, argsStart, argsEnd, opts) {
 
     var startTicks = new Date().getTime(),
         lastTicks = 0,
-        targetFn = target[fn],
-        floorValue = fn == 'translate',
+        targetFn = target[fnName],
+        floorValue = fnName == 'translate',
         argsComplete = 0,
         autoInvalidate = opts.autoInvalidate,
         animateValid = argsStart.length && argsEnd.length &&
@@ -4648,7 +4641,7 @@ function animateDrawable(target, fn, argsStart, argsEnd, opts) {
             targetFn.apply(target, argsCurrent);
 
             if (autoInvalidate && view) {
-                view.redraw = true;
+                view.invalidate();
             } // if
 
             if (callback) {
@@ -4868,7 +4861,7 @@ function ImageDrawable(params) {
                     var view = _self.layer ? _self.layer.view : null;
 
                     if (view) {
-                        view.redraw = true;
+                        view.invalidate();
                     } // if
                 } // if
             });
@@ -5101,12 +5094,13 @@ ViewLayer.prototype = {
     drawn and the following parameters are passed to the method:
 
         - renderer - the renderer that will be drawing the viewlayer
+        - viewport - the current viewport
         - state - the current DisplayState of the view
         - view - a reference to the View
         - tickCount - the current tick count
         - hitData - an object that contains information regarding the current hit data
     */
-    draw: function(renderer, state, view, tickCount, hitData) {
+    draw: function(renderer, viewport, state, view, tickCount, hitData) {
     },
 
     /**
@@ -5156,7 +5150,7 @@ var ImageLayer = function(genId, params) {
                 tiles = [].concat(newTiles);
 
                 generating = false;
-                view.redraw = true;
+                view.invalidate();
                 COG.info('GEN COMPLETED IN ' + (new Date().getTime() - tickCount) + ' ms');
             });
         } // if
@@ -5173,8 +5167,8 @@ var ImageLayer = function(genId, params) {
     /**
     ### draw(renderer)
     */
-    function draw(renderer) {
-        renderer.drawTiles(tiles);
+    function draw(renderer, viewport) {
+        renderer.drawTiles(viewport, tiles);
     } // draw
 
     /* definition */
@@ -5208,6 +5202,19 @@ var DrawLayer = function(params) {
 
     /* private functions */
 
+    function performSync(view) {
+        for (var ii = drawables.length; ii--; ) {
+            drawables[ii].resync(view);
+        } // for
+
+        drawables.sort(function(shapeA, shapeB) {
+            var diff = shapeB.xy.y - shapeA.xy.y;
+            return diff != 0 ? diff : shapeB.xy.x - shapeA.xy.y;
+        });
+
+        view.invalidate();
+    } // performSync
+
     function quickHitCheck(drawable, hitX, hitY) {
         var bounds = drawable.bounds;
 
@@ -5216,15 +5223,16 @@ var DrawLayer = function(params) {
             hitY >= bounds.y1 && hitY <= bounds.y2);
     } // quickHitCheck
 
+
     /* event handlers */
 
-    function handleRefresh(evt, view, viewRect) {
-        drawables = _self.getDrawables(view, viewRect);
-    } // handleViewIdle
+    function handleResync(evt, parent) {
+        performSync(parent);
+    } // handleParentChange
 
     /* exports */
 
-    function draw(renderer, state, view, tickCount, hitData) {
+    function draw(renderer, viewport, state, view, tickCount, hitData) {
         var emptyProps = {
             };
 
@@ -5241,6 +5249,7 @@ var DrawLayer = function(params) {
 
                 drawData = prepFn ? prepFn.call(renderer,
                     drawable,
+                    viewport,
                     hitData,
                     state,
                     drawProps) : null;
@@ -5278,11 +5287,13 @@ var DrawLayer = function(params) {
     } // draw
 
     /**
-    ### getDrawables(view, viewRect)
+    ### find(selector: String)
+    The find method will eventually support retrieving all the shapes from the shape
+    layer that match the selector expression.  For now though, it just returns all shapes
     */
-    function getDrawables(view, viewRect) {
-        return [];
-    } // getDrawables
+    function find(selector) {
+        return [].concat(drawables);
+    } // find
 
     /**
     ### hitGuess(hitX, hitY, state, view)
@@ -5305,12 +5316,41 @@ var DrawLayer = function(params) {
     /* initialise _self */
 
     var _self = COG.extend(new ViewLayer(params), {
+        /**
+        ### add(poly)
+        Used to add a T5.Poly to the layer
+        */
+        add: function(drawable, prepend) {
+            if (drawable) {
+                drawable.layer = _self;
+
+                var view = _self.view;
+                if (view) {
+                    drawable.resync(view);
+                    view.invalidate();
+                } // if
+
+                if (prepend) {
+                    drawables.unshift(drawable);
+                }
+                else {
+                    drawables[drawables.length] = drawable;
+                } // if..else
+            } // if
+        },
+
+        clear: function() {
+            drawables = [];
+        },
+
         draw: draw,
         getDrawables: getDrawables,
         hitGuess: hitGuess
     });
 
     _self.bind('refresh', handleRefresh);
+    _self.bind('parentChange', handleResync);
+    _self.bind('resync', handleResync);
 
     return _self;
 };
@@ -5326,85 +5366,7 @@ data and the like.
 ## Methods
 */
 var ShapeLayer = function(params) {
-    params = COG.extend({
-        zindex: 10
-    }, params);
-
-    var shapes = [];
-
-    /* private functions */
-
-    function performSync(view) {
-        for (var ii = shapes.length; ii--; ) {
-            shapes[ii].resync(view);
-        } // for
-
-        shapes.sort(function(shapeA, shapeB) {
-            var diff = shapeB.xy.y - shapeA.xy.y;
-            return diff != 0 ? diff : shapeB.xy.x - shapeA.xy.y;
-        });
-
-        view.redraw = true;
-    } // performSync
-
-    /* event handlers */
-
-    function handleResync(evt, parent) {
-        performSync(parent);
-    } // handleParentChange
-
-    /* exports */
-
-    /**
-    ### find(selector: String)
-    The find method will eventually support retrieving all the shapes from the shape
-    layer that match the selector expression.  For now though, it just returns all shapes
-    */
-    function find(selector) {
-        return [].concat(shapes);
-    } // find
-
-    /* initialise _self */
-
-    var _self = COG.extend(new DrawLayer(params), {
-        /**
-        ### add(poly)
-        Used to add a T5.Poly to the layer
-        */
-        add: function(shape, prepend) {
-            if (shape) {
-                shape.layer = _self;
-
-                var view = _self.view;
-                if (view) {
-                    shape.resync(view);
-                    view.redraw = true;
-                } // if
-
-                if (prepend) {
-                    shapes.unshift(shape);
-                }
-                else {
-                    shapes[shapes.length] = shape;
-                } // if..else
-            } // if
-        },
-
-        clear: function() {
-            shapes = [];
-        },
-
-        find: find,
-
-        getDrawables: function(view, viewRect) {
-            return shapes;
-        }
-    });
-
-    _self.bind('parentChange', handleResync);
-    _self.bind('resync', handleResync);
-
-    return _self;
+    return new DrawLayer(params);
 };
 
     COG.extend(exports, {
@@ -7190,7 +7152,6 @@ var Map = exports.Map = function(params) {
         tapExtent: 10, // TODO: remove and use the inherited value
         crosshair: false,
         zoomLevel: 0,
-        boundsChangeThreshold: 30,
         minZoom: 1,
         maxZoom: 18,
         pannable: true,
@@ -7324,11 +7285,7 @@ var Map = exports.Map = function(params) {
     } // handleTap
 
     function handleRefresh(evt) {
-        var changeDelta = XY.absSize(XY.diff(lastBoundsChangeOffset, _self.getOffset()));
-        if (changeDelta > params.boundsChangeThreshold) {
-            lastBoundsChangeOffset = XY.copy(_self.getOffset());
-            _self.trigger("boundsChange", _self.getBoundingBox());
-        } // if
+        _self.trigger("boundsChange", _self.getBoundingBox());
     } // handleWork
 
     function handleProviderUpdate(name, value) {
@@ -7347,7 +7304,6 @@ var Map = exports.Map = function(params) {
 
         _self.resetScale();
         _self.triggerAll('resync', _self);
-        _self.refresh();
     } // handleZoomLevel
 
     /* internal functions */
@@ -7432,9 +7388,11 @@ var Map = exports.Map = function(params) {
             offsetY = centerXY.y - (_self.height >> 1);
 
         _self.updateOffset(offsetX, offsetY, easingFn, easingDuration, function() {
+            /*
             _self.refresh();
 
             _self.trigger("boundsChange", _self.getBoundingBox());
+            */
 
             if (callback) {
                 callback(_self);

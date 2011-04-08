@@ -4,7 +4,9 @@ DEMO = (function() {
     var tickCount = new Date().getTime(),
         activeSample = null,
         sampleMap = null,
+        DEFAULT_GENERATOR = 'osm.cloudmade',
         DEFAULT_VERSION = 'dev',
+        DEFAULT_RENDERER = 'canvas',
         DEFAULT_CONFIG = {
             version: 'dev' // '0.9.4.2'
         };
@@ -15,8 +17,13 @@ DEMO = (function() {
         removeStatusTimeout,
         sampleId = location.hash.replace(/.*\/(.*?)($|\?.*$)/, '$1'),
         currentGen = '',
-        currentOpts = {},
+        currentOpts = {
+            zoombar: {
+                images: '/img/zoom.png'
+            }
+        },
         currentVersion = DEFAULT_VERSION,
+        currentRenderer = location.hash.replace('#', '') || DEFAULT_RENDERER,
         statsLoaded = false,
         
         // define version loaders
@@ -34,7 +41,9 @@ DEMO = (function() {
             },
 
             dev: function(chain) {
-                return chain.script('/js/tile5/dev/tile5.js?v=' + tickCount);
+                return chain
+                    .script('/js/tile5/dev/tile5.js').wait()
+                    .script('/js/tile5/dev/plugins/renderer.zoombar.js');
             }
         },
         
@@ -52,6 +61,9 @@ DEMO = (function() {
             bing: {
                 apikey: "AgZHtHdj6xF41EcwYw2Yo0y1kDICGOLJ2ATmDGMFTUX-lSBqssPHcx50lx65oOly",
                 style: "Road"
+            },
+            'osm.wms': {
+                mapurl: 'http://www2.demis.nl/worldmap/wms.asp?Service=WMS&Version=1.1.0&Request=GetMap&WIDTH=256&HEIGHT=256&SRS=EPSG:4326&Layers=Countries&Format=image/png&'
             }
         },
         
@@ -59,15 +71,16 @@ DEMO = (function() {
         generatorDeps = {
             'osm.cloudmade': function(loader, version, callback) {
                 return loader
-                    .script('/js/tile5/' + version + '/geo/osm.js?v=' + tickCount)
+                    .script('/js/tile5/' + version + '/engines/osm.js?v=' + tickCount).wait()
+                    .script('/js/tile5/' + version + '/engines/cloudmade.js?v=' + tickCount)
                     .wait(callback);
             },
             
             decarta: function(loader, version, callback) {
                 return loader
-                    .script('/js/tile5/' + version + '/geo/decarta.js?v=' + tickCount)
+                    .script('/js/tile5/' + version + '/engines/decarta.js?v=' + tickCount)
                     .wait(function() {
-                        T5.Geo.Decarta.applyConfig({
+                        T5.Decarta.applyConfig({
                             server: "http://ws.decarta.com/openls",
                             clientName: "racq-do",
                             clientPassword: "mz5ff3",
@@ -84,19 +97,36 @@ DEMO = (function() {
             
             bing: function(loader, version, callback) {
                 return loader
-                    .script('/js/tile5/' + version + '/geo/bing.js?v=' + tickCount)
+                    .script('/js/tile5/' + version + '/engines/bing.js?v=' + tickCount)
                     .wait(function() {
                         callback(loader);
                     });
+            },
+            
+            'osm.wms': function(loader, version, callback) {
+                return loader
+                    .script('/js/tile5/' + version + '/engines/osm.js?v=' + tickCount).wait()
+                    .script('/js/tile5/' + version + '/engines/wms.js?v=' + tickCount)
+                    .wait(callback);
             }
         },
         
         // define renderer dependencies
         rendererDeps = {
+            'canvas/dom': function(chain) {
+                return chain.script('/js/tile5/dev/plugins/renderer.dom.js');
+            },
+            
+            raphael: function(chain) {
+                return chain
+                    .script('/js/libs/raphael.js').wait()
+                    .script('/js/tile5/dev/plugins/renderer.raphael.js');
+            },
+            
             'three:webgl': function(chain) {
                 return chain
                     .script('/js/libs/Three.js').wait()
-                    .script('/js/tile5/dev/plugins/renderer.three.js?v=' + tickCount);
+                    .script('/js/tile5/dev/plugins/renderer.three.js');
             },
             /*
             'three:canvas': function(chain) {
@@ -168,6 +198,33 @@ DEMO = (function() {
         });
     } // loadControls
     
+    function loadDeps(callback) {
+        var deps = rendererDeps[currentRenderer],
+            extraLibs = DEMO.Sample.extraLibs || [];
+        
+        function loadExtraLibs() {
+            if (extraLibs.length > 0) {
+                var chain = $LAB;
+                
+                for (var ii = 0; ii < extraLibs.length; ii++) {
+                    chain = chain.script(extraLibs[ii]);
+                } // for
+                
+                chain.wait(callback);
+            }
+            else if (callback) {
+                callback();
+            } // if..else
+        } // loadExtraLibs
+        
+        if (deps) {
+            deps($LAB).wait(loadExtraLibs);
+        }
+        else {
+            loadExtraLibs();
+        } // if..else
+    } // loadDeps
+    
     function loadGenerator(id, loader, callback) {
         
         function updateAndReload() {
@@ -186,6 +243,9 @@ DEMO = (function() {
             }
         } // updateAndReload
         
+        // use the default id if not set
+        id = id || DEFAULT_GENERATOR;
+        
         // remove existing acknowledgements
         $('#usermessages-ack li').remove();
         
@@ -199,17 +259,20 @@ DEMO = (function() {
     } // loadGenerator
     
     function loadStats() {
-        $LAB.script('/js/libs/Stats.js').wait(function() {
-            var stats = new Stats();
+        var statsElem = $('#demoStats')[0];
+        if (statsElem) {
+            $LAB.script('/js/libs/Stats.js').wait(function() {
+                var stats = new Stats();
 
-            // add the stats display to the dom
-            $('#demoStats')[0].appendChild(stats.domElement);
-            setInterval(function() {
-                stats.update();
-            }, 1000 / 60);
-            
-            statsLoaded = true;
-        });
+                // add the stats display to the dom
+                statsElem.appendChild(stats.domElement);
+                setInterval(function() {
+                    stats.update();
+                }, 1000 / 60);
+
+                statsLoaded = true;
+            });
+        } // if
     } // loadStats
     
     function makePretty(input) {
@@ -224,9 +287,9 @@ DEMO = (function() {
         return chunks.join(' ').replace(/geojson/i, 'GeoJSON');
     } // makePretty
     
-    function updateCombo(selector, validOpts) {
+    function updateCombo(selector, validOpts, initValue) {
         var enabledOpts,
-            currentValue = $(selector).val();
+            currentValue = initValue || $(selector).val();
         
         $(selector + ' option:disabled').removeAttr('disabled');
         if (validOpts) {
@@ -237,33 +300,45 @@ DEMO = (function() {
             });
         } // if
         
-        // select the first valid option
-        enabledOpts = $(selector + ' option:enabled');
-        if (enabledOpts.length) {
-            $(selector).val(enabledOpts[0].value);
-        } // if
+        if (! initValue) {
+            // select the first valid option
+            enabledOpts = $(selector + ' option:enabled');
+            if (enabledOpts.length) {
+                initValue = enabledOpts[0].value;
+            } // if
+        }
+        
+        $(selector).val(initValue);
     } // updateCombo
     
     function updateControls() {
-        updateCombo('#renderer', DEMO.Sample ? DEMO.Sample.renderers : null);
+        updateCombo('#renderer', DEMO.Sample ? DEMO.Sample.renderers : null, currentRenderer);
         updateCombo('#generator', DEMO.Sample ? DEMO.Sample.generators : null);
         
         // bind to controls
         $('#renderer').change(function() {
-            var deps = rendererDeps[$(this).val()];
+            // update the current renderer
+            currentRenderer = $(this).val();
 
-            $('#mapContainer *').remove();
-            if (deps) {
-                deps($LAB).wait(DEMO.run);
-            }
-            else {
-                DEMO.run();
-            } // if..else
+            // change the renderer on the fly :)
+            if (sampleMap) {
+                loadDeps(function() {
+                    sampleMap.renderer(currentRenderer + '/zoombar');
+                });
+            } // if
         });
         
         $('#generator').change(function() {
             loadGenerator($(this).val(), $LAB);
-        });        
+        });
+        
+        $('#btnRestart').click(function() {
+            if (sampleMap) {
+                sampleMap.unbind();
+            } // if
+            
+            run();
+        });
     } // updateControls
     
     /* exports */
@@ -309,48 +384,50 @@ DEMO = (function() {
     } // init
     
     function run(firstRun) {
+        var deps = rendererDeps[currentRenderer];
+        
         if (firstRun) {
             // update the controls
             updateControls();
         } // if
         
-        loadGenerator($('#generator').val(), $LAB, function() {
-            // remove any children of the map container
-            $('#mapContainer *').remove();
-            
-            if (activeSample) {
-                // if we have a stop method then stop
-                if (activeSample.stop) {
-                    activeSample.stop();
+        loadDeps(function() {
+            loadGenerator($('#generator').val(), $LAB, function() {
+                // remove any children of the map container
+                if (activeSample) {
+                    // if we have a stop method then stop
+                    if (activeSample.stop) {
+                        activeSample.stop();
+                    } // if
+
+                    // if we have a map, then unbind
+                    if (sampleMap) {
+                        sampleMap.detach();
+                        sampleMap = null;
+                    } // if
+
+                    // clear the active sample
+                    activeSample = null;
                 } // if
 
-                // if we have a map, then unbind
-                if (sampleMap) {
-                    sampleMap.detach();
-                    sampleMap = null;
+                // update the active sample
+                activeSample = DEMO.Sample;
+
+                // if we have an active sample, then run it
+                if (activeSample && activeSample.run) {
+                    loadStyles(DEMO.Sample.styles);
+
+                    sampleMap = activeSample.run(
+                        'mapContainer', 
+                        currentRenderer + '/zoombar', 
+                        currentGen, 
+                        currentOpts);
+
+                    if (! statsLoaded) {
+                        loadStats();
+                    } // if
                 } // if
-
-                // clear the active sample
-                activeSample = null;
-            } // if
-
-            // update the active sample
-            activeSample = DEMO.Sample;
-
-            // if we have an active sample, then run it
-            if (activeSample && activeSample.run) {
-                loadStyles(DEMO.Sample.styles);
-
-                sampleMap = activeSample.run(
-                    'mapContainer', 
-                    $('#renderer').val(), 
-                    currentGen, 
-                    currentOpts);
-                    
-                if (! statsLoaded) {
-                    loadStats();
-                } // if
-            } // if
+            });
         });
     } // run
     

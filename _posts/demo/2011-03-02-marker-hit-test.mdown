@@ -10,6 +10,14 @@ categories:
 thumbnail: /img/samples/marker-hit-test.png
 ---
 
+<div id="demoControls">
+<strong>Animate Again:</strong> <span id="easing-types"> </span>
+<p>
+<button id="cluster">Cluster Markers</button>
+</p>
+</div>
+
 This demo showcases a new feature of `0.9.4.2` around the ability to detect hovering over markers.  Previously the marker layer of a map would capture and report tapping a marker through the `markerTap` event, this method will be deprecated in favor of more generic hit method reported at the `T5.View` layer.  
 
-The implementation isn't 100% decided yet, but something along the lines of `hoverHit` and a `tapHit` or possibly a single event that reports the hitType via a parameter (preferences?).
+__NOTE:__ Marker hit testing not yet implemented in 3D.
+

@@ -1,0 +1,41 @@
+---
+layout: raw
+title:  Tile5 Demo
+---
+
+<!--[if lt IE 9]>
+    <script type="text/javascript" src="/js/flashcanvas/flashcanvas.js"></script>
+<![endif]-->
+<script>
+if (typeof FlashCanvas != "undefined") {
+    FlashCanvas.setOptions({
+        turbo: true,
+        delay: 20,
+		usePolicyFile: true,
+		imageCacheSize: 500
+    });
+}
+</script>
+<script src="/js/libs/LAB.src.js"></script>
+<div id="mapContainer" style="background: black;">
+</div>
+<script>
+var version = 'dev',
+	renderer = location.hash.replace('#', '') || 'canvas';
+
+$LAB
+.setOptions({
+	UsePreloading: false,
+	UseCachePreload: false
+})
+.script('/js/tile5/' + version + '/tile5.js').wait()
+.script('/js/tile5/' + version + '/plugins/renderer.zoombar.js').wait()
+.script('/js/libs/Three.js').wait()
+.script('/js/tile5/' + version + '/plugins/renderer.webgl.js').wait()
+.script('/js/tile5/' + version + '/plugins/renderer.three.js').wait()
+.script('/js/libs/raphael-min.js').wait()
+.script('/js/tile5/' + version + '/plugins/renderer.raphael.js').wait()
+.script('/js/tile5/' + version + '/engines/osm.js').wait()
+.script('/js/tile5/' + version + '/engines/cloudmade.js').wait()
+.script('renderer-test.js');
+</script>

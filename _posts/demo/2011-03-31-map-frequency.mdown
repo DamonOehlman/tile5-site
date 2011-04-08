@@ -1,0 +1,15 @@
+---
+layout: sample
+title:  Map Frequency (Firefox 4.0+ Only)
+sample: visualization-map-frequency
+
+categories:
+ - demo-inprogress
+
+thumbnail: /img/samples/visualization-walmart.jpg
+---
+
+<div id="demoControls">
+	<audio id="track" controls="true"></audio>
+</div>
+

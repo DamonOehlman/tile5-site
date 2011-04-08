@@ -244,7 +244,7 @@ T5.Geo.Decarta = (function() {
         
         CenterContext: function(jsonData) {
             return {
-                centerPos: T5.Geo.Position.parse(jsonData.CenterPoint ? jsonData.CenterPoint.pos.content : ""),
+                centerPos: new T5.Pos(jsonData.CenterPoint ? jsonData.CenterPoint.pos.content : ""),
                 radius: new T5.Geo.Radius(jsonData.Radius ? jsonData.Radius.content : 0, jsonData.Radius ? jsonData.Radius.unit : null)
             }; // _self
         } // CenterContext
@@ -399,7 +399,7 @@ T5.Geo.Decarta = (function() {
             if (match && validMatch(match)) {
                 // if the point is defined, then convert that to a position
                 if (match && match.Point) {
-                    matchPos = T5.Geo.Position.parse(match.Point.pos);
+                    matchPos = new T5.Pos(match.Point.pos);
                 } // if
 
                 // if we have the address then convert that to an address
@@ -498,7 +498,7 @@ T5.Geo.Decarta = (function() {
                     "<xls:ReverseGeocodeRequest>" + 
                         "<xls:Position>" + 
                             "<gml:Point>" + 
-                                "<gml:pos>" + T5.Geo.Position.toString(params.position) + "</gml:pos>" + 
+                                "<gml:pos>" + params.position.toString() + "</gml:pos>" + 
                             "</gml:Point>" + 
                         "</xls:Position>" + 
                         "<xls:ReverseGeocodePreference>" + params.geocodePreference + "</xls:ReverseGeocodePreference>" + 
@@ -510,7 +510,7 @@ T5.Geo.Decarta = (function() {
                 
                 // if the point is defined, then convert that to a position
                 if (response && response.Point) {
-                    matchPos = T5.Geo.Position.parse(match.Point.pos);
+                    matchPos = new T5.Pos(match.Point.pos);
                 } // if
 
                 // if we have the address then convert that to an address
@@ -558,7 +558,7 @@ T5.Geo.Decarta = (function() {
                 totalTime = COG.addDuration(totalTime, time);
                 
                 fnresult.push(new T5.Geo.Routing.Instruction({
-                    position: T5.Geo.Position.parse(instructions[ii].Point),
+                    position: new T5.Pos(instructions[ii].Point),
                     description: instructions[ii].Instruction,
                     distance: distance,
                     distanceTotal: totalDistance,
@@ -603,7 +603,7 @@ T5.Geo.Decarta = (function() {
                     // as to why this is required, who knows....
                     var tagName = (ii === 0 ? "StartPoint" : (ii === params.waypoints.length-1 ? "EndPoint" : "ViaPoint"));
                     
-                    body += COG.formatStr("<xls:{0}><xls:Position><gml:Point><gml:pos>{1}</gml:pos></gml:Point></xls:Position></xls:{0}>", tagName, T5.Geo.Position.toString(params.waypoints[ii]));
+                    body += COG.formatStr("<xls:{0}><xls:Position><gml:Point><gml:pos>{1}</gml:pos></gml:Point></xls:Position></xls:{0}>", tagName, params.waypoints[ii].toString());
                 }
                 
                 // close the waypoint list
@@ -780,49 +780,69 @@ T5.Geo.Decarta = (function() {
         
         /* internals */
         
-        function createTiles(view, viewRect, callback) {
+        function createTiles(view, viewRect, store, callback) {
             var zoomLevel = view.getZoomLevel ? view.getZoomLevel() : 0;
             
             if (zoomLevel) {
                 var numTiles = 2 << (zoomLevel - 1),
                     numTilesHalf = numTiles >> 1,
                     tileSize = params.tileSize,
-                    xTiles = (viewRect.width / tileSize | 0) + 2,
-                    yTiles = (viewRect.height / tileSize | 0) + 2,
-                    xTile = (viewRect.x1 / tileSize | 0) - numTilesHalf,
-                    yTile = numTiles - (viewRect.y1 / tileSize | 0) - numTilesHalf - yTiles,
-                    images = [];
+                    xTiles = (viewRect.w / tileSize | 0) + 1,
+                    yTiles = (viewRect.h / tileSize | 0) + 1,
+                    xTile = (viewRect.x / tileSize | 0) - numTilesHalf,
+                    yTile = numTiles - (viewRect.y / tileSize | 0) - numTilesHalf - yTiles,
+                    tiles = store.search({
+                        x: (numTilesHalf + xTile) * tileSize,
+                        y: (numTilesHalf + yTile*-1 - yTiles) * tileSize,
+                        w: xTiles * tileSize,
+                        h: yTiles * tileSize
+                    }),
+                    tileIds = {},
+                    ii;
+
+                // iterate through the tiles and create the tile id index
+                for (ii = tiles.length; ii--; ) {
+                    tileIds[tiles[ii].id] = true;
+                } // for
                     
                 for (var xx = 0; xx <= xTiles; xx++) {
                     for (var yy = 0; yy <= yTiles; yy++) {
-                        // build the tile url 
-                        tileUrl = hosts[xx % hosts.length] + '/openls/image-cache/TILE?'+
-                           'LLMIN=0.0,0.0' +
-                           '&LLMAX=' + _ll_LUT[zoomLevel] +
-                           '&CACHEABLE=true' + 
-                           '&DS=navteq-world' +
-                           '&WIDTH=' + (256 /* * dpr*/) +
-                           '&HEIGHT=' + (256 /* * dpr*/) +
-                           '&CLIENTNAME=' + currentConfig.clientName +
-                           '&SESSIONID=' + currentConfig.sessionID +
-                           '&FORMAT=PNG' +
-                           '&CONFIG=' + currentConfig.configuration +
-                           '&N=' + (yTile + yy - 1) +
-                           '&E=' + (xTile + xx);
-                           
-                        images[images.length] = {
-                            x: (numTilesHalf + xTile + xx) * tileSize,
-                            y: (numTilesHalf + yTile*-1 - yy) * tileSize,
-                            width: tileSize,
-                            height: tileSize,
-                            url: tileUrl
-                        };
+                        var tileX = xTile + xx,
+                            tileY = yTile + yy - 1,
+                            tileId = tileX + '_' + tileY;
+                            
+                        // if the tile is not in the index, then create
+                        if (! tileIds[tileId]) {
+                            var tileUrl = hosts[xx % hosts.length] + '/openls/image-cache/TILE?'+
+                                   'LLMIN=0.0,0.0' +
+                                   '&LLMAX=' + _ll_LUT[zoomLevel] +
+                                   '&CACHEABLE=true' + 
+                                   '&DS=navteq-world' +
+                                   '&WIDTH=' + (256 /* * dpr*/) +
+                                   '&HEIGHT=' + (256 /* * dpr*/) +
+                                   '&CLIENTNAME=' + currentConfig.clientName +
+                                   '&SESSIONID=' + currentConfig.sessionID +
+                                   '&FORMAT=PNG' +
+                                   '&CONFIG=' + currentConfig.configuration +
+                                   '&N=' + tileY +
+                                   '&E=' + tileX,
+                                tile = new T5.Tile(
+                                    (numTilesHalf + xTile + xx) * tileSize,
+                                    (numTilesHalf + yTile*-1 - yy) * tileSize,
+                                    tileUrl,
+                                    tileSize, 
+                                    tileSize,
+                                    tileId);
+                                    
+                            // add the new tile to the store
+                            store.insert(tile, tile);
+                        } // if
                     } // for
                 } // for
                     
                 // if the callback is assigned, then pass back the creator
                 if (callback) {
-                    callback(images);
+                    callback();
                 } // if                
             } // if
         } // createTiles
@@ -830,9 +850,9 @@ T5.Geo.Decarta = (function() {
         
         /* exports */
         
-        function run(view, viewRect, callback) {
+        function run(view, viewRect, store, callback) {
             if (hosts) {
-                createTiles(view, viewRect, callback);
+                createTiles(view, viewRect, store, callback);
             }
             else {
                 // make an RUOK request to retrieve configuration information
@@ -851,7 +871,7 @@ T5.Geo.Decarta = (function() {
                     } // if..else
 
                     // create the tiles
-                    createTiles(view, viewRect, callback);
+                    createTiles(view, viewRect, store, callback);
                 });
             }
         } // run
@@ -860,12 +880,9 @@ T5.Geo.Decarta = (function() {
         
         T5.userMessage('ack', 'decarta', '&copy; deCarta, Inc. Map and Imagery Data &copy; NAVTEQ or Tele Atlas or DigitalGlobe');
         
-        // initialise the generator
-        var _self = COG.extend(new T5.ImageGenerator(params), {
+        return {
             run: run
-        });
-        
-        return _self;
+        };
     };
     
     // register the decarta generator

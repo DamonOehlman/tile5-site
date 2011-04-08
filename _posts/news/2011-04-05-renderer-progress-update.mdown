@@ -1,0 +1,33 @@
+---
+layout: article
+title:  Renderer Progress Update
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+It's been a busy last few days as usual with a serious focus at the moment gaining compatibility with what I like to call "boring" browsers.  This of course is pretty much Internet Explorer 7 & 8.  While half the challenge (or maybe a quarter) of enabling older browser support was achieved through [decoupling the canvas rendering from the core of Tile5](/news/decoupling-renderers-past-present-and-future), it has been a frustrating / interesting / rewarding past few days.
+
+## Plan A - Implement the Canvas + DOM renderering
+
+The initial exploration of this rendering strategy looked to be fairly robust.  Essentially, the [DOM renderer](https://github.com/sidelab/tile5/blob/dev/src/js/plugins/renderer.dom.js) would take on the task of rendering the map tiles as standard HTML image elements while the [Canvas renderer](https://github.com/sidelab/tile5/blob/dev/src/js/graphics/renderers/canvas.js) would take on drawing the overlays.  The initial plan was to gain IE support through using [FlashCanvas](http://flashcanvas.net/) to take on the canvas drawing while saving it some burden by drawing the tiles in the browser.
+
+While this did end up working, I noticed that redraws of the overlays in Flash tended to flicker a little.  Rightly or wrongly, I have decided not to spend time investigating whether or not this can be improved (I have one of those feelings in my gut saying Flash is going to bite me later) but rather investigate alternatives.
+
+## Plan B - Implement a Raphaël Renderer
+
+For a little while I have been thinking about playing around with [Raphaël](http://raphaeljs.com/), and once I had decoupled the renderers this became something that could actually be investigated.  Given my priority was to provide support for Tile5 to IE, Raphaël (in my opinion) is an excellent way to go.
+
+Where possible, Raphaël will use [SVG](http://www.w3.org/TR/SVG/) to draw, but where it isn't available (IE) [VML](http://www.w3.org/TR/NOTE-VML) is used instead.  This is extremely nice, and something that deserves a lot of credit. 
+
+Writing a [Raphaël renderer](https://github.com/sidelab/tile5/blob/dev/src/js/plugins/renderer.raphael.js) really didn't take that long at all, and while there is still more to do, it's reasonably feature complete already.  In terms of my thoughts around SVG vs Canvas I will probably write a separate post on that topic over on [my blog](http://distractable.net/) soon.
+
+## Renderers Roadmap
+
+Given the experience to-date, my plan is now to keep working with the Raphaël renderer for current client project that requires IE compatibility.  As previously mentioned though, I will undoubtedly spend time working on the [Three.js renderer](https://github.com/sidelab/tile5/blob/dev/src/js/plugins/renderer.three.js) too.
+
+I also spent a little time today going through each of the renderers that have been implemented so far, and made sure they cleaned up after themselves (i.e. removed stuff from the DOM). I've also updated the [mapping demos](/demos/mapping) to allow you switch between renderers and no reloading of the demo is required (although you can hit a "Restart Demo" button when things break...).  I'm pretty happy with that actually as you can start to see the possibilities for writing HTML5 mapping applications that can seamlessly switch between a 2D top-down view and a 3D view :)
+
+As always, if you have any questions about anything, I'd encourage you to perhaps check out the [Tile5 discussion groups](https://groups.google.com/forum/#!forum/tile5) or shoot through questions on [Twitter](http://twitter.com/tile5js).

@@ -50,13 +50,6 @@ DEMO.Sample = (function() {
         COG.info('city index = ' + cityIndex);
 
         // clear the map markers and add one for the new city
-        map.markers.clear();
-        map.markers.add(new T5.ImageMarker({
-            imageUrl: "/img/pins/pin-158935-1-24.png",
-            imageAnchor: T5.XY.init(8, 24),
-            xy: T5.GeoXY.init(cityPos)
-        }));
-        
         // pan to the next city position
         map.panToPosition(
             cityPos, 
@@ -80,6 +73,13 @@ DEMO.Sample = (function() {
 
             map.setLayer('tiles', new T5.ImageLayer(generatorType, generatorOpts));
             map.gotoPosition(T5.Geo.Position.parse(cities[cities.length - 1].pos), 6);
+            
+            // add the map markers
+            for (var ii = cities.length; ii--; ) {
+                map.markers.add(new T5.Marker({
+                    xy: T5.GeoXY.init(T5.Geo.Position.parse(cities[ii].pos))
+                }));
+            } // for
             
             setTimeout(nextCity, 1000);
             

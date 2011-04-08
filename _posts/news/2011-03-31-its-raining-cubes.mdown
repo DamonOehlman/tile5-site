@@ -1,0 +1,31 @@
+---
+layout: article
+title:  It's Raining Cubes (A Post on Marker Abstraction)
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+Firstly, let me say once you start playing with [WebGL](http://www.khronos.org/webgl/) (either directly or more pleasantly, via [Three.js](https://github.com/mrdoob/three.js)) there really is no turning back.  It's just a whole bag of awesome, and I couldn't be happier that in time I will be able to say that Tile5 provides "A Grade" support for different flavours of HTML5 mapping, with WebGL being one of those.
+
+When you do start to consider the impact of implementing different rendering engines for what was previously a HTML5 canvas focused library, there are things that need to be thought about.  This is especially true with regards to 3D.
+
+Prior to playing around with WebGL and Three.js for instance, my preferred mechanism for dropping a pin on the map was via the [T5.ImageMarker](/docs/api/dev/src_js_graphics_drawables_imagemarker.js.html) class.  It provided a nice and simple way for drawing an image on the map, and if you are writing an mapping application that will use the 2D canvas renderer only then it's probably still the way to go.  
+
+However, when you can potentially use 3D meshes as markers that definitely seems more appealling. For instance, shown below is a screenshot of the marker I tend to use quite a bit drawn in 3D:
+
+![Image Markers in 3D](/img/posts/imagemarker-3d.png)
+
+And then as a simple cube:
+
+![Simple Cube as a Marker in 3D](/img/posts/marker-simple-3d.png)
+
+Admittedly the cube looks fairly boring (and 2D!!) as a static image, but when you start panning the map around you definitely start to notice the advantages.  
+
+How do I propose working with markers that work well for both 2D and 3D? 
+
+Essentially, at present I am falling back to using the [T5.Marker](/docs/api/dev/src_js_graphics_drawables_marker.js.html) class, and will be investigating having the renderers look at a `markerStyle` property to influence how the marker is rendered.  At present both the canvas renderer and the Three.js WebGL renderer handle a "simple" marker style and some others will be added too.  
+
+Still some way to go, but it's definitely looking good so far - watch this space.  In the meantime though, why not check out the [Marker Hit Test demo](/demo-mapping/marker-hit-test/#three:webgl) with animated falling cubes (no hit testing in 3D yet... that's on the todo list).

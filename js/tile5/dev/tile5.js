@@ -475,6 +475,7 @@ http://www.nonobtrusive.com/2010/05/20/lightweight-jsonp-without-any-3rd-party-l
 (function() {
     var BACK_S = 1.70158,
         HALF_PI = Math.PI / 2,
+        TWO_PI = Math.PI * 2,
         ANI_WAIT = 1000 / 60 | 0,
 
         abs = Math.abs,
@@ -952,110 +953,32 @@ var EventMonitor = function(target, handlers, params) {
         INERTIA_IDLE_DISTANCE = 15; // pixels
 
     var observable = params.observable,
-        pannableOpts = null,
         handlerInstances = [],
-        pans = [],
         totalDeltaX,
         totalDeltaY;
 
 
     /* internals */
 
-    function checkInertia(events) {
-        var evtCount = events.length,
-            includedCount,
-            vectorX = 0,
-            vectorY = 0,
-            diffX,
-            diffY,
-            distance,
-            theta,
-            extraDistance,
-            totalTicks = 0, // evtCount > 0 ? (new Date().getTime() - events[evtCount-1].ticks) : 0,
-            xyRatio = 1,
-            ii;
-
-        ii = events.length;
-        while (--ii > 1 && totalTicks < INERTIA_TIMEOUT) {
-            totalTicks += (events[ii].ticks - events[ii - 1].ticks);
-        } // while
-
-        includedCount = evtCount - ii;
-
-        if (includedCount > 1) {
-            diffX = events[evtCount - 1].x - events[ii].x;
-            diffY = events[evtCount - 1].y - events[ii].y;
-            distance = Math.sqrt(diffX * diffX + diffY * diffY) | 0;
-
-            if (distance > INERTIA_IDLE_DISTANCE) {
-                diffX = events[evtCount - 1].x - events[0].x;
-                diffY = events[evtCount - 1].y - events[0].y;
-                distance = Math.sqrt(diffX * diffX + diffY * diffY) | 0;
-                theta = Math.asin(diffY / distance);
-
-                extraDistance = distance * INERTIA_DURATION / totalTicks | 0;
-                extraDistance = extraDistance > INERTIA_MAXDIST ? INERTIA_MAXDIST : extraDistance;
-
-                inertiaPan(
-                    Math.cos(diffX > 0 ? theta : Math.PI - theta) * extraDistance,
-                    Math.sin(theta) * extraDistance,
-                    COG.easing('sine.out'),
-                    INERTIA_DURATION);
-            } // if
-        } // if
-    } // checkInertia
-
     function deltaGreaterThan(value) {
         return Math.abs(totalDeltaX) > value || Math.abs(totalDeltaY) > value;
     } // deltaGreaterThan
 
     function handlePointerMove(evt, absXY, relXY, deltaXY) {
-        if (pannableOpts) {
-            pans[pans.length] = {
-                ticks: new Date().getTime(),
-                x: deltaXY.x,
-                y: deltaXY.y
-            };
-
-            observable.trigger('pan', deltaXY.x, deltaXY.y);
-        } // if
-
-        totalDeltaX += deltaXY.x ? deltaXY.x : 0;
-        totalDeltaY += deltaXY.y ? deltaXY.y : 0;
+        totalDeltaX += deltaXY.x || 0;
+        totalDeltaY += deltaXY.y || 0;
     } // handlePanMove
 
     function handlePointerDown(evt, absXY, relXY) {
-        pans = [];
-
         totalDeltaX = 0;
         totalDeltaY = 0;
     } // handlePointerDown
 
     function handlePointerUp(evt, absXY, relXY) {
         if (! deltaGreaterThan(MAXMOVE_TAP)) {
-            observable.trigger('tap', absXY, relXY);
-        }
-        else if (pannableOpts) {
-            checkInertia(pans);
-        }
+            observable.triggerCustom('tap', evt, absXY, relXY);
+        } // if
     } // handlePointerUP
-
-    function inertiaPan(changeX, changeY, easing, duration) {
-        var currentX = 0,
-            currentY = 0,
-            lastX = 0;
-
-
-        COG.tweenValue(0, changeX, easing, duration, function(val, complete) {
-            lastX = currentX;
-            currentX = val;
-        });
-
-        COG.tweenValue(0, changeY, easing, duration, function(val, complete) {
-            observable.trigger('pan', currentX - lastX, val - currentY);
-            currentY = val;
-        });
-    } // inertia pan
 
     /* exports */
 
@@ -1063,18 +986,10 @@ var EventMonitor = function(target, handlers, params) {
         return observable.bind.apply(null, arguments);
     } // bind
 
-    function pannable(opts) {
-        pannableOpts = COG.extend({
-            inertia: true
-        }, opts);
-
-        return self;
-    } // pannable
-
     function unbind() {
         observable.unbind();
 
-        for (var ii = 0; ii < handlerInstances.length; ii++) {
+        for (ii = 0; ii < handlerInstances.length; ii++) {
             handlerInstances[ii].unbind();
         } // for
 
@@ -1085,7 +1000,6 @@ var EventMonitor = function(target, handlers, params) {
 
     var self = {
         bind: bind,
-        pannable: pannable,
         unbind: unbind
     };
 
@@ -1102,21 +1016,29 @@ var EventMonitor = function(target, handlers, params) {
 
     /* internal functions */
 
-    function genBinder(useBody) {
-        return function(evtName, callback, customTarget) {
-            var target = customTarget ? customTarget : (useBody ? document.body : document);
-
+    function genBinder(target) {
+        return function(evtName, callback) {
             target.addEventListener(evtName, callback, false);
         };
     } // bindDoc
 
-    function genUnbinder(useBody) {
+    function genUnbinder(target) {
         return function(evtName, callback, customTarget) {
-            var target = customTarget ? customTarget : (useBody ? document.body : document);
-
             target.removeEventListener(evtName, callback, false);
         };
     } // unbindDoc
+
+    function genIEBinder(target) {
+        return function(evtName, callback) {
+            target.attachEvent('on' + evtName, callback);
+        };
+    } // genIEBinder
+
+    function genIEUnbinder(target) {
+        return function(evtName, callback) {
+            target.detachEvent('on' + evtName, callback);
+        };
+    } // genIEUnbinder
 
     function getHandlers(types, capabilities) {
         var handlers = [];
@@ -1141,14 +1063,6 @@ var EventMonitor = function(target, handlers, params) {
         return handlers;
     } // getHandlers
 
-    function ieBind(evtName, callback, customTarget) {
-        (customTarget ? customTarget : document).attachEvent('on' + evtName, callback);
-    } // ieBind
-
-    function ieUnbind(evtName, callback, customTarget) {
-        (customTarget ? customTarget : document).detachEvent('on' + evtName, callback);
-    } // ieUnbind
-
     function point(x, y) {
         return {
             x: x ? x : 0,
@@ -1172,7 +1086,7 @@ var EventMonitor = function(target, handlers, params) {
     */
     function watch(target, opts, caps) {
         opts = COG.extend({
-            bindToBody: false,
+            bindTarget: null,
             observable: null,
             isIE: typeof window.attachEvent != 'undefined',
             types: null
@@ -1188,71 +1102,11 @@ var EventMonitor = function(target, handlers, params) {
             globalOpts = opts;
         } // if
 
-        opts.binder = opts.isIE ? ieBind : genBinder(opts.bindToBody);
-        opts.unbinder = opts.isIE ? ieUnbind : genUnbinder(opts.bindToBody);
+        opts.binder = (opts.isIE ? genIEBinder : genBinder)(opts.bindTarget || document);
+        opts.unbinder = (opts.isIE ? genIEBinder : genUnbinder)(opts.bindTarget || document);
 
         return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
     } // watch
-
-var InertiaMonitor = function(upX, upY, params) {
-    params = COG.extend({
-        inertiaTrigger: 20
-    }, params);
-
-    var INERTIA_TIMEOUT = 300,
-        INERTIA_DURATION = 300,
-        INERTIA_MAXDIST = 500;
-
-    var startTicks = new Date().getTime(),
-        worker;
-
-    /* internals */
-
-    function calcDistance(x1, y1, x2, y2) {
-        var distX = x1 - x2,
-            distY = y1 - y2;
-
-        return Math.sqrt(distX * distX + distY * distY);
-    } // calcDistance
-
-    function calculateInertia(currentX, currentY, distance, tickDiff) {
-        var theta = Math.asin((upY - currentY) / distance),
-            extraDistance = distance * (INERTIA_DURATION / tickDiff) >> 0;
-
-        extraDistance = extraDistance > INERTIA_MAXDIST ? INERTIA_MAXDIST : extraDistance;
-
-        theta = currentX > upX ? theta : Math.PI - theta;
-
-        self.trigger(
-            'inertia',
-            upX,
-            upY,
-            Math.cos(theta) * extraDistance | 0,
-            Math.sin(theta) * -extraDistance | 0);
-    } // calculateInertia
-
-    /* exports */
-
-    function check(currentX, currentY) {
-        var distance = calcDistance(upX, upY, currentX, currentY),
-            tickDiff = new Date().getTime() - startTicks;
-
-        if ((tickDiff < INERTIA_TIMEOUT) && (distance > params.inertiaTrigger)) {
-            calculateInertia(currentX, currentY, distance, tickDiff);
-        }
-        else if (tickDiff > INERTIA_TIMEOUT) {
-            self.trigger('timeout');
-        } // if..else
-    } // check
-
-    var self = {
-        check: check
-    };
-
-    COG.observable(self);
-
-    return self;
-};
 
 /* common pointer (mouse, touch, etc) functions */
 
@@ -1283,8 +1137,10 @@ function genEventProps(source, evt) {
 } // genEventProps
 
 function matchTarget(evt, targetElement) {
-    var targ = evt.target ? evt.target : evt.srcElement;
-    while (targ && (targ !== targetElement) && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
+    var targ = evt.target ? evt.target : evt.srcElement,
+        targClass = targ.className;
+
+    while (targ && (targ !== targetElement)) {
         targ = targ.parentNode;
     } // while
 
@@ -1298,14 +1154,18 @@ function pointerOffset(absPoint, offset) {
     };
 } // triggerPositionEvent
 
-function preventDefault(evt) {
+function preventDefault(evt, immediate) {
     if (evt.preventDefault) {
         evt.preventDefault();
         evt.stopPropagation();
     }
-    else if (evt.cancelBubble) {
-        evt.cancelBubble();
+    else if (typeof evt.cancelBubble != 'undefined') {
+        evt.cancelBubble = true;
     } // if..else
+
+    if (immediate && evt.stopImmediatePropagation) {
+        evt.stopImmediatePropagation();
+    } // if
 } // preventDefault
 var MouseHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
@@ -1344,19 +1204,6 @@ var MouseHandler = function(targetElement, observable, opts) {
         } // if
     } // getPagePos
 
-    function handleClick(evt) {
-        if (matchTarget(evt, targetElement)) {
-            var clickXY = getPagePos(evt);
-
-            observable.triggerCustom(
-                'tap',
-                genEventProps('mouse', evt),
-                clickXY,
-                pointerOffset(clickXY, getOffset(targetElement))
-            );
-        } // if
-    } // handleClick
-
     function handleDoubleClick(evt) {
         COG.info('captured double click');
 
@@ -1380,7 +1227,7 @@ var MouseHandler = function(targetElement, observable, opts) {
                 var pagePos = getPagePos(evt);
 
                 targetElement.style.cursor = 'move';
-                preventDefault(evt);
+                preventDefault(evt, true);
 
                 lastX = pagePos.x;
                 lastY = pagePos.y;
@@ -1482,21 +1329,21 @@ var MouseHandler = function(targetElement, observable, opts) {
     /* exports */
 
     function unbind() {
-        opts.unbinder('mousedown', handleMouseDown, false);
-        opts.unbinder('mousemove', handleMouseMove, false);
-        opts.unbinder('mouseup', handleMouseUp, false);
+        opts.unbinder('mousedown', handleMouseDown);
+        opts.unbinder('mousemove', handleMouseMove);
+        opts.unbinder('mouseup', handleMouseUp);
 
-        opts.unbinder("mousewheel", handleWheel, document);
-        opts.unbinder("DOMMouseScroll", handleWheel, document);
+        opts.unbinder("mousewheel", handleWheel);
+        opts.unbinder("DOMMouseScroll", handleWheel);
     } // unbind
 
-    opts.binder('mousedown', handleMouseDown, false);
-    opts.binder('mousemove', handleMouseMove, false);
-    opts.binder('mouseup', handleMouseUp, false);
-    opts.binder('dblclick', handleDoubleClick, false);
+    opts.binder('mousedown', handleMouseDown);
+    opts.binder('mousemove', handleMouseMove);
+    opts.binder('mouseup', handleMouseUp);
+    opts.binder('dblclick', handleDoubleClick);
 
-    opts.binder('mousewheel', handleWheel, document);
-    opts.binder('DOMMouseScroll', handleWheel, document);
+    opts.binder('mousewheel', handleWheel);
+    opts.binder('DOMMouseScroll', handleWheel);
 
     return {
         unbind: unbind
@@ -1669,7 +1516,7 @@ var TouchHandler = function(targetElement, observable, opts) {
 
     function handleTouchMove(evt) {
         if (matchTarget(evt, targetElement)) {
-            evt.preventDefault();
+            preventDefault(evt);
 
             touchesCurrent = getTouchData(evt);
 
@@ -1781,14 +1628,14 @@ var TouchHandler = function(targetElement, observable, opts) {
     /* exports */
 
     function unbind() {
-        opts.unbinder('touchstart', handleTouchStart, false);
-        opts.unbinder('touchmove', handleTouchMove, false);
-        opts.unbinder('touchend', handleTouchEnd, false);
+        opts.unbinder('touchstart', handleTouchStart);
+        opts.unbinder('touchmove', handleTouchMove);
+        opts.unbinder('touchend', handleTouchEnd);
     } // unbind
 
-    opts.binder('touchstart', handleTouchStart, false);
-    opts.binder('touchmove', handleTouchMove, false);
-    opts.binder('touchend', handleTouchEnd, false);
+    opts.binder('touchstart', handleTouchStart);
+    opts.binder('touchmove', handleTouchMove);
+    opts.binder('touchend', handleTouchEnd);
 
     COG.info('initialized touch handler');
 
@@ -1812,6 +1659,8 @@ register('pointer', {
 
 var T5 = {};
 (function(exports) {
+    COG.observable(exports);
+
 window.animFrame = (function() {
     return  window.requestAnimationFrame       ||
             window.webkitRequestAnimationFrame ||
@@ -1825,41 +1674,6 @@ window.animFrame = (function() {
             };
 })();
 
-var TWO_PI = Math.PI * 2,
-    HALF_PI = Math.PI / 2;
-
-var abs = Math.abs,
-    ceil = Math.ceil,
-    floor = Math.floor,
-    min = Math.min,
-    max = Math.max,
-    pow = Math.pow,
-    sqrt = Math.sqrt,
-    log = Math.log,
-    round = Math.round,
-    sin = Math.sin,
-    asin = Math.asin,
-    cos = Math.cos,
-    acos = Math.acos,
-    tan = Math.tan,
-    atan = Math.atan,
-    atan2 = Math.atan2,
-
-    proto = 'prototype',
-    has = 'hasOwnProperty',
-    isnan = {'NaN': 1, 'Infinity': 1, '-Infinity': 1},
-    lowerCase = String[proto].toLowerCase,
-    objectToString = Object[proto].toString,
-
-    typeUndefined = 'undefined',
-    typeFunction = 'function',
-    typeString = 'string',
-    typeObject = 'object',
-    typeNumber = 'number',
-    typeArray = 'array',
-
-    isExplorerCanvas = typeof G_vmlCanvasManager != typeUndefined,
-    isFlashCanvas = typeof FlashCanvas != typeUndefined;
 /**
 # T5
 The T5 core module contains classes and functionality that support basic drawing
@@ -1901,6 +1715,191 @@ function isType(o, type) {
             objectToString.call(o).slice(8, -1).toLowerCase() == type;
 }; // is
 
+var indexOf = Array.prototype.indexOf || function(target) {
+    for (var ii = 0; ii < this.length; ii++) {
+        if (this[ii] === target) {
+            return ii;
+        } // if
+    } // for
+
+    return -1;
+};
+var TWO_PI = Math.PI * 2,
+    HALF_PI = Math.PI / 2,
+    PROP_WK_TRANSFORM = '-webkit-transform';
+
+var abs = Math.abs,
+    ceil = Math.ceil,
+    floor = Math.floor,
+    min = Math.min,
+    max = Math.max,
+    pow = Math.pow,
+    sqrt = Math.sqrt,
+    log = Math.log,
+    round = Math.round,
+    sin = Math.sin,
+    asin = Math.asin,
+    cos = Math.cos,
+    acos = Math.acos,
+    tan = Math.tan,
+    atan = Math.atan,
+    atan2 = Math.atan2,
+
+    proto = 'prototype',
+    has = 'hasOwnProperty',
+    isnan = {'NaN': 1, 'Infinity': 1, '-Infinity': 1},
+    lowerCase = String[proto].toLowerCase,
+    objectToString = Object[proto].toString,
+
+    typeUndefined = 'undefined',
+    typeFunction = 'function',
+    typeString = 'string',
+    typeObject = 'object',
+    typeNumber = 'number',
+    typeArray = 'array',
+
+    supportTransforms = typeof document.body.style[PROP_WK_TRANSFORM] != 'undefined',
+
+    reDelimitedSplit = /[\,\s]/;
+/**
+# T5.newCanvas(width, height)
+*/
+var newCanvas = T5.newCanvas = function(width, height) {
+    var tmpCanvas = document.createElement('canvas');
+
+    tmpCanvas.width = width ? width : 0;
+    tmpCanvas.height = height ? height : 0;
+
+    T5.trigger('createCanvas', tmpCanvas);
+
+    return tmpCanvas;
+};
+/**
+# T5.Generator
+The generator module is used to manage the registration and creation
+of generators.  Image generators, etc
+*/
+var Generator = (function() {
+
+    var generatorRegistry = {};
+
+    /* private internal functions */
+
+    /* exports */
+
+    function init(id, params) {
+        var generatorType = generatorRegistry[id],
+            generator;
+
+        if (! generatorType) {
+            throw new Error('Unable to locate requested generator: ' + id);
+        } // if
+
+        return new generatorType(params);
+    } // init
+
+    function register(id, creatorFn) {
+        generatorRegistry[id] = creatorFn;
+    } // register
+
+    /* module definition */
+
+    return {
+        init: init,
+        register: register
+    };
+})();
+/**
+# T5.Service
+This is a module of Tile5 that supports registration of services that provide capabilities
+to Tile5.  For instance an engine for a GIS backend might provide `route` or `geocode` service
+*/
+var Service = (function() {
+    var registry = {};
+
+    /* exports */
+
+    /**
+    ### find(serviceType)
+    */
+    function find(serviceType) {
+        return (registry[serviceType] || [])[0];
+    } // find
+
+    /**
+    ### register(serviceType, initFn)
+    */
+    function register(serviceType, initFn) {
+        if (! registry[serviceType]) {
+            registry[serviceType] = [];
+        } // if
+
+        registry[serviceType].push(initFn());
+    } // register
+
+    return {
+        find: find,
+        register: register
+    };
+})();
+
+
+/**
+# T5.XY (Internal Class)
+The internal XY class is currently created by making a call to `T5.XY.init` rather than `new T5.XY`.
+This will seem strange, and it is strange, and is a result of migrating from a closure based pattern
+to a prototypal pattern in areas of the Tile5 library.
+
+## Methods
+*/
+function XY(x, y) {
+    this.x = x || 0;
+    this.y = y || 0;
+} // XY constructor
+
+XY.prototype = {
+    constructor: XY,
+
+    /**
+    ### add(xy*)
+    Return a __new__ xy composite that is adds the current value of this xy value with the other xy
+    values that have been passed to the function.  The actual value of this XY value remain unchanged.
+    */
+    add: function() {
+        var sumX = this.x,
+            sumY = this.y;
+
+        for (var ii = arguments.length; ii--; ) {
+            sumX += arguments[ii].x;
+            sumY += arguments[ii].y;
+        } // for
+
+        return new XY(sumX, sumY);
+    }, // add
+
+    /**
+    ### equals(xy)
+    Return true if the two points are equal, false otherwise.  __NOTE:__ This function
+    does not automatically floor the values so if the point values are floating point
+    then floating point precision errors will likely occur.
+    */
+    equals: function(xy) {
+        return this.x === xy.x && this.y === xy.y;
+    }
+};
+function Rect(x, y, width, height) {
+    this.x = x || 0;
+    this.y = y || 0;
+    this.w = width || 0;
+    this.h = height || 0;
+
+    this.x2 = this.x + this.w;
+    this.y2 = this.y + this.h;
+} // Rect
+
+Rect.prototype = {
+    constructor: Rect
+};
 /**
 # T5.XY
 This module contains simple functions for creating and manipulating an object literal that
@@ -1908,7 +1907,7 @@ contains an `x` and `y` value.  Previously this functionaliy lived in the T5.V m
 been moved to communicate it's more generic implementation.  The T5.V module still exists, however,
 and also exposes the functions of this module for the sake of backward compatibility.
 */
-var XY = (function() {
+var XYFns = (function() {
     /* internal functions */
 
     /* exports */
@@ -1995,7 +1994,7 @@ var XY = (function() {
     then floating point precision errors will likely occur.
     */
     function equals(pt1, pt2) {
-        return pt1.x === pt2.x && pt1.y === pt2.y;
+        return pt1.equals(pt2);
     } // equals
 
     /**
@@ -2040,7 +2039,7 @@ var XY = (function() {
             maxY = isType(maxY, typeUndefined) || xy.y > maxY ? xy.y : maxY;
         } // for
 
-        return XYRect.init(minX, minY, maxX, maxY);
+        return new Rect(minX, minY, maxX - minX, maxY - minY);
     } // getRect
 
     /**
@@ -2051,10 +2050,7 @@ var XY = (function() {
     be used.
     */
     function init(initX, initY) {
-        return {
-            x: initX || 0,
-            y: initY || 0
-        };
+        return new XY(initX, initY);
     } // init
 
     /**
@@ -2110,7 +2106,7 @@ var XY = (function() {
             return null;
         } // if
 
-        generalization = generalization ? generalization : XY.VECTOR_SIMPLIFICATION;
+        generalization = generalization ? generalization : XYFns.VECTOR_SIMPLIFICATION;
 
         var tidied = [],
             last = null;
@@ -2198,7 +2194,7 @@ var Vector = (function() {
             return vectors;
         } // if
 
-        epsilon = epsilon ? epsilon : XY.VECTOR_SIMPLIFICATION;
+        epsilon = epsilon ? epsilon : XYFns.VECTOR_SIMPLIFICATION;
 
         var distanceMax = 0,
             index = 0,
@@ -2243,7 +2239,7 @@ var Vector = (function() {
             absX = unitLength !== 0 ? (v2.x - v1.x) / unitLength : 0,
             absY = unitLength !== 0 ? (v2.y - v1.y) / unitLength : 0;
 
-        return XY.init(absX, absY);
+        return new XY(absX, absY);
     } // unitize
 
     /* define module */
@@ -2280,11 +2276,11 @@ var XYRect = (function() {
     ### buffer(rect, bufferX, bufferY)
     */
     function buffer(rect, bufferX, bufferY) {
-        return XY.init(
-            rect.x1 - bufferX,
-            rect.y1 - (bufferY || bufferX),
-            rect.x1 + bufferX,
-            rect.y1 + (bufferY || bufferX)
+        return XYRect.init(
+            rect.x - bufferX,
+            rect.y - (bufferY || bufferX),
+            rect.x2 + bufferX,
+            rect.y2 + (bufferY || bufferX)
         );
     } // buffer
 
@@ -2293,7 +2289,7 @@ var XYRect = (function() {
     Return a xy composite for the center of the rect
     */
     function center(rect) {
-        return XY.init(rect.x1 + (rect.width >> 1), rect.y1 + (rect.height >> 1));
+        return new XY(rect.x + (rect.w >> 1), rect.y + (rect.h >> 1));
     } // center
 
     /**
@@ -2301,7 +2297,7 @@ var XYRect = (function() {
     Return a duplicate of the XYRect
     */
     function copy(rect) {
-        return init(rect.x1, rect.y1, rect.x2, rect.y2);
+        return init(rect.x, rect.y, rect.x2, rect.y2);
     } // copy
 
     /**
@@ -2309,7 +2305,7 @@ var XYRect = (function() {
     Return the distance from corner to corner of the rect
     */
     function diagonalSize(rect) {
-        return sqrt(rect.width * rect.width + rect.height * rect.height);
+        return sqrt(rect.w * rect.w + rect.h * rect.h);
     } // diagonalSize
 
     /**
@@ -2333,20 +2329,7 @@ var XYRect = (function() {
     Create a new XYRect composite object
     */
     function init(x1, y1, x2, y2) {
-        x1 = x1 || 0;
-        y1 = y1 || 0;
-        x2 = x2 || x1;
-        y2 = y2 || y1;
-
-        return {
-            x1: x1,
-            y1: y1,
-            x2: x2,
-            y2: y2,
-
-            width: x2 - x1,
-            height: y2 - y1
-        };
+        return new Rect(x1, y1, (x2 || x1) - x1, (y2 || y1) - y1);
     } // init
 
     /**
@@ -2354,13 +2337,13 @@ var XYRect = (function() {
     Returns the intersecting rect between the two specified XYRect composites
     */
     function intersect(rect1, rect2) {
-        var x1 = max(rect1.x1, rect2.x1),
-            y1 = max(rect1.y1, rect2.y1),
+        var x1 = max(rect1.x, rect2.x),
+            y1 = max(rect1.y, rect2.y),
             x2 = min(rect1.x2, rect2.x2),
             y2 = min(rect1.y2, rect2.y2),
             r = init(x1, y1, x2, y2);
 
-        return ((r.width > 0) && (r.height > 0)) ? r : null;
+        return ((r.w > 0) && (r.h > 0)) ? r : null;
     } // intersect
 
     /**
@@ -2368,7 +2351,7 @@ var XYRect = (function() {
     Return the string representation of the rect
     */
     function toString(rect) {
-        return rect ? ('[' + rect.x1 + ', ' + rect.y1 + ', ' + rect.x2 + ', ' + rect.y2 + ']') : '';
+        return rect ? ('[' + rect.x + ', ' + rect.y + ', ' + rect.x2 + ', ' + rect.y2 + ']') : '';
     } // toString
 
     /**
@@ -2376,20 +2359,20 @@ var XYRect = (function() {
     Return the minimum rect required to contain both of the supplied rects
     */
     function union(rect1, rect2) {
-        if (rect1.width === 0 || rect1.height === 0) {
+        if (rect1.w === 0 || rect1.h === 0) {
             return copy(rect2);
         }
-        else if (rect2.width === 0 || rect2.height === 0) {
+        else if (rect2.w === 0 || rect2.h === 0) {
             return copy(rect1);
         }
         else {
-            var x1 = min(rect1.x1, rect2.x1),
-                y1 = min(rect1.y1, rect2.y1),
+            var x1 = min(rect1.x, rect2.x),
+                y1 = min(rect1.y, rect2.y),
                 x2 = max(rect1.x2, rect2.x2),
                 y2 = max(rect1.y2, rect2.y2),
                 r = init(x1, y1, x2, y2);
 
-            return ((r.width > 0) && (r.height > 0)) ? r : null;
+            return ((r.w > 0) && (r.h > 0)) ? r : null;
         } // if..else
     } // union
 
@@ -2407,70 +2390,6 @@ var XYRect = (function() {
         union: union
     };
 })();
-/**
-# T5.Dimensions
-A module of utility functions for working with dimensions composites
-
-## Dimension Attributes
-
-Dimensions created using the init function will have the following attributes:
-- `width`
-- `height`
-
-
-## Functions
-*/
-var Dimensions = (function() {
-
-    /* exports */
-
-    /**
-    ### getAspectRatio(dimensions)
-    Return the aspect ratio for the `dimensions` (width / height)
-    */
-    function getAspectRatio(dimensions) {
-        return dimensions.height !== 0 ?
-            dimensions.width / dimensions.height : 1;
-    } // getAspectRatio
-
-    /**
-    ### getCenter(dimensions)
-    Get the a XY composite for the center of the `dimensions` (width / 2, height  / 2)
-    */
-    function getCenter(dimensions) {
-        return XY.init(dimensions.width >> 1, dimensions.height >> 1);
-    } // getCenter
-
-    /**
-    ### getSize(dimensions)
-    Get the size for the diagonal for the `dimensions`
-    */
-    function getSize(dimensions) {
-        return sqrt(pow(dimensions.width, 2) + pow(dimensions.height, 2));
-    } // getSize
-
-    /**
-    ### init(width, height)
-    Create a new dimensions composite (width, height)
-    */
-    function init(width, height) {
-        width = width ? width : 0;
-
-        return {
-            width: width,
-            height: height ? height : width
-        };
-    } // init
-
-    /* module definition */
-
-    return {
-        getAspectRatio: getAspectRatio,
-        getCenter: getCenter,
-        getSize: getSize,
-        init: init
-    };
-})(); // dimensionTools
 /**
 # T5.Hits
 
@@ -2541,7 +2460,7 @@ Hits = (function() {
             elements ? elements : hitData.elements,
             hitData.absXY,
             hitData.relXY,
-            XY.init(hitData.x, hitData.y)
+            new XY(hitData.x, hitData.y)
         );
     } // triggerEvent
 
@@ -2554,6 +2473,142 @@ Hits = (function() {
         triggerEvent: triggerEvent
     };
 })();
+function createStoreForZoomLevel(zoomLevel, oldStorage) {
+    var store = new SpatialStore(Math.sqrt(256 << zoomLevel) | 0);
+
+    if (oldStorage && (oldStorage.zoomLevel === zoomLevel)) {
+        oldStorage.copyInto(store);
+    } // if
+
+    store.zoomLevel = zoomLevel;
+
+    return store;
+}
+
+var SpatialStore = function(cellsize) {
+    cellsize = cellsize || 128;
+
+    /* internals */
+
+    var buckets = [],
+        lookup = {};
+
+    /* internals */
+
+    function getBucket(x, y) {
+        var colBuckets = buckets[x],
+            rowBucket;
+
+        if (! colBuckets) {
+            colBuckets = buckets[x] = [];
+        } // if
+
+        rowBucket = colBuckets[y];
+
+        if (! rowBucket) {
+            rowBucket = colBuckets[y] = [];
+        } // if
+
+        return rowBucket;
+    } // getBuckets
+
+    /* exports */
+
+    /**
+    ### copyInto(target)
+    This function is used to copy the items in the current store into the specified store.
+    We use this primarily when we are creating a store with a new cellsize and need to copy
+    the old items across.
+    */
+    function copyInto(target) {
+        for (var itemId in lookup) {
+            var itemData = lookup[itemId];
+
+            target.insert(itemData.bounds || itemData, itemData, itemId);
+        } // for
+    } // copyInto
+
+    function insert(rect, data, id) {
+        var minX = rect.x / cellsize | 0,
+            minY = rect.y / cellsize | 0,
+            maxX = (rect.x + rect.w) / cellsize | 0,
+            maxY = (rect.y + rect.h) / cellsize | 0;
+
+        id = id || data.id || COG.objId('spatial');
+
+        lookup[id] = data;
+
+        for (var xx = minX; xx <= maxX; xx++) {
+            for (var yy = minY; yy <= maxY; yy++) {
+                getBucket(xx, yy).push(id);
+            } // for
+        } // for
+    } // insert
+
+    function remove(rect, data, id) {
+        id = id || data.id;
+
+        if (lookup[id]) {
+            var minX = rect.x / cellsize | 0,
+                minY = rect.y / cellsize | 0,
+                maxX = (rect.x + rect.w) / cellsize | 0,
+                maxY = (rect.y + rect.h) / cellsize | 0;
+
+            delete lookup[id];
+
+            for (var xx = minX; xx <= maxX; xx++) {
+                for (var yy = minY; yy <= maxY; yy++) {
+                    var bucket = getBucket(xx, yy),
+                        itemIndex = indexOf.call(bucket, id);
+
+                    if (itemIndex >= 0) {
+                        bucket.splice(itemIndex, 1);
+                    } // if
+                } // for
+            } // for
+        } // if
+    } // remove
+
+    function search(rect) {
+        var minX = rect.x / cellsize | 0,
+            minY = rect.y / cellsize | 0,
+            maxX = (rect.x + rect.w) / cellsize | 0,
+            maxY = (rect.y + rect.h) / cellsize | 0,
+            ids = [],
+            results = [];
+
+        for (var xx = minX; xx <= maxX; xx++) {
+            for (var yy = minY; yy <= maxY; yy++) {
+                ids = ids.concat(getBucket(xx, yy));
+            } // for
+        } // for
+
+        ids.sort();
+
+        for (var ii = ids.length; ii--; ) {
+            var currentId = ids[ii],
+                target = lookup[currentId];
+
+            if (target) {
+                results[results.length] = target;
+            } // if
+
+            while (ii > 0 && ids[ii-1] == currentId) {
+                ii--;
+            }
+        } // for
+
+        return results;
+    } // search
+
+    return {
+        copyInto: copyInto,
+        insert: insert,
+        remove: remove,
+        search: search
+    };
+};
+
 var INTERVAL_LOADCHECK = 10,
     INTERVAL_CACHECHECK = 10000,
     LOAD_TIMEOUT = 30000,
@@ -2603,7 +2658,7 @@ function checkImageLoads(tickCount) {
 } // imageLoadWorker
 
 function isLoaded(image) {
-    return image && (isFlashCanvas || (image.complete && image.width > 0));
+    return image && image.complete && image.width > 0;
 } // isLoaded
 
 function loadImage(url, callback) {
@@ -2638,7 +2693,7 @@ This function is used to load an image and fire a callback when the image
 is loaded.  The callback fires when the image is _really_ loaded (not
 when the onload event handler fires).
 */
-var getImage = T5.getImage = function(url, callback) {
+function getImage(url, callback) {
     var image = url && callback ? imageCache[url] : null;
 
     if (image && isLoaded(image)) {
@@ -2648,72 +2703,62 @@ var getImage = T5.getImage = function(url, callback) {
         loadImage(url, callback);
     } // if..else
 };
-/**
-# T5.newCanvas(width, height)
-*/
-var newCanvas = T5.newCanvas = function(width, height) {
-    var tmpCanvas = document.createElement('canvas');
+function Tile(x, y, url, width, height, id) {
+    this.x = x;
+    this.y = y;
+    this.w = width || 256;
+    this.h = width || 256;
 
-    tmpCanvas.width = width ? width : 0;
-    tmpCanvas.height = height ? height : 0;
+    this.x2 = this.x + this.w;
+    this.y2 = this.y + this.h;
 
-    if (isFlashCanvas) {
-        document.body.appendChild(tmpCanvas);
-        FlashCanvas.initElement(tmpCanvas);
-    } // if
+    this.url = url;
 
-    if (isExplorerCanvas) {
-        G_vmlCanvasManager.initElement(tmpCanvas);
-    } // if
+    this.id = id || (x + '_' + y);
 
-    return tmpCanvas;
+    this.loaded = false;
+    this.image = null;
 };
-/**
-# T5.Generator
-The generator module is used to manage the registration and creation
-of generators.  Image generators, etc
-*/
-var Generator = (function() {
 
-    var generatorRegistry = {};
+Tile.prototype = {
+    constructor: Tile,
 
-    /* private internal functions */
+    load: function(callback) {
+        var tile = this;
 
-    /* exports */
+        getImage(this.url, function(image, loaded) {
+            tile.loaded = true;
+            tile.image = image;
 
-    function init(id, params) {
-        var generatorType = generatorRegistry[id],
-            generator;
-
-        if (! generatorType) {
-            throw new Error('Unable to locate requested generator: ' + id);
-        } // if
-
-        return new generatorType(params);
-    } // init
-
-    function register(id, creatorFn) {
-        generatorRegistry[id] = creatorFn;
-    } // register
-
-    /* module definition */
-
-    return {
-        init: init,
-        register: register
-    };
-})();
+            if (callback) {
+                callback();
+            } // if
+        });
+    }
+};
 
 /**
 # T5.Renderer
+
+## Events
+Renderers fire the following events:
+
+### detach
+
+### predraw
+
+### reset
+
 */
-var Renderer = function(view, container, params) {
+var Renderer = function(view, container, outer, params) {
 
     /* internals */
 
     /* exports */
 
-    return {
+    var _this = {
+        fastpan: true,
+
         /**
         ### applyStyle(style: T5.Style): string
         */
@@ -2748,7 +2793,7 @@ var Renderer = function(view, container, params) {
         ### getOffset()
         */
         getOffset: function() {
-            return XY.init(0, 0);
+            return new XY();
         },
 
         /**
@@ -2771,6 +2816,13 @@ var Renderer = function(view, container, params) {
         },
 
         /**
+        ### projectXY(srcX, srcY)
+        This function is optionally implemented by a renderer to manually take
+        care of projecting an x and y coordinate to the target drawing area.
+        */
+        projectXY: null,
+
+        /**
         ### render
         */
         render: function() {
@@ -2782,6 +2834,8 @@ var Renderer = function(view, container, params) {
         reset: function() {
         }
     };
+
+    return COG.observable(_this);
 };
 
 var rendererRegistry = {};
@@ -2796,20 +2850,23 @@ var registerRenderer = exports.registerRenderer = function(id, creatorFn) {
 /**
 # T5.attachRenderer(id, view, container, params)
 */
-var attachRenderer = exports.attachRenderer = function(id, view, container, params) {
+var attachRenderer = exports.attachRenderer = function(id, view, container, outer, params) {
     var ids = id.split('/'),
-        renderer = new Renderer(view, container, params);
+        renderer = new Renderer(view, container, outer, params);
 
     for (var ii = 0; ii < ids.length; ii++) {
         var rClass = rendererRegistry[ids[ii]];
         if (rClass) {
-            renderer = new rClass(view, container, params, renderer);
+            renderer = new rClass(view, container, outer, params, renderer);
         } // if
     } // for
 
     return renderer;
 };
-registerRenderer('canvas', function(view, container, params, baseRenderer) {
+/**
+# RENDERER: canvas
+*/
+registerRenderer('canvas', function(view, container, outer, params, baseRenderer) {
     params = COG.extend({
     }, params);
 
@@ -2818,13 +2875,17 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
     var vpWidth,
         vpHeight,
         canvas,
+        createdCanvas = false,
         context,
-        viewport,
         drawOffsetX = 0,
         drawOffsetY = 0,
+        styleFns = {},
         transform = null,
         pipTransformed = CANI.canvas.pipTransformed,
         previousStyles = {},
+
+        drawNothing = function(drawData) {
+        },
 
         defaultDrawFn = function(drawData) {
             if (this.fill) {
@@ -2834,46 +2895,61 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
             if (this.stroke) {
                 context.stroke();
             } // if
-        };
+        },
 
-    function drawTile(tile, x, y) {
-        getImage(tile.url, function(image, loaded) {
-            view.redraw = loaded;
-            if (! loaded) {
-                context.drawImage(image, x, y);
-            } // if
-        });
-    } // drawTile
+        styleParams = [
+            'fill',
+            'stroke',
+            'lineWidth',
+            'opacity'
+        ],
+
+        styleAppliers = [
+            'fillStyle',
+            'strokeStyle',
+            'lineWidth',
+            'globalAlpha'
+        ];
 
     function createCanvas() {
         if (container) {
-            var isCanvas = container.tagName == 'CANVAS',
-                sizeTarget = isCanvas ? container.parentNode : container;
+            vpWidth = container.offsetWidth;
+            vpHeight = container.offsetHeight;
 
-            vpWidth = view.width = sizeTarget.offsetWidth;
-            vpHeight = view.height = sizeTarget.offsetHeight;
+            canvas = newCanvas(vpWidth, vpHeight);
+            canvas.style.cssText = 'position: absolute; z-index: 1;';
 
-            if (! isCanvas) {
-                canvas = newCanvas(vpWidth, vpHeight);
-                canvas.style.cssText = 'position: absolute; z-index: 1;';
-
-                container.appendChild(canvas);
-            }
-            else {
-                canvas = container;
-                canvas.width = vpWidth;
-                canvas.height = vpHeight;
-
-                if (isFlashCanvas) {
-                    FlashCanvas.initElement(canvas);
-                } // if
-            } // if..else
-
+            container.appendChild(canvas);
             context = null;
         } // if
     } // createCanvas
 
-    function initDrawData(hitData, state, drawFn) {
+    function getPreviousStyle(canvasId) {
+        if (! previousStyles[canvasId]) {
+            previousStyles[canvasId] = [];
+        } // if
+
+        return previousStyles[canvasId].pop() || 'basic';
+    } // getPreviousStyle
+
+    function handleDetach() {
+        container.removeChild(canvas);
+    } // handleDetach
+
+    function handleStyleDefined(evt, styleId, styleData) {
+        var ii, data;
+
+        styleFns[styleId] = function(context) {
+            for (ii = styleParams.length; ii--; ) {
+                data = styleData[styleParams[ii]];
+                if (data) {
+                    context[styleAppliers[ii]] = data;
+                } // if
+            } // for
+        };
+    } // handleStyleDefined
+
+    function initDrawData(viewport, hitData, state, drawFn) {
         var isHit = false;
 
         if (hitData) {
@@ -2885,6 +2961,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
 
         return {
             draw: drawFn || defaultDrawFn,
+            viewport: viewport,
             state: state,
             hit: isHit,
             vpX: drawOffsetX,
@@ -2894,26 +2971,33 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         };
     } // initDrawData
 
+    function loadStyles() {
+        for (var styleId in T5.styles) {
+            handleStyleDefined(null, styleId, T5.styles[styleId]);
+        } // for
+
+        T5.bind('styleDefined', handleStyleDefined);
+    } // loadStyles
+
     /* exports */
 
     function applyStyle(styleId) {
-        var nextStyle = getStyle(styleId),
-            previousStyle = nextStyle && context && context.canvas ?
-                previousStyles[context.canvas.id] :
-                null;
+        var nextStyle = styleFns[styleId],
+            canvasId = context && context.canvas ? context.canvas.id : 'default',
+            previousStyle = getPreviousStyle(canvasId);
 
         if (nextStyle) {
-            previousStyles[context.canvas.id] = styleId;
+            previousStyles[canvasId].push(styleId);
 
-            nextStyle.applyToContext(context);
+            nextStyle(context);
 
             return previousStyle;
         } // if
     } // applyStyle
 
     function applyTransform(drawable) {
-        var translated = drawable.translateX || drawable.translateY,
-            transformed = translated || drawable.scaling !== 1 || drawable.rotatation;
+        var translated = drawable.translateX !== 0 || drawable.translateY !== 0,
+            transformed = translated || drawable.scaling !== 1 || drawable.rotation !== 0;
 
         if (transformed) {
             context.save();
@@ -2945,7 +3029,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         return transform;
     } // applyTransform
 
-    function drawTiles(tiles) {
+    function drawTiles(viewport, tiles) {
         var tile,
             inViewport,
             minX = drawOffsetX - 256,
@@ -2960,25 +3044,24 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
                 tile.y >= minY && tile.y <= maxY;
 
             if (inViewport) {
-                drawTile(tile, tile.x - drawOffsetX, tile.y - drawOffsetY);
+                if (! tile.loaded) {
+                    tile.load(view.invalidate);
+                }
+                else {
+                    context.drawImage(
+                        tile.image,
+                        tile.x - drawOffsetX,
+                        tile.y - drawOffsetY);
+                } // if..else
             } // if
         } // for
     } // drawTiles
 
-    /**
-    ### hitTest(drawData, hitX, hitY): boolean
-    */
-    function hitTest(drawData, hitX, hitY) {
-        return context.isPointInPath(hitX, hitY);
-    } // hitTest
-
-    function prepare(layers, state, tickCount, hitData) {
+    function prepare(layers, viewport, state, tickCount, hitData) {
         var ii,
             canClip = false,
-            viewOffset = view.getOffset(),
-            scaleFactor = view.getScaleFactor(),
-            viewX = viewOffset.x,
-            viewY = viewOffset.y;
+            targetVP = viewport.scaled || viewport,
+            scaleFactor = viewport.scaleFactor;
 
         if (context) {
             context.restore();
@@ -2991,23 +3074,8 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
             canClip = canClip || layers[ii].clip;
         } // for
 
-        viewport = XYRect.init(viewX, viewY, viewX + vpWidth, viewY + vpHeight);
-        viewport.scaleFactor = scaleFactor;
-
-        if (scaleFactor !== 1) {
-            var centerX = viewport.x1 + (vpWidth >> 1),
-                centerY = viewport.y1 + (vpHeight >> 1);
-
-            viewport = XYRect.fromCenter(
-                centerX,
-                centerY,
-                vpWidth / scaleFactor | 0,
-                vpHeight / scaleFactor | 0
-            );
-        } // if
-
-        drawOffsetX = viewport.x1;
-        drawOffsetY = viewport.y1;
+        drawOffsetX = targetVP.x;
+        drawOffsetY = targetVP.y;
 
         if (context) {
             if (! canClip) {
@@ -3025,9 +3093,9 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
     } // prepare
 
     /**
-    ### prepArc(drawable, hitData, state, opts)
+    ### prepArc(drawable, viewport, hitData, state, opts)
     */
-    function prepArc(drawable, hitData, state, opts) {
+    function prepArc(drawable, viewport, hitData, state, opts) {
         context.beginPath();
         context.arc(
             drawable.xy.x - (transform ? transform.x : drawOffsetX),
@@ -3038,13 +3106,13 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
             false
         );
 
-        return initDrawData(hitData, state);
+        return initDrawData(viewport, hitData, state);
     } // prepArc
 
     /**
-    ### prepImage(drawable, hitData, state, opts)
+    ### prepImage(drawable, viewport, hitData, state, opts)
     */
-    function prepImage(drawable, hitData, state, opts) {
+    function prepImage(drawable, viewport, hitData, state, opts) {
         var realX = (opts.x || drawable.xy.x) - (transform ? transform.x : drawOffsetX),
             realY = (opts.y || drawable.xy.y) - (transform ? transform.y : drawOffsetY),
             image = opts.image || drawable.image;
@@ -3058,7 +3126,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
                 opts.height || image.height
             );
 
-            return initDrawData(hitData, state, function(drawData) {
+            return initDrawData(viewport, hitData, state, function(drawData) {
                 context.drawImage(
                     image,
                     realX,
@@ -3071,9 +3139,71 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
     } // prepImage
 
     /**
-    ### prepPoly(drawable, hitData, state, opts)
+    ### prepMarker(drawable, viewport, hitData, state, opts)
     */
-    function prepPoly(drawable, hitData, state, opts) {
+    function prepMarker(drawable, viewport, hitData, state, opts) {
+        var markerX = drawable.xy.x - (transform ? transform.x : drawOffsetX),
+            markerY = drawable.xy.y - (transform ? transform.y : drawOffsetY),
+            size = drawable.size,
+            drawOverride = undefined;
+
+        context.beginPath();
+
+        switch (drawable.markerStyle.toLowerCase()) {
+            case 'image':
+                drawOverride = drawNothing;
+
+                context.rect(
+                    markerX - (size >> 1),
+                    markerY - (size >> 1),
+                    size,
+                    size);
+
+                if (drawable.reset && drawable.image) {
+                    drawable.image = null;
+                    drawable.reset = false;
+                } // if
+
+                if (drawable.image) {
+                    context.drawImage(
+                        drawable.image,
+                        markerX - (size >> 1),
+                        markerY - (size >> 1),
+                        size,
+                        size
+                    );
+                }
+                else {
+                    getImage(drawable.imageUrl, function(image) {
+                        drawable.image = image;
+
+                        context.drawImage(
+                            drawable.image,
+                            markerX - (size >> 1),
+                            markerY - (size >> 1),
+                            size,
+                            size
+                        );
+                    });
+                } // if..else
+
+                break;
+
+            default:
+                context.moveTo(markerX, markerY);
+                context.lineTo(markerX - (size >> 1), markerY - size);
+                context.lineTo(markerX + (size >> 1), markerY - size);
+                context.lineTo(markerX, markerY);
+                break;
+        } // switch
+
+        return initDrawData(viewport, hitData, state, drawOverride);
+    } // prepMarker
+
+    /**
+    ### prepPoly(drawable, viewport, hitData, state, opts)
+    */
+    function prepPoly(drawable, viewport, hitData, state, opts) {
         var first = true,
             points = opts.points || drawable.points,
             offsetX = transform ? transform.x : drawOffsetX,
@@ -3094,7 +3224,7 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
             } // if..else
         } // for
 
-        return initDrawData(hitData, state);
+        return initDrawData(viewport, hitData, state);
     } // prepPoly
 
     /* initialization */
@@ -3102,17 +3232,16 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
     createCanvas();
 
     var _this = COG.extend(baseRenderer, {
-        interactTarget: canvas,
-
         applyStyle: applyStyle,
         applyTransform: applyTransform,
+
         drawTiles: drawTiles,
 
-        hitTest: hitTest,
         prepare: prepare,
 
         prepArc: prepArc,
         prepImage: prepImage,
+        prepMarker: prepMarker,
         prepPoly: prepPoly,
 
         getContext: function() {
@@ -3127,23 +3256,38 @@ registerRenderer('canvas', function(view, container, params, baseRenderer) {
         },
 
         getOffset: function() {
-            return XY.init(drawOffsetX, drawOffsetY);
-        },
-
-        getViewport: function() {
-            return viewport;
+            return new XY(drawOffsetX, drawOffsetY);
         }
+
+
+
+        /*
+        render: function(viewport) {
+            context.strokeStyle = '#F00';
+            context.moveTo(0, viewport.h >> 1);
+            context.lineTo(viewport.w, viewport.h >> 1);
+            context.moveTo(viewport.w >> 1, 0);
+            context.lineTo(viewport.w >> 1, viewport.h);
+            context.stroke();
+        }
+        */
     });
+
+    loadStyles();
+
+    _this.bind('detach', handleDetach);
 
     return _this;
 });
-registerRenderer('dom', function(view, container, params, baseRenderer) {
+registerRenderer('dom', function(view, container, outer, params, baseRenderer) {
 
     /* internals */
 
-    var PROP_WK_TRANSFORM = '-webkit-transform',
-        supportTransforms = typeof container.style[PROP_WK_TRANSFORM] != 'undefined',
-        imageDiv = null;
+    var ID_PREFIX = 'tile_',
+        PREFIX_LENGTH = ID_PREFIX.length,
+        imageDiv = null,
+        activeTiles = {},
+        currentTiles = {};
 
     function createImageContainer() {
         imageDiv = document.createElement('div');
@@ -3153,146 +3297,186 @@ registerRenderer('dom', function(view, container, params, baseRenderer) {
             container.offsetWidth,
             container.offsetHeight);
 
-        container.insertBefore(imageDiv, baseRenderer.interactTarget);
+        if (container.childNodes.length > 0) {
+            container.insertBefore(imageDiv, container.childNodes[0]);
+        }
+        else {
+            container.appendChild(imageDiv);
+        } // if..else
     } // createImageContainer
+
+    function createTileImage(tile) {
+        var image = tile.image = new Image();
+
+        activeTiles[tile.id] = tile;
+
+        image.src = tile.url;
+        image.onload = function() {
+            if (currentTiles[tile.id]) {
+                imageDiv.appendChild(this);
+                tile.indom = true;
+            }
+            else {
+                tile.image = null;
+            } // if..else
+        };
+
+        image.style.cssText = '-webkit-user-select: none; -webkit-box-shadow: none; -moz-box-shadow: none; box-shadow: none; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; border-style: initial; border-color: initial; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; position: absolute;';
+
+        return image;
+    }
+
+    function handleDetach() {
+        container.removeChild(imageDiv);
+    } // handleDetach
+
+    function handlePredraw(evt, viewport, state) {
+
+        removeOldObjects(activeTiles, currentTiles);
+        currentTiles = {};
+    } // handlePredraw
+
+    function handleReset(evt) {
+        removeOldObjects(activeTiles, currentTiles = {});
+
+        while (imageDiv.childNodes.length > 0) {
+            imageDiv.removeChild(imageDiv.childNodes[0]);
+        } // while
+    } // handleReset
+
+    function removeOldObjects(activeObj, currentObj, flagField) {
+        var deletedKeys = [];
+
+        for (var objId in activeObj) {
+            var item = activeObj[objId],
+                inactive = flagField ? item[flagField] : (! currentObj[objId]);
+
+            if (inactive) {
+                if (item.indom) {
+                    COG.info('attemping to remove tile ' + item.id + ' from the dom');
+                    try {
+                        imageDiv.removeChild(item.image);
+                    }
+                    catch (e) {
+                        COG.warn('could not remove tile ' + item.id + ' from the DOM');
+                    }
+
+                    item.image = null;
+                } // if
+
+                deletedKeys[deletedKeys.length] = objId;
+            } // if
+        } // for
+
+        for (var ii = deletedKeys.length; ii--; ) {
+            delete activeObj[deletedKeys[ii]];
+        } // for
+    } // removeOldObjects
 
     /* exports */
 
-    function drawTiles(tiles) {
+    function drawTiles(viewport, tiles) {
         var tile,
             image,
-            offset = _this.getOffset(),
-            viewport = _this.getViewport(),
+            scaleFactor = viewport.scaleFactor,
             inViewport,
-            offsetX = offset.x,
-            offsetY = offset.y,
-            minX = offsetX - 256,
-            minY = offsetY - 256,
-            maxX = offsetX + viewport.width,
-            maxY = offsetY + viewport.height,
-            relX, relY;
+            offsetX, offsetY,
+            minX, minY, maxX, maxY,
+            tileWidth, tileHeight,
+            gridWidth, gridHeight,
+            diffWidth, diffHeight,
+            scaleOffsetX = 0,
+            scaleOffsetY = 0,
+            relX, relY, ii,
+            xIndex, yIndex,
+            scaledWidth,
+            scaledHeight,
+            tileIds = [];
 
-        for (var ii = tiles.length; ii--; ) {
+        for (ii = tiles.length; ii--; ) {
             tile = tiles[ii];
-            image = tile.image;
 
-            inViewport = tile.x >= minX && tile.x <= maxX &&
-                tile.y >= minY && tile.y <= maxY;
+            tileWidth = tileWidth || tile.w;
+            tileHeight = tileHeight || tile.h;
 
-            relX = tile.x - offsetX;
-            relY = tile.y - offsetY;
+            minX = minX ? Math.min(tile.x, minX) : tile.x;
+            minY = minY ? Math.min(tile.y, minY) : tile.y;
+            maxX = maxX ? Math.max(tile.x, maxX) : tile.x;
+            maxY = maxY ? Math.max(tile.y, maxY) : tile.y;
+        } // for
 
-            if (! image) {
-                image = tile.image = new Image();
-                image.src = tile.url;
+        gridWidth = ((maxX - minX) / tileWidth + 1) * tileWidth;
+        gridHeight = ((maxY - minY) / tileHeight + 1) * tileHeight;
+        diffWidth = gridWidth * scaleFactor - viewport.w;
+        diffHeight = gridHeight * scaleFactor - viewport.h;
 
-                imageDiv.appendChild(image);
-                image.style.cssText = '-webkit-user-select: none; -webkit-box-shadow: none; -moz-box-shadow: none; box-shadow: none; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; border-style: initial; border-color: initial; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; position: absolute;';
+        scaleOffsetX = diffWidth * scaleFactor - diffWidth;
+        scaleOffsetY = diffHeight * scaleFactor - diffHeight;
+
+        offsetX = minX - viewport.x;
+        offsetY = minY - viewport.y;
+
+        for (ii = tiles.length; ii--; ) {
+            tile = tiles[ii];
+
+            if (tile.url) {
+                image = tile.image;
+
+                if (! image) {
+                    image = createTileImage(tile);
+                } // if
+
+                xIndex = (tile.x - minX) / tile.w;
+                yIndex = (tile.y - minY) / tile.h;
+
+                scaledWidth = tile.w * scaleFactor | 0;
+                scaledHeight = tile.h * scaleFactor | 0;
+
+                relX = offsetX + (xIndex * scaledWidth);
+                relY = offsetY + (yIndex * scaledWidth);
+
+                if (supportTransforms) {
+                    image.style[PROP_WK_TRANSFORM] = 'translate3d(' + relX +'px, ' + relY + 'px, 0px)';
+                }
+                else {
+                    image.style.left = relX + 'px';
+                    image.style.top = relY + 'px';
+                } // if..else
+
+                image.style.width = scaledWidth + 'px';
+                image.style.height = scaledHeight + 'px';
+
+                currentTiles[tile.id] = tile;
             } // if
-
-            if (supportTransforms) {
-                image.style[PROP_WK_TRANSFORM] = 'translate3d(' + relX +'px, ' + relY + 'px, 0px)';
-            }
-            else {
-                image.style.left = relX + 'px';
-                image.style.top = relY + 'px';
-            } // if..else
-
-            image.style.display = 'block'; // inViewport ? 'block' : 'none';
         } // for
     } // drawTiles
-
-    function reset() {
-        imageDiv.innerHTML = '';
-    } // reset
 
     /* initialization */
 
     createImageContainer();
 
     var _this = COG.extend(baseRenderer, {
-        drawTiles: drawTiles,
-        reset: reset
+        preventPartialScale: true,
+
+        drawTiles: drawTiles
     });
+
+    _this.bind('predraw', handlePredraw);
+    _this.bind('detach', handleDetach);
+    _this.bind('reset', handleReset);
 
     return _this;
 });
 
-/* internals */
-
-var styleRegistry = {};
-
-/**
-### createStyle(params)
-*/
-function createStyle(params) {
-    params = COG.extend({
-        lineWidth: undefined,
-        lineCap: undefined,
-        lineJoin: undefined,
-        miterLimit: undefined,
-        lineStyle: undefined,
-
-        fillStyle: undefined,
-
-        globalAlpha: undefined,
-        globalCompositeOperation: undefined
-    }, params);
-
-    var mods = [];
-
-    /* internal functions */
-
-    function fillMods(keyName) {
-        var paramVal = params[keyName];
-
-        if (! isType(paramVal, typeUndefined)) {
-            mods.push(function(context) {
-                context[keyName] = paramVal;
-            });
-        } // if
-    } // fillMods
-
-    function reloadMods() {
-        mods = [];
-
-        for (var keyName in params) {
-            fillMods(keyName);
-        } // for
-    } // reloadMods
-
-    /* exports */
-
-    function update(keyName, keyVal) {
-        params[keyName] = keyVal;
-        reloadMods();
-    } // update
-
-    /* define _self */
-
-    var _self = {
-        applyToContext: function(context) {
-            for (var ii = mods.length; ii--; ) {
-                mods[ii](context);
-            } // for
-        },
-
-        update: update
-    };
-
-    /* initialize */
-
-    reloadMods();
-    return _self;
-} // createStyle
-
-/* exports */
+var styleRegistry = exports.styles = {};
 
 /**
 # T5.defineStyle(id, data)
 */
 var defineStyle = exports.defineStyle = function(id, data) {
-    styleRegistry[id] = createStyle(data);
+    styleRegistry[id] = data;
+
+    exports.trigger('styleDefined', id, styleRegistry[id]);
 
     return id;
 };
@@ -3325,21 +3509,23 @@ var loadStyles = exports.loadStyles = function(path) {
 
 defineStyles({
     basic: {
-        lineWidth: 1,
-        strokeStyle: '#000',
-        fillStyle: '#fff'
+        fill: '#ffffff'
+    },
+
+    highlight: {
+        fill: '#ff0000'
     },
 
     waypoints: {
         lineWidth: 4,
-        strokeStyle: 'rgba(0, 51, 119, 0.9)',
-        fillStyle: '#FFF'
+        stroke: '#003377',
+        fill: '#ffffff'
     },
 
     waypointsHover: {
         lineWidth: 4,
-        strokeStyle: '#f00',
-        fillStyle: '#FFF'
+        stroke: '#ff0000',
+        fill: '#ffffff'
     }
 });
 var viewStates = {
@@ -3485,13 +3671,20 @@ view.bind('refresh', function(evt) {
 ### drawComplete
 Triggered when drawing the view has been completed (who would have thought).
 <pre>
-view.bind('drawComplete', function(evt, viewRect, tickCount) {
+view.bind('drawComplete', function(evt, viewport, tickCount) {
 });
 </pre>
 
-- offset (T5.Vector) - the view offset that was used for the draw operation
+- viewport - the current viewport of the view
 - tickCount - the tick count at the start of the draw operation.
 
+
+### enterFrame
+Triggered on the view cycling.
+<pre>
+view.bind('enterFrame', function(evt, tickCount, frameData) {
+});
+</pre>
 
 ### zoomLevelChange
 Triggered when the zoom level of the view has changed.  Given that Tile5 was primarily
@@ -3515,7 +3708,8 @@ var View = function(params) {
         captureHover: true,
         captureDrag: false,
         inertia: true,
-        minRefresh: 1000,
+        refreshDistance: 256,
+        padding: 256 >> 1,
         pannable: false,
         clipping: true,
         scalable: false,
@@ -3526,7 +3720,7 @@ var View = function(params) {
         tapExtent: 10,
         guides: false,
         turbo: false,
-        fps: 25,
+        fps: 60,
 
         minZoom: 1,
         maxZoom: 1,
@@ -3536,20 +3730,29 @@ var View = function(params) {
         zoomLevel: 1
     }, params);
 
-    var TURBO_CLEAR_INTERVAL = 500;
+    var TURBO_CLEAR_INTERVAL = 500,
 
-    var caps = {},
+        caps = {},
         layers = [],
         layerCount = 0,
-        container = document.getElementById(params.container),
+        container = null,
+        panContainer = null,
+        outer,
         dragObject = null,
         frameIndex = 0,
         mainContext = null,
-        isIE = isType(window.attachEvent, typeFunction),
+        isIE = !isType(window.attachEvent, typeUndefined),
         hitFlagged = false,
-        minRefresh = params.minRefresh,
+        fastpan = true,
+        pointerDown = false,
+        dx = 0, dy = 0,
+        totalDX = 0,
+        totalDY = 0,
+        refreshDist = params.refreshDistance,
         offsetX = 0,
         offsetY = 0,
+        refreshX = 0,
+        refreshY = 0,
         lastOffsetX = 0,
         lastOffsetY = 0,
         offsetMaxX = null,
@@ -3570,13 +3773,16 @@ var View = function(params) {
         resizeCanvasTimeout = 0,
         scaleFactor = 1,
         scaleTween = null,
-        lastScaleFactor = 0,
+        lastScaleFactor = 1,
         lastCycleTicks = 0,
         eventMonitor = null,
         turbo = params.turbo,
+        partialScaling = true,
         tweeningOffset = false,
         cycleDelay = 1000 / params.fps | 0,
         viewChanges = 0,
+        width, height,
+        halfWidth, halfHeight,
         zoomX, zoomY,
         zoomLevel = params.zoomLevel,
 
@@ -3590,12 +3796,6 @@ var View = function(params) {
         state = stateActive;
 
     /* event handlers */
-
-    function handlePan(evt, x, y) {
-        if (! dragObject) {
-            updateOffset(offsetX - x, offsetY - y);
-        } // if
-    } // pan
 
     /* scaling functions */
 
@@ -3611,37 +3811,38 @@ var View = function(params) {
             setZoomLevel(zoomLevel + scaleFactorExp, zoomX, zoomY);
         }
 
-        _self.redraw = true;
+        redraw = true;
     } // scaleView
 
     function setZoomCenter(xy) {
     } // setZoomCenter
 
-    function getScaledOffset(srcX, srcY) {
-        var viewport = _self.getViewport(),
-            invScaleFactor = 1 / scaleFactor,
-            scaledX = viewport ? (viewport.x1 + srcX * invScaleFactor) : srcX,
-            scaledY = viewport ? (viewport.y1 + srcY * invScaleFactor) : srcY;
+    function getProjectedXY(srcX, srcY) {
+        var projectedXY = renderer && renderer.projectXY ? renderer.projectXY(srcX, srcY) : null;
 
-        return XY.init(scaledX, scaledY);
-    } // getScaledOffset
+        if (! projectedXY) {
+            var viewport = _self.getViewport(),
+                invScaleFactor = 1 / scaleFactor,
+                scaledX = viewport ? (viewport.x + srcX * invScaleFactor) : srcX,
+                scaledY = viewport ? (viewport.y + srcY * invScaleFactor) : srcY;
 
-    function handleContainerUpdate(name, value) {
-        container = document.getElementById(value);
-        createRenderer();
-    } // handleContainerUpdate
+            projectedXY = new XY(scaledX, scaledY);
+        } // if
+
+        return projectedXY;
+    } // getProjectedXY
 
     function handleDoubleTap(evt, absXY, relXY) {
         triggerAll(
             'doubleTap',
             absXY,
             relXY,
-            getScaledOffset(relXY.x, relXY.y));
+            getProjectedXY(relXY.x, relXY.y));
 
         if (params.scalable) {
             scale(
                 2,
-                getScaledOffset(relXY.x, relXY.y),
+                getProjectedXY(relXY.x, relXY.y),
                 params.zoomEasing,
                 null,
                 params.zoomDuration);
@@ -3650,6 +3851,7 @@ var View = function(params) {
 
     function handlePointerDown(evt, absXY, relXY) {
         dragObject = null;
+        pointerDown = true;
 
         initHitData('down', absXY, relXY);
     } // handlePointerDown
@@ -3658,12 +3860,18 @@ var View = function(params) {
         initHitData('hover', absXY, relXY);
     } // handlePointerHover
 
-    function handlePointerMove(evt, absXY, relXY) {
+    function handlePointerMove(evt, absXY, relXY, deltaXY) {
         dragSelected(absXY, relXY, false);
+
+        if (! dragObject) {
+            dx = deltaXY.x;
+            dy = deltaXY.y;
+        } // if
     } // handlePointerMove
 
     function handlePointerUp(evt, absXY, relXY) {
         dragSelected(absXY, relXY, true);
+        pointerDown = false;
     } // handlePointerUp
 
     function handleResize(evt) {
@@ -3683,13 +3891,16 @@ var View = function(params) {
     function handlePointerTap(evt, absXY, relXY) {
         initHitData('tap', absXY, relXY);
 
-        triggerAll('tap', absXY, relXY, getScaledOffset(relXY.x, relXY.y, true));
+        triggerAll('tap', absXY, relXY, getProjectedXY(relXY.x, relXY.y, true));
     } // handlePointerTap
 
     /* private functions */
 
-    function createRenderer() {
-        renderer = attachRenderer(params.renderer, _self, container);
+    function createRenderer(typeName) {
+        renderer = attachRenderer(typeName || params.renderer, _self, container, outer, params);
+
+        partialScaling = ! renderer.preventPartialScale;
+        fastpan = renderer.fastpan;
 
         captureInteractionEvents();
     } // createRenderer
@@ -3722,11 +3933,7 @@ var View = function(params) {
         } // if
 
         if (renderer) {
-            eventMonitor = INTERACT.watch(renderer.interactTarget);
-
-            if (params.pannable) {
-                eventMonitor.pannable().bind('pan', handlePan);
-            } // if
+            eventMonitor = INTERACT.watch(renderer.interactTarget || container);
 
             if (params.scalable) {
                 eventMonitor.bind('zoom', handleZoom);
@@ -3745,6 +3952,17 @@ var View = function(params) {
         } // if
     } // captureInteractionEvents
 
+    function changeRenderer(name, value) {
+        if (renderer) {
+            renderer.trigger('detach');
+            renderer = null;
+        } // if
+
+        createRenderer(value);
+
+        invalidate();
+    } // changeRenderer
+
     /*
     The constrain offset function is used to keep the view offset within a specified
     offset using wrapping if allowed.  The function is much more 'if / then / elsey'
@@ -3755,10 +3973,10 @@ var View = function(params) {
             return;
         } // if
 
-        var testX = offsetWrapX ? offsetX + (viewport.width >> 1) : offsetX,
-            testY = offsetWrapY ? offsetY + (viewport.height >> 1) : offsetY,
-            viewWidth = viewport.width,
-            viewHeight = viewport.height;
+        var testX = offsetWrapX ? offsetX + (viewport.w >> 1) : offsetX,
+            testY = offsetWrapY ? offsetY + (viewport.h >> 1) : offsetY,
+            viewWidth = viewport.w,
+            viewHeight = viewport.h;
 
         if (offsetMaxX && offsetMaxX > viewWidth) {
             if (testX + viewWidth > offsetMaxX) {
@@ -3791,7 +4009,7 @@ var View = function(params) {
 
     function dragSelected(absXY, relXY, drop) {
         if (dragObject) {
-            var scaledOffset = getScaledOffset(relXY.x, relXY.y),
+            var scaledOffset = getProjectedXY(relXY.x, relXY.y),
                 dragOk = dragObject.drag.call(
                     dragObject.target,
                     dragObject,
@@ -3800,7 +4018,7 @@ var View = function(params) {
                     drop);
 
             if (dragOk) {
-                _self.redraw = true;
+                invalidate();
             } // if
 
             if (drop) {
@@ -3833,62 +4051,38 @@ var View = function(params) {
         return -1;
     } // getLayerIndex
 
+    function initContainer() {
+        panContainer = document.createElement('div');
+        panContainer.id = COG.objId('t5_container');
+        panContainer.style.cssText = COG.formatStr(
+            'position: absolute; overflow: hidden; width: {0}px; height: {1}px;',
+            outer.offsetWidth,
+            outer.offsetHeight);
+
+        outer.appendChild(panContainer);
+
+        width = panContainer.offsetWidth + params.padding * 2;
+        height = panContainer.offsetHeight + params.padding * 2;
+        halfWidth = width / 2;
+        halfHeight = height / 2;
+
+        container = document.createElement('div');
+        container.id = COG.objId('t5_view');
+        container.style.cssText = COG.formatStr(
+            'position: absolute; overflow: hidden; width: {0}px; height: {1}px; margin: {2}px 0 0 {2}px;',
+            width,
+            height,
+            -params.padding);
+
+        panContainer.appendChild(container);
+    } // initContainer
+
+    function updateContainer(name, value) {
+        initContainer(outer = document.getElementById(value));
+        createRenderer();
+    } // updateContainer
+
     /* draw code */
-
-    function calcZoomRect(drawRect) {
-        var invScaleFactor = 1 / scaleFactor,
-            invScaleFactorNorm = (invScaleFactor - 0.5) * 2;
-
-        zoomX = interactCenter.x + (offsetX - interactOffset.x);
-        zoomY = interactCenter.y + (offsetY - interactOffset.y);
-
-        /*
-        COG.info(
-            'scale factor = ' + scaleFactor +
-            ', inv scale factor = ' + invScaleFactor +
-            ', inv scale factor norm = ' + invScaleFactorNorm);
-
-        COG.info('zoom x = ' + zoomX + ', y = ' + zoomY);
-        COG.info('offset x = ' + offsetX + ', y = ' + offsetY);
-        COG.info('interact offset x = ' + interactOffset.x + ', y = ' + interactOffset.y);
-        */
-
-        if (drawRect) {
-            return XYRect.fromCenter(
-                zoomX >> 0,
-                zoomY >> 0,
-                (drawRect.width * invScaleFactor) >> 0,
-                (drawRect.height * invScaleFactor) >> 0);
-        } // if
-    } // calcZoomRect
-
-    function drawView() {
-        var drawLayer,
-            rectCenter = XYRect.center(rect),
-            rotation = Math.PI,
-            ii = 0;
-
-        /* first pass clip */
-
-        if (canClip) {
-            mainContext.beginPath();
-
-            for (ii = layerCount; ii--; ) {
-                if (layers[ii].clip) {
-                    layers[ii].clip(mainContext, drawRect, drawState, _self, tickCount);
-                } // if
-            } // for
-
-            mainContext.closePath();
-            mainContext.clip();
-        } // if
-
-        /* second pass - draw */
-
-        viewChanges = 0;
-
-        triggerAll('drawComplete', rect, tickCount);
-    } // drawView
 
     /*
     ### checkHits
@@ -3924,25 +4118,42 @@ var View = function(params) {
     function cycle(tickCount) {
         var redrawBG,
             panning,
-            newFrame = false;
+            scaleChanged,
+            newFrame = false,
+            frameData,
+            viewport,
+            deltaEnergy = abs(dx) + abs(dy);
 
-        tickCount = tickCount ? tickCount : new Date().getTime();
+        tickCount = tickCount || new Date().getTime();
 
-        newFrame = tickCount - lastCycleTicks > cycleDelay;
+        newFrame = true; // tickCount - lastCycleTicks > cycleDelay;
 
         if (newFrame) {
-            _self.trigger('enterFrame', tickCount, frameIndex++);
+            var refreshXDist = abs(offsetX - refreshX),
+                refreshYDist = abs(offsetY - refreshY);
 
-            if (tickCount - lastRefresh > minRefresh) {
+            panning = offsetX !== lastOffsetX || offsetY !== lastOffsetY;
+            scaleChanged = scaleFactor !== lastScaleFactor;
+
+            if (panning || scaleChanged) {
+                viewChanges++;
+            } // if
+
+            if ((deltaEnergy < 10) && (refreshXDist >= refreshDist || refreshYDist >= refreshDist)) {
                 refresh();
             } // if
+
+            frameData = {
+                index: frameIndex++,
+                draw: viewChanges || deltaEnergy || totalDX || totalDY
+            };
+
+            _self.trigger('enterFrame', tickCount, frameData);
 
             lastCycleTicks = tickCount;
         }
 
-        if (newFrame && _self.redraw) {
-            panning = offsetX !== lastOffsetX || offsetY !== lastOffsetY;
-
+        if (renderer && newFrame && frameData.draw) {
             state = stateActive |
                         (scaleFactor !== 1 ? stateZoom : 0) |
                         (panning ? statePan : 0) |
@@ -3951,71 +4162,118 @@ var View = function(params) {
             redrawBG = (state & (stateZoom | statePan)) !== 0;
             interacting = redrawBG && (state & stateAnimating) === 0;
 
-            /*
-            if (offsetMaxX || offsetMaxY) {
-                constrainOffset();
-            } // if
-            */
+            if (fastpan && deltaEnergy > 5) {
+                totalDX += dx;
+                totalDY += dy;
+
+                if (supportTransforms) {
+                    container.style[PROP_WK_TRANSFORM] = 'translate3d(' + (totalDX | 0) +'px, ' + (totalDY | 0) + 'px, 0px)';
+                }
+                else {
+                    container.style.left = totalDX + 'px';
+                    container.style.top = totalDY + 'px';
+                } // if..else
+            }
+            else {
+                offsetX -= (dx + totalDX) | 0;
+                offsetY -= (dy + totalDY) | 0;
 
 
-            if (renderer.prepare(layers, state, tickCount, hitData)) {
-                var viewport = renderer.getViewport();
+                if (totalDX || totalDY) {
+                    if (supportTransforms) {
+                        container.style[PROP_WK_TRANSFORM] = 'translate3d(0px, 0px, 0px)';
+                    }
+                    else {
+                        container.style.left = 0;
+                        container.style.top = 0;
+                    } // if..else
+
+                    totalDX = 0;
+                    totalDY = 0;
+                } // if..else
+
+                viewport = getViewport();
 
                 /*
-                for (var ii = layerCount; ii--; ) {
-                    state = state | (layers[ii].animated ? stateAnimating : 0);
-
-                    layers[ii].cycle(tickCount, viewport, state);
-                } // for
+                if (offsetMaxX || offsetMaxY) {
+                    constrainOffset();
+                } // if
                 */
 
-                for (ii = layerCount; ii--; ) {
-                    var drawLayer = layers[ii];
 
-                    if ((state & drawLayer.validStates) !== 0) {
-                        var previousStyle = drawLayer.style ?
-                                renderer.applyStyle(drawLayer.style) :
-                                null;
+                renderer.trigger('predraw', viewport, state);
 
-                        drawLayer.draw(
-                            renderer,
-                            state,
-                            _self,
-                            tickCount,
-                            hitData);
+                if (renderer.prepare(layers, viewport, state, tickCount, hitData)) {
+                    viewChanges = 0;
 
-                        if (previousStyle) {
-                            renderer.applyStyle(previousStyle);
+                    /*
+                    for (var ii = layerCount; ii--; ) {
+                        state = state | (layers[ii].animated ? stateAnimating : 0);
+
+                        layers[ii].cycle(tickCount, viewport, state);
+                    } // for
+                    */
+
+                    for (ii = layerCount; ii--; ) {
+                        var drawLayer = layers[ii];
+
+                        if (drawLayer.visible && ((state & drawLayer.validStates) !== 0)) {
+                            var previousStyle = drawLayer.style ?
+                                    renderer.applyStyle(drawLayer.style, true) :
+                                    null;
+
+                            drawLayer.draw(
+                                renderer,
+                                viewport,
+                                state,
+                                _self,
+                                tickCount,
+                                hitData);
+
+                            if (previousStyle) {
+                                renderer.applyStyle(previousStyle);
+                            } // if
                         } // if
-                    } // if
-                } // for
+                    } // for
 
-                renderer.render();
-            } // if
+                    renderer.render(viewport);
 
-            /*
-            drawView(
-                state,
-                cycleRect,
-                clipping && clippable && (! redrawBG),
-                tickCount);
-            */
+                    _self.trigger('drawComplete', viewport, tickCount);
+
+                    lastOffsetX = offsetX;
+                    lastOffsetY = offsetY;
+                    lastScaleFactor = scaleFactor;
+                } // if
+            } // if..else
+
+            if (pointerDown) {
+                dx = 0;
+                dy = 0;
+            }
+            else if (dx != 0 || dy != 0) {
+                dx *= 0.8;
+                dy *= 0.8;
+
+                if (abs(dx) < 0.5) {
+                    dx = 0;
+                } // if
+
+                if (abs(dy) < 0.5) {
+                    dy = 0;
+                } // if
+            } // if..else
 
             if (hitData) {
                 checkHits();
                 hitData = null;
             } // if
-
-            lastOffsetX = offsetX;
-            lastOffsetY = offsetY;
-            _self.redraw = false;
         } // if
 
         animFrame(cycle);
     } // cycle
 
     function initHitData(hitType, absXY, relXY) {
-        hitData = Hits.init(hitType, absXY, relXY, getScaledOffset(relXY.x, relXY.y, true));
+        hitData = Hits.init(hitType, absXY, relXY, getProjectedXY(relXY.x, relXY.y, true));
 
         for (var ii = layerCount; ii--; ) {
             hitFlagged = hitFlagged || (layers[ii].hitGuess ?
@@ -4024,7 +4282,7 @@ var View = function(params) {
         } // for
 
         if (hitFlagged) {
-            _self.redraw = true;
+            viewChanges++;
         } // if
     } // initHitData
 
@@ -4036,8 +4294,19 @@ var View = function(params) {
     will definitely want to call the detach method between usages.
     */
     function detach() {
+        if (renderer) {
+            renderer.trigger('detach');
+        } // if
+
         if (eventMonitor) {
             eventMonitor.unbind();
+        } // if
+
+        if (panContainer) {
+            document.getElementById(panContainer).removeChild(panContainer);
+
+            panContainer = null;
+            container = null;
         } // if
     } // detach
 
@@ -4071,7 +4340,7 @@ var View = function(params) {
     Return a T5.XY containing the current view offset
     */
     function getOffset() {
-        return XY.init(offsetX, offsetY);
+        return new XY(offsetX, offsetY);
     } // getOffset
 
     /**
@@ -4099,7 +4368,7 @@ var View = function(params) {
     }
 
     function invalidate() {
-        _self.redraw = true;
+        viewChanges++;
     }
 
     /**
@@ -4120,20 +4389,20 @@ var View = function(params) {
     Return a T5.XYRect for the last drawn view rect
     */
     function getViewport() {
-        var viewport, dimensions;
+        var viewport = new Rect(offsetX, offsetY, width, height);
 
-        if (renderer) {
-            viewport = renderer.getViewport();
+        viewport.scaleFactor = scaleFactor;
 
-            if (! viewport) {
-                dimensions = renderer.getDimensions();
-                viewport = XYRect.init(
-                    offsetX,
-                    offsetY,
-                    offsetX + dimensions.width,
-                    offsetY + dimensions.height
-                );
-            }
+        if (scaleFactor !== 1) {
+            var centerX = offsetX + halfWidth,
+                centerY = offsetY + halfHeight;
+
+            viewport.scaled = XYRect.fromCenter(
+                centerX | 0,
+                centerY | 0,
+                width / scaleFactor | 0,
+                height / scaleFactor | 0
+            );
         } // if
 
         return viewport;
@@ -4166,9 +4435,13 @@ var View = function(params) {
 
         if (value) {
             addLayer(id, value);
+
+            value.trigger('refresh', _self, getViewport());
+
+            _self.trigger('layerChange', _self, value);
         } // if
 
-        refresh();
+        invalidate();
 
         return value;
     } // setLayer
@@ -4179,17 +4452,18 @@ var View = function(params) {
     events and will do some of their recalculations when this is called.
     */
     function refresh() {
-        var viewport = renderer ? renderer.getViewport() : null;
-
+        var viewport = getViewport();
         if (viewport) {
             if (offsetMaxX || offsetMaxY) {
                 constrainOffset(viewport);
             } // if
 
-            lastRefresh = new Date().getTime();
+            refreshX = offsetX;
+            refreshY = offsetY;
+
             triggerAll('refresh', _self, viewport);
 
-            _self.redraw = true;
+            viewChanges++;
         } // if
     } // refresh
 
@@ -4200,10 +4474,10 @@ var View = function(params) {
     function removeLayer(id) {
         var layerIndex = getLayerIndex(id);
         if ((layerIndex >= 0) && (layerIndex < layerCount)) {
-            _self.trigger('layerRemoved', layers[layerIndex]);
+            _self.trigger('layerRemove', _self, layers[layerIndex]);
 
             layers.splice(layerIndex, 1);
-            _self.redraw = true;
+            invalidate();
         } // if
 
         layerCount = layers.length;
@@ -4218,12 +4492,22 @@ var View = function(params) {
     Scale the view to the specified `targetScaling` (1 = normal, 2 = double-size and 0.5 = half-size).
     */
     function scale(targetScaling, targetXY, tweenFn, callback, duration) {
+        var scaleFactorExp;
+
+        if (! partialScaling) {
+            tweenFn = false;
+
+            scaleFactorExp = round(log(targetScaling) / Math.LN2);
+
+            targetScaling = pow(2, scaleFactorExp);
+        } // if
+
         if (tweenFn) {
             COG.tweenValue(scaleFactor, targetScaling, tweenFn, duration, function(val, completed) {
                 scaleFactor = val;
 
                 if (completed) {
-                    var scaleFactorExp = round(log(scaleFactor) / Math.LN2);
+                    scaleFactorExp = round(log(scaleFactor) / Math.LN2);
 
                     scaleFactor = pow(2, scaleFactorExp);
 
@@ -4257,8 +4541,6 @@ var View = function(params) {
         value = max(params.minZoom, min(params.maxZoom, value));
         if (value !== zoomLevel) {
             var scaling = pow(2, value - zoomLevel),
-                halfWidth = _self.width >> 1,
-                halfHeight = _self.height >> 1,
                 scaledHalfWidth = halfWidth / scaling | 0,
                 scaledHalfHeight = halfHeight / scaling | 0;
 
@@ -4271,15 +4553,16 @@ var View = function(params) {
 
             lastOffsetX = offsetX;
             lastOffsetY = offsetY;
+            refreshX = 0;
+            refreshY = 0;
 
             triggerAll('zoomLevelChange', value);
 
             scaleFactor = 1;
 
-            renderer.reset();
+            renderer.trigger('reset');
 
             refresh();
-            _self.redraw = true;
         } // if
     } // setZoomLevel
 
@@ -4357,8 +4640,6 @@ var View = function(params) {
             offsetX = x | 0;
             offsetY = y | 0;
 
-            _self.redraw = true;
-
             if (callback) {
                 callback();
             } // if
@@ -4369,6 +4650,7 @@ var View = function(params) {
 
     var _self = {
         id: params.id,
+        padding: params.padding,
 
         detach: detach,
         eachLayer: eachLayer,
@@ -4409,14 +4691,16 @@ var View = function(params) {
             'inertia',
             'minZoom',
             'maxZoom',
+            'renderer',
             'zoom'
         ],
         COG.paramTweaker(params, null, {
-            'container': handleContainerUpdate,
+            'container': updateContainer,
             'inertia': captureInteractionEvents,
             'captureHover': captureInteractionEvents,
             'scalable': captureInteractionEvents,
-            'pannable': captureInteractionEvents
+            'pannable': captureInteractionEvents,
+            'renderer': changeRenderer
         }),
         true);
 
@@ -4426,13 +4710,7 @@ var View = function(params) {
         }));
 
         caps = testResults;
-        createRenderer();
-
-        /*
-        canvasCaps = testResults.canvas;
-
-        attachToCanvas();
-        */
+        updateContainer(null, params.container);
 
         if (isIE) {
             window.attachEvent('onresize', handleResize);
@@ -4446,7 +4724,239 @@ var View = function(params) {
 
     return _self;
 }; // T5.View
+/**
+# T5.Map
+_extends:_ T5.Tiler
 
+
+The Map class is the entry point for creating a tiling map.  Creating a
+map is quite simple and requires two things to operate.  A containing HTML5 canvas
+that will be used to display the map and a T5.Geo.MapProvider that will populate
+the map.
+
+## Example Usage: Creating a Map
+
+<pre lang='javascript'>
+map = new T5.Map({
+    container: 'mapContainer'
+});
+</pre>
+
+Like all View descendants the map supports features such as intertial scrolling and
+the like and is configurable through implementing the COG.configurable interface. For
+more information on view level features check out the View documentation.
+
+## Events
+
+### zoomLevelChange
+This event is triggered when the zoom level has been updated
+
+<pre>
+map.bind('zoomLevelChange', function(evt, newZoomLevel) {
+});
+</pre>
+
+### boundsChange
+This event is triggered when the bounds of the map have changed
+
+<pre>
+map.bind('boundsChange', function(evt, bounds) {
+});
+</pre>
+
+## Methods
+*/
+var Map = function(params) {
+    params = COG.extend({
+        zoomLevel: 1,
+        minZoom: 1,
+        maxZoom: 18,
+        pannable: true,
+        scalable: true
+    }, params);
+
+    var lastBoundsChangeOffset = new XY(),
+        initialized = false,
+        tappedPOIs = [],
+        annotations = null, // annotations layer
+        guideOffset = null,
+        initialTrackingUpdate = true,
+        rpp = 0,
+        tapExtent = params.tapExtent;
+
+    /* internal functions */
+
+    /* event handlers */
+
+    function handleTap(evt, absXY, relXY, offsetXY) {
+        var tapPos = GeoXY.toPos(offsetXY, rpp),
+            minPos = GeoXY.toPos(
+                XYFns.offset(offsetXY, -tapExtent, tapExtent),
+                rpp),
+            maxPos = GeoXY.toPos(
+                XYFns.offset(offsetXY, tapExtent, -tapExtent),
+                rpp);
+
+        _self.trigger(
+            'geotap',
+            absXY,
+            relXY,
+            tapPos,
+            BoundingBox.init(minPos, maxPos)
+        );
+    } // handleTap
+
+    function handleRefresh(evt, view, viewport) {
+        if (lastBoundsChangeOffset.x != viewport.x || lastBoundsChangeOffset.y != viewport.y) {
+            _self.trigger('boundsChange', _self.getBoundingBox());
+
+            lastBoundsChangeOffset.x = viewport.x;
+            lastBoundsChangeOffset.y = viewport.y;
+        } // if
+    } // handleWork
+
+    function handleProviderUpdate(name, value) {
+        _self.cleanup();
+        initialized = false;
+    } // handleProviderUpdate
+
+    function handleZoomLevelChange(evt, zoomLevel) {
+        var gridSize;
+
+        rpp = radsPerPixel(zoomLevel);
+
+        gridSize = TWO_PI / rpp | 0;
+        _self.setMaxOffset(gridSize, gridSize, true, false);
+
+
+        _self.resetScale();
+        _self.triggerAll('resync', _self);
+    } // handleZoomLevel
+
+    /* internal functions */
+
+    function getLayerScaling(oldZoom, newZoom) {
+        return radsPerPixel(oldZoom) / radsPerPixel(newZoom);
+    } // getLayerScaling
+
+    /* public methods */
+
+    /**
+    ### getBoundingBox()
+
+    Return a T5.Geo.BoundingBox for the current map view area
+    */
+    function getBoundingBox() {
+        var viewport = _self.getViewport();
+
+        return viewport ?
+            BoundingBox.init(
+                GeoXY.toPos(new XY(viewport.x, viewport.y2), rpp),
+                GeoXY.toPos(new XY(viewport.x2, viewport.y), rpp)) :
+            null;
+    } // getBoundingBox
+
+    /**
+    ### getCenterPosition()`
+    Return a T5.GeoXY composite for the center position of the map
+    */
+    function getCenterPosition() {
+        var viewport = _self.getViewport();
+        if (viewport) {
+            var xy = new XY(viewport.x + (viewport.w >> 1), viewport.y + (viewport.h >> 1));
+            return GeoXY.toPos(xy, rpp);
+        } // if
+
+        return null;
+    } // getCenterPosition
+
+    /**
+    ### gotoBounds(bounds, callback)
+    Calculates the optimal display bounds for the specified T5.Geo.BoundingBox and
+    then goes to the center position and zoom level best suited.
+    */
+    function gotoBounds(bounds, callback) {
+        var zoomLevel = BoundingBox.getZoomLevel(
+                            bounds,
+                            _self.getViewport());
+
+        gotoPosition(
+            BoundingBox.getCenter(bounds),
+            zoomLevel,
+            callback);
+    } // gotoBounds
+
+    /**
+    ### gotoPosition(position, newZoomLevel, callback)
+    This function is used to tell the map to go to the specified position.  The
+    newZoomLevel parameter is optional and updates the map zoom level if supplied.
+    An optional callback argument is provided to receieve a notification once
+    the position of the map has been updated.
+    */
+    function gotoPosition(position, newZoomLevel, callback) {
+        _self.setZoomLevel(newZoomLevel);
+
+        panToPosition(position, callback);
+    } // gotoPosition
+
+    /**
+    ### panToPosition(position, callback, easingFn)
+    This method is used to tell the map to pan (not zoom) to the specified
+    T5.GeoXY.  An optional callback can be passed as the second
+    parameter to the function and this fires a notification once the map is
+    at the new specified position.  Additionally, an optional easingFn parameter
+    can be supplied if the pan operation should ease to the specified location
+    rather than just shift immediately.  An easingDuration can also be supplied.
+    */
+    function panToPosition(position, callback, easingFn, easingDuration) {
+        var centerXY = GeoXY.init(position, radsPerPixel(_self.getZoomLevel())),
+            viewport = _self.getViewport(),
+            offsetX = centerXY.x - (viewport.w >> 1),
+            offsetY = centerXY.y - (viewport.h >> 1);
+
+        _self.updateOffset(offsetX, offsetY, easingFn, easingDuration, function() {
+            if (callback) {
+                callback(_self);
+            } // if
+        });
+    } // panToPosition
+
+    /**
+    ### syncXY(points)
+    This function iterates through the specified vectors and if they are
+    of type GeoXY composite they are provided the rads per pixel of the
+    grid so they can perform their calculations
+    */
+    function syncXY(points, reverse) {
+        return (reverse ? GeoXY.syncPos : GeoXY.sync)(points, rpp);
+    } // syncXY
+
+    /* public object definition */
+
+    params.adjustScaleFactor = function(scaleFactor) {
+        var roundFn = scaleFactor < 1 ? Math.floor : Math.ceil;
+        return Math.pow(2, roundFn(Math.log(scaleFactor)));
+    };
+
+    var _self = COG.extend(new View(params), {
+
+        getBoundingBox: getBoundingBox,
+        getCenterPosition: getCenterPosition,
+
+        gotoBounds: gotoBounds,
+        gotoPosition: gotoPosition,
+        panToPosition: panToPosition,
+        syncXY: syncXY
+    });
+
+    _self.bind('tap', handleTap);
+
+    _self.bind('refresh', handleRefresh);
+
+    _self.bind('zoomLevelChange', handleZoomLevelChange);
+
+    return _self;
+}; // T5.Map
 
 /**
 # T5.Drawable
@@ -4465,7 +4975,7 @@ var Drawable = function(params) {
     params = COG.extend({
         style: null,
         xy: null,
-        size: null,
+        size: 10,
         fill: false,
         stroke: true,
         draggable: false,
@@ -4565,6 +5075,16 @@ Drawable.prototype = {
     ### updateBounds(bounds: XYRect, updateXY: boolean)
     */
     updateBounds: function(bounds, updateXY) {
+        var moved = bounds && (
+                (! this.bounds) ||
+                bounds.x != this.bounds.x ||
+                bounds.y != this.bounds.y
+            );
+
+        if (moved) {
+            this.trigger('move', this, bounds, this.bounds);
+        } // if
+
         this.bounds = bounds;
 
         if (updateXY) {
@@ -4604,7 +5124,7 @@ function registerAnimationCallback(fn) {
     } // if
 } // registerAnimationCallback
 
-function animateDrawable(target, fn, argsStart, argsEnd, opts) {
+function animateDrawable(target, fnName, argsStart, argsEnd, opts) {
     opts = COG.extend({
         easing: 'sine.out',
         duration: 1000,
@@ -4615,8 +5135,8 @@ function animateDrawable(target, fn, argsStart, argsEnd, opts) {
 
     var startTicks = new Date().getTime(),
         lastTicks = 0,
-        targetFn = target[fn],
-        floorValue = fn == 'translate',
+        targetFn = target[fnName],
+        floorValue = fnName == 'translate',
         argsComplete = 0,
         autoInvalidate = opts.autoInvalidate,
         animateValid = argsStart.length && argsEnd.length &&
@@ -4648,7 +5168,7 @@ function animateDrawable(target, fn, argsStart, argsEnd, opts) {
             targetFn.apply(target, argsCurrent);
 
             if (autoInvalidate && view) {
-                view.redraw = true;
+                view.invalidate();
             } // if
 
             if (callback) {
@@ -4684,38 +5204,40 @@ function animateDrawable(target, fn, argsStart, argsEnd, opts) {
         registerAnimationCallback(runTween);
     } // if
 } // animate
-function checkOffsetAndBounds(drawable, image) {
-    var x, y;
-
-    if (image && image.width > 0) {
-        if (! drawable.imageOffset) {
-            drawable.imageOffset = XY.init(
-                -image.width >> 1,
-                -image.height >> 1
-            );
-        } // if
-
-        if (! drawable.bounds) {
-            x = drawable.xy.x + drawable.imageOffset.x;
-            y = drawable.xy.y + drawable.imageOffset.y;
-
-            drawable.bounds = XYRect.init(x, y, x + image.width, y + image.height);
-        } // if
-    } // if
-} // checkOffsetAndBounds
 /**
-### T5.Marker(params)
+# T5.Marker
+The T5.Marker class represents a generic marker for annotating an underlying view.
+Originally the marker class did very little, and in most instances a T5.ImageMarker
+was used instead to generate a marker that looked more visually appealing, however,
+with the introduction of different rendering backends the standard marker class is
+the recommended option for annotating maps and views as it allows the renderer to
+implement suitable rendering behaviour which looks good regardless of the context.
+
+## Initialization Parameters
+In addition to the standard T5.Drawable initialization parameters, a Marker can
+accept the following:
+
+
+- `markerStyle` - (default = simple)
+
+    The style of marker that will be displayed for the marker.  This is interpreted
+    by each renderer individually.
+
 */
 function Marker(params) {
+    params = COG.extend({
+        fill: true,
+        stroke: false,
+        markerStyle: 'simple',
+        hoverStyle: 'highlight',
+        typeName: 'Marker'
+    }, params);
+
     Drawable.call(this, params);
 };
 
 Marker.prototype = COG.extend(Drawable.prototype, {
-    constructor: Marker,
-
-    prep: function(renderer, offsetX, offsetY, state) {
-        return renderer.arc(this.xy.x, this.xy.y, this.size >> 1, 0, Math.PI * 2);
-    } // prep
+    constructor: Marker
 });
 /**
 # T5.Poly
@@ -4741,6 +5263,7 @@ is specified then the style of the T5.PolyLayer is used.
 function Poly(points, params) {
     params = COG.extend({
         simplify: false,
+        fill: true,
         typeName: 'Poly'
     }, params);
 
@@ -4757,7 +5280,7 @@ function Poly(points, params) {
 
         view.syncXY(points);
 
-        drawPoints = this.points = XY.floor(simplify ? XY.simplify(points) : points);
+        drawPoints = this.points = XYFns.floor(simplify ? XYFns.simplify(points) : points);
 
         for (var ii = drawPoints.length; ii--; ) {
             x = drawPoints[ii].x;
@@ -4769,12 +5292,16 @@ function Poly(points, params) {
             maxY = isType(maxY, typeUndefined) || y > maxY ? y : maxY;
         } // for
 
-        this.updateBounds(XYRect.init(minX, minY, maxX, maxY), true);
+        this.updateBounds(new Rect(minX, minY, maxX - minX, maxY - minY), true);
     } // resync
 
     Drawable.call(this, params);
 
     COG.extend(this, {
+        getPoints: function() {
+            return [].concat(points);
+        },
+
         resync: resync
     });
 
@@ -4799,10 +5326,7 @@ Line.prototype = COG.extend({}, Poly.prototype);
 _extends:_ T5.Drawable
 
 
-An image annotation is simply a T5.Annotation that has been extended to
-display an image rather than a simple circle.  Probably the most common type
-of annotation used.  Supports using either the `image` or `imageUrl` parameters
-to use preloaded or an imageurl for displaying the annotation.
+An image drawable is the class that provides support for drawing images to a T5.DrawLayer.
 
 ## TODO
 
@@ -4810,10 +5334,7 @@ to use preloaded or an imageurl for displaying the annotation.
 tweak touch handling to get this better...
 
 
-## Constructor
-`new T5.Image(params);`
-
-### Initialization Parameters
+## Initialization Parameters
 
 - `image` (HTMLImage, default = null) - one of either this or the `imageUrl` parameter
 is required and the specified image is used to display the annotation.
@@ -4822,19 +5343,8 @@ is required and the specified image is used to display the annotation.
 required.  If specified, the image is obtained using T5.Images module and then drawn
 to the canvas.
 
-- `imageAnchor` (T5.Vector, default = null) - a T5.Vector that optionally specifies the
-anchor position for an annotation.  Consider that your annotation is "pin-like" then you
-would want to provide an anchor vector that specified the pixel position in the image
-around the center and base of the image.  If not `imageAnchor` parameter is provided, then
-the center of the image is assumed for the anchor position.
-
-- `rotation` (float, default = 0) - the value of the rotation for the image marker
-(in radians).  Be aware that applying rotation to a marker does add an extra processing
-overhead as the canvas context needs to be saved and restored as part of the operation.
-
-- `scale` (float, default = 1)
-
-- `opacity` (float, default = 1)
+- `centerOffset` (T5.XY, default = null) - a XY composite that optionally specifies the
+offset that should be applied to the image when it is drawn by the renderer.
 
 
 ## Methods
@@ -4843,17 +5353,36 @@ function ImageDrawable(params) {
     params = COG.extend({
         image: null,
         imageUrl: null,
-        imageOffset: null,
+        centerOffset: null,
         typeName: 'Image'
     }, params);
 
-    var dragOffset = null,
-        drawableUpdateBounds = Drawable.prototype.updateBounds,
+    var drawableResync = Drawable.prototype.resync,
         drawX,
         drawY,
         imgOffsetX = 0,
         imgOffsetY = 0,
         image = params.image;
+
+    /* internal functions */
+
+    function checkOffsetAndBounds() {
+        if (image && image.width > 0) {
+            if (! this.centerOffset) {
+                this.centerOffset = new XY(
+                    -image.width >> 1,
+                    -image.height >> 1
+                );
+            } // if
+
+            this.updateBounds(new Rect(
+                this.xy.x + this.centerOffset.x,
+                this.xy.y + this.centerOffset.y,
+                image.width,
+                image.height),
+            false);
+        } // if
+    } // checkOffsetAndBounds
 
     /* exports */
 
@@ -4861,6 +5390,8 @@ function ImageDrawable(params) {
         this.imageUrl = imageUrl;
 
         if (this.imageUrl) {
+            var marker = this;
+
             getImage(this.imageUrl, function(retrievedImage, loaded) {
                 image = retrievedImage;
 
@@ -4868,44 +5399,14 @@ function ImageDrawable(params) {
                     var view = _self.layer ? _self.layer.view : null;
 
                     if (view) {
-                        view.redraw = true;
+                        view.invalidate();
                     } // if
                 } // if
+
+                checkOffsetAndBounds.apply(marker);
             });
         } // if
     } // changeImage
-
-    /**
-    ### drag(dragData, dragX, dragY, drop)
-    */
-    function drag(dragData, dragX, dragY, drop) {
-        if (! dragOffset) {
-            dragOffset = XY.init(
-                dragData.startX - this.xy.x,
-                dragData.startY - this.xy.y
-            );
-
-        }
-
-        this.xy.x = dragX - dragOffset.x;
-        this.xy.y = dragY - dragOffset.y;
-
-        if (drop) {
-            dragOffset = null;
-
-
-            if (this.layer) {
-                var view = this.layer.view;
-                if (view) {
-                    view.syncXY([this.xy], true);
-                } // if
-            } // if
-
-            this.trigger('dragDrop');
-        } // if
-
-        return true;
-    } // drag
 
     /**
     ### getProps(renderer, state)
@@ -4924,31 +5425,27 @@ function ImageDrawable(params) {
         };
     } // getProps
 
-    /**
-    ### updateBounds(bounds: XYRect, updateXY: boolean)
-    */
-    function updateBounds(bounds, updateXY) {
-        drawableUpdateBounds.call(this, bounds, updateXY);
+    function resync(view) {
+        drawableResync.call(this, view);
 
-        checkOffsetAndBounds(this, image);
-    } // setOrigin
+        checkOffsetAndBounds.call(this);
+    } // resync
 
     Drawable.call(this, params);
 
     var _self = COG.extend(this, {
         changeImage: changeImage,
-        drag: drag,
         getProps: getProps,
-        updateBounds: updateBounds
+        resync: resync
     });
 
     if (! image) {
-        changeImage(this.imageUrl);
+        changeImage.call(this, this.imageUrl);
     } // if
 
-    if (this.imageOffset) {
-        imgOffsetX = this.imageOffset.x;
-        imgOffsetY = this.imageOffset.y;
+    if (this.centerOffset) {
+        imgOffsetX = this.centerOffset.x;
+        imgOffsetY = this.centerOffset.y;
     } // if
 };
 
@@ -4956,7 +5453,12 @@ ImageDrawable.prototype = COG.extend({}, Drawable.prototype, {
     constructor: ImageDrawable
 });
 /**
-### T5.ImageMarker(params)
+# T5.ImageMarker
+The T5.ImageMarker is a class that provides a mechanism for displaying an image
+marker as an annotation for a T5.Map or T5.View
+
+
+_extends_: T5.ImageDrawable
 */
 function ImageMarker(params) {
     params = COG.extend({
@@ -4964,7 +5466,7 @@ function ImageMarker(params) {
     }, params);
 
     if (params.imageAnchor) {
-        params.imageOffset = XY.invert(params.imageAnchor);
+        params.centerOffset = XYFns.invert(params.imageAnchor);
     } // if
 
     ImageDrawable.call(this, params);
@@ -4990,33 +5492,6 @@ Arc.prototype = COG.extend(Drawable.prototype, {
     constructor: Arc
 });
 
-/**
-# T5.ImageGenerator
-
-## Events
-
-### update
-*/
-var ImageGenerator = function(params) {
-    params = COG.extend({
-        relative: false,
-        padding: 2
-    }, params);
-
-    /**
-    ### run(viewRect, view, callback)
-    */
-    function run(view, viewRect, callback) {
-        COG.warn('running base generator - this should be overriden');
-    } // run
-
-    var _self = {
-        run: run
-    };
-
-    COG.observable(_self);
-    return _self;
-};
 /**
 # T5.ViewLayer
 
@@ -5073,6 +5548,7 @@ function ViewLayer(params) {
     }, params);
 
     this.view = null;
+    this.visible = true;
 
     COG.observable(COG.extend(this, params));
 }; // ViewLayer constructor
@@ -5101,12 +5577,13 @@ ViewLayer.prototype = {
     drawn and the following parameters are passed to the method:
 
         - renderer - the renderer that will be drawing the viewlayer
+        - viewport - the current viewport
         - state - the current DisplayState of the view
         - view - a reference to the View
         - tickCount - the current tick count
         - hitData - an object that contains information regarding the current hit data
     */
-    draw: function(renderer, state, view, tickCount, hitData) {
+    draw: function(renderer, viewport, state, view, tickCount, hitData) {
     },
 
     /**
@@ -5124,57 +5601,48 @@ ViewLayer.prototype = {
 /**
 # T5.ImageLayer
 */
-var ImageLayer = function(genId, params) {
+var TileLayer = function(genId, params) {
     params = COG.extend({
         imageLoadArgs: {}
     }, params);
 
     var genFn = genId ? Generator.init(genId, params).run : null,
         generating = false,
-        lastGenX = 0,
-        lastGenY = 0,
-        loadArgs = params.imageLoadArgs,
-        regenTimeout = 0,
-        regenViewRect = null,
-        tiles = [];
-
-    /* private internal functions */
-
-    function regenerate(view, viewRect) {
-        var xyDiff = max(abs(viewRect.x1 - lastGenX), abs(viewRect.y1 - lastGenY)),
-            regen = xyDiff >= 128 && genFn && (! generating);
-
-        if (regen) {
-            generating = true;
-
-            var tickCount = new Date().getTime();
-
-            genFn(view, viewRect, function(newTiles) {
-                lastGenX = viewRect.x1;
-                lastGenY = viewRect.y1;
-
-                tiles = [].concat(newTiles);
-
-                generating = false;
-                view.redraw = true;
-                COG.info('GEN COMPLETED IN ' + (new Date().getTime() - tickCount) + ' ms');
-            });
-        } // if
-    } // regenerate
+        storage = null,
+        zoomTrees = [],
+        tiles = [],
+        loadArgs = params.imageLoadArgs;
 
     /* event handlers */
 
-    function handleRefresh(evt, view, viewRect) {
-        regenerate(view, viewRect);
+    function handleRefresh(evt, view, viewport) {
+        var tickCount = new Date().getTime();
+
+        if (storage) {
+            genFn(view, viewport, storage, function() {
+                view.invalidate();
+                COG.info('GEN COMPLETED IN ' + (new Date().getTime() - tickCount) + ' ms');
+            });
+        } // if
     } // handleViewIdle
+
+    function handleResync(evt, view) {
+        var zoomLevel = view && view.getZoomLevel ? view.getZoomLevel() : 0;
+
+        if (! zoomTrees[zoomLevel]) {
+            zoomTrees[zoomLevel] = createStoreForZoomLevel(zoomLevel);
+        } // if
+
+        storage = zoomTrees[zoomLevel];
+    } // handleParentChange
 
     /* exports */
 
     /**
     ### draw(renderer)
     */
-    function draw(renderer) {
-        renderer.drawTiles(tiles);
+    function draw(renderer, viewport) {
+        renderer.drawTiles(viewport, storage.search(XYRect.buffer(viewport, 128)));
     } // draw
 
     /* definition */
@@ -5184,6 +5652,8 @@ var ImageLayer = function(genId, params) {
     });
 
     _self.bind('refresh', handleRefresh);
+    _self.bind('parentChange', handleResync);
+    _self.bind('resync', handleResync);
 
     return _self;
 };
@@ -5204,32 +5674,87 @@ var DrawLayer = function(params) {
         zindex: 10
     }, params);
 
-    var drawables = [];
+    var drawables = [],
+        storage,
+        sortTimeout = 0;
 
     /* private functions */
 
-    function quickHitCheck(drawable, hitX, hitY) {
-        var bounds = drawable.bounds;
+    function dragObject(dragData, dragX, dragY, drop) {
+        var dragOffset = this.dragOffset;
 
-        return (bounds &&
-            hitX >= bounds.x1 && hitX <= bounds.x2 &&
-            hitY >= bounds.y1 && hitY <= bounds.y2);
-    } // quickHitCheck
+        if (! dragOffset) {
+            dragOffset = this.dragOffset = new XY(
+                dragData.startX - this.xy.x,
+                dragData.startY - this.xy.y
+            );
+        } // if
+
+        this.xy.x = dragX - dragOffset.x;
+        this.xy.y = dragY - dragOffset.y;
+
+        if (drop) {
+            delete this.dragOffset;
+
+
+            var view = _self.view;
+            if (view) {
+                view.syncXY([this.xy], true);
+                view.invalidate();
+            } // if
+
+            this.trigger('dragDrop');
+        } // if
+
+        return true;
+    } // dragObject
+
+    function triggerSort(view) {
+        clearTimeout(sortTimeout);
+        sortTimeout = setTimeout(function() {
+            drawables.sort(function(shapeA, shapeB) {
+                if (shapeB.xy && shapeA.xy) {
+                    var diff = shapeB.xy.y - shapeA.xy.y;
+                    return diff != 0 ? diff : shapeB.xy.x - shapeA.xy.x;
+                } // if
+            });
+
+            if (view) {
+                view.invalidate();
+            } // if
+        }, 50);
+    } // triggerSort
 
     /* event handlers */
 
-    function handleRefresh(evt, view, viewRect) {
-        drawables = _self.getDrawables(view, viewRect);
-    } // handleViewIdle
+    function handleItemMove(evt, drawable, newBounds, oldBounds) {
+        if (oldBounds) {
+            storage.remove(oldBounds, drawable);
+        } // if
+
+        storage.insert(newBounds, drawable);
+    } // handleItemMove
+
+    function handleResync(evt, view) {
+        storage = createStoreForZoomLevel(view.getZoomLevel(), storage); // TODO: populate with the previous storage
+
+        for (var ii = drawables.length; ii--; ) {
+            var drawable = drawables[ii];
+
+            drawable.resync(view);
+        } // for
+
+    } // handleParentChange
 
     /* exports */
 
-    function draw(renderer, state, view, tickCount, hitData) {
+    function draw(renderer, viewport, state, view, tickCount, hitData) {
         var emptyProps = {
-            };
+            },
+            drawItems = storage && viewport ? storage.search(viewport): [];
 
-        for (var ii = drawables.length; ii--; ) {
-            var drawable = drawables[ii],
+        for (var ii = drawItems.length; ii--; ) {
+            var drawable = drawItems[ii],
                 overrideStyle = drawable.style || _self.style,
                 styleType,
                 previousStyle,
@@ -5241,16 +5766,17 @@ var DrawLayer = function(params) {
 
                 drawData = prepFn ? prepFn.call(renderer,
                     drawable,
+                    viewport,
                     hitData,
                     state,
                     drawProps) : null;
 
             if (drawData) {
-                if (drawData.hit) {
+                if (hitData && drawData.hit) {
                     hitData.elements.push(Hits.initHit(
                         drawable.type,
                         drawable,
-                        drawable.draggable ? drawable.drag : null)
+                        drawable.draggable ? dragObject : null)
                     );
 
                     styleType = hitData.type + 'Style';
@@ -5258,7 +5784,7 @@ var DrawLayer = function(params) {
                     overrideStyle = drawable[styleType] || _self[styleType] || overrideStyle;
                 } // if
 
-                previousStyle = overrideStyle ? renderer.applyStyle(overrideStyle) : null;
+                previousStyle = overrideStyle ? renderer.applyStyle(overrideStyle, true) : null;
 
                 drawFn = drawable.draw || drawData.draw;
 
@@ -5278,11 +5804,13 @@ var DrawLayer = function(params) {
     } // draw
 
     /**
-    ### getDrawables(view, viewRect)
+    ### find(selector: String)
+    The find method will eventually support retrieving all the shapes from the shape
+    layer that match the selector expression.  For now though, it just returns all shapes
     */
-    function getDrawables(view, viewRect) {
-        return [];
-    } // getDrawables
+    function find(selector) {
+        return [].concat(drawables);
+    } // find
 
     /**
     ### hitGuess(hitX, hitY, state, view)
@@ -5290,27 +5818,64 @@ var DrawLayer = function(params) {
     so we don't have to do the work again when drawing
     */
     function hitGuess(hitX, hitY, state, view) {
-        var hit = false;
-
-        for (var ii = drawables.length; (! hit) && ii--; ) {
-            var drawable = drawables[ii],
-                bounds = drawable.bounds;
-
-            hit = hit || quickHitCheck(drawable, hitX, hitY);
-        } // for
-
-        return hit;
+        return storage && storage.search({
+            x: hitX - 10,
+            y: hitY - 10,
+            w: 20,
+            h: 20
+        }).length > 0;
     } // hitGuess
 
     /* initialise _self */
 
     var _self = COG.extend(new ViewLayer(params), {
+        itemCount: 0,
+
+        /**
+        ### add(poly)
+        Used to add a T5.Poly to the layer
+        */
+        add: function(drawable, prepend) {
+            if (drawable) {
+                drawable.layer = _self;
+
+                if (prepend) {
+                    drawables.unshift(drawable);
+                }
+                else {
+                    drawables[drawables.length] = drawable;
+                } // if..else
+
+                var view = _self.view;
+                if (view) {
+                    drawable.resync(view);
+                    if (storage && drawable.bounds) {
+                        storage.insert(drawable.bounds, drawable);
+                    } // if
+
+                    triggerSort(view);
+                } // if
+
+                drawable.bind('move', handleItemMove);
+            } // if
+
+            _self.itemCount = drawables.length;
+        },
+
+        clear: function() {
+            storage = new SpatialStore();
+
+            drawables = [];
+            _self.itemCount = 0;
+        },
+
         draw: draw,
-        getDrawables: getDrawables,
+        find: find,
         hitGuess: hitGuess
     });
 
-    _self.bind('refresh', handleRefresh);
+    _self.bind('parentChange', handleResync);
+    _self.bind('resync', handleResync);
 
     return _self;
 };
@@ -5326,85 +5891,61 @@ data and the like.
 ## Methods
 */
 var ShapeLayer = function(params) {
-    params = COG.extend({
-        zindex: 10
-    }, params);
+    return new DrawLayer(params);
+};
 
-    var shapes = [];
+/**
+# T5.Pos (internal class)
+The T5.Pos class is a currently an internal class that is used by the `T5.Geo.Position` module.
+This is currently a little obscure and is due to a change in the way Tile5 is structured internally.
 
-    /* private functions */
+# Methods
+*/
+function Pos(p1, p2) {
+    if (p1 && p1.split) {
+        var coords = p1.split(reDelimitedSplit);
 
-    function performSync(view) {
-        for (var ii = shapes.length; ii--; ) {
-            shapes[ii].resync(view);
-        } // for
+        if (coords.length > 1) {
+            p1 = coords[0];
+            p2 = coords[1];
+        } // if
+    }
+    else if (p1 && p1.lat) {
+        p2 = p1.lon;
+        p1 = p1.lat;
+    } // if..else
 
-        shapes.sort(function(shapeA, shapeB) {
-            var diff = shapeB.xy.y - shapeA.xy.y;
-            return diff != 0 ? diff : shapeB.xy.x - shapeA.xy.y;
-        });
+    this.lat = parseFloat(p1 || 0);
+    this.lon = parseFloat(p2 || 0);
+} // Pos constructor
 
-        view.redraw = true;
-    } // performSync
-
-    /* event handlers */
-
-    function handleResync(evt, parent) {
-        performSync(parent);
-    } // handleParentChange
-
-    /* exports */
+Pos.prototype = {
+    constructor: Pos,
 
     /**
-    ### find(selector: String)
-    The find method will eventually support retrieving all the shapes from the shape
-    layer that match the selector expression.  For now though, it just returns all shapes
+    ### offset(latOffset, lonOffset)
+    Return a new T5.Geo.Position which is the original `pos` offset by
+    the specified `latOffset` and `lonOffset` (which are specified in
+    km distance)
     */
-    function find(selector) {
-        return [].concat(shapes);
-    } // find
+    offset: function(latOffset, lonOffset) {
+        var radOffsetLat = latOffset / KM_PER_RAD,
+            radOffsetLon = lonOffset / KM_PER_RAD,
+            radLat = this.lat * DEGREES_TO_RADIANS,
+            radLon = this.lon * DEGREES_TO_RADIANS,
+            newLat = radLat + radOffsetLat,
+            deltaLon = asin(sin(radOffsetLon) / cos(radLat)),
+            newLon = radLon + deltaLon;
 
-    /* initialise _self */
+        newLat = ((newLat + HALF_PI) % Math.PI) - HALF_PI;
+        newLon = newLon % TWO_PI;
 
-    var _self = COG.extend(new DrawLayer(params), {
-        /**
-        ### add(poly)
-        Used to add a T5.Poly to the layer
-        */
-        add: function(shape, prepend) {
-            if (shape) {
-                shape.layer = _self;
+        return new Pos(newLat * RADIANS_TO_DEGREES, newLon * RADIANS_TO_DEGREES);
+    },
 
-                var view = _self.view;
-                if (view) {
-                    shape.resync(view);
-                    view.redraw = true;
-                } // if
-
-                if (prepend) {
-                    shapes.unshift(shape);
-                }
-                else {
-                    shapes[shapes.length] = shape;
-                } // if..else
-            } // if
-        },
-
-        clear: function() {
-            shapes = [];
-        },
-
-        find: find,
-
-        getDrawables: function(view, viewRect) {
-            return shapes;
-        }
-    });
-
-    _self.bind('parentChange', handleResync);
-    _self.bind('resync', handleResync);
-
-    return _self;
+    toString: function(delimiter) {
+        return this.lat + (delimiter || ' ') + this.lon;
+    }
 };
 
     COG.extend(exports, {
@@ -5412,23 +5953,28 @@ var ShapeLayer = function(params) {
         is: isType,
         ticks: ticks,
         userMessage: userMessage,
+        indexOf: indexOf,
 
-        XY: XY,
+        Rect: Rect,
+        XY: XYFns,
         XYRect: XYRect,
-        Dimensions: Dimensions,
         Vector: Vector,
         Hits: Hits,
 
         Generator: Generator,
+        Service: Service,
 
         tweenValue: COG.tweenValue,
         easing: COG.easing,
 
+        Tile: Tile,
+        TileLayer: TileLayer,
+        getImage: getImage,
+
         viewState: viewState,
         View: View,
         ViewLayer: ViewLayer,
-        ImageLayer: ImageLayer,
-        ImageGenerator: ImageGenerator,
+        ImageLayer: TileLayer,
 
         Drawable: Drawable,
         Marker: Marker,
@@ -5439,19 +5985,13 @@ var ShapeLayer = function(params) {
         ImageMarker: ImageMarker,
 
         DrawLayer: DrawLayer,
-        ShapeLayer: ShapeLayer
+        ShapeLayer: ShapeLayer,
+
+        Map: Map,
+
+        Pos: Pos
     });
 
-    COG.observable(exports);
-
-/**
-# T5.Geo
-The Geo module contains classes and functionality to support geospatial
-operations and calculations that are required when drawing maps, routes, etc.
-
-## Functions
-*/
-var Geo = exports.Geo = (function() {
 var LAT_VARIABILITIES = [
     1.406245461070741,
     1.321415085624082,
@@ -5512,27 +6052,6 @@ function dist2rad(distance) {
 } // dist2rad
 
 /**
-### getEngine(requiredCapability)
-Returns the engine that provides the required functionality.  If preferred engines are supplied
-as additional arguments, then those are looked for first
-*/
-function getEngine(requiredCapability) {
-    var fnresult = null;
-
-    for (var ii = 1; (! fnresult) && (ii < arguments.length); ii++) {
-        fnresult = findEngine(requiredCapability, arguments[ii]);
-    } // for
-
-    fnresult = fnresult ? fnresult : findEngine(requiredCapability);
-
-    if (! fnresult) {
-        throw new Error("Unable to find GEO engine with " + requiredCapability + " capability");
-    }
-
-    return fnresult;
-} // getEngine
-
-/**
 ### lat2pix(lat)
 To be completed
 */
@@ -5588,54 +6107,7 @@ function radsPerPixel(zoomLevel) {
 } // radsPerPixel
 
 
-/**
-### rankGeocodeResponses(requestAddress, responseAddress, engine)
-To be completed
-*/
-function rankGeocodeResponses(requestAddress, responseAddresses, engine) {
-    var matches = [],
-        compareFns = module.AddressCompareFns;
-
-    if (engine && engine.compareFns) {
-        compareFns = COG.extend({}, compareFns, engine.compareFns);
-    } // if
-
-    for (var ii = 0; ii < responseAddresses.length; ii++) {
-        matches.push(new module.GeoSearchResult({
-            caption: addrTools.toString(responseAddresses[ii]),
-            data: responseAddresses[ii],
-            pos: responseAddresses[ii].pos,
-            matchWeight: plainTextAddressMatch(requestAddress, responseAddresses[ii], compareFns, module.GeocodeFieldWeights)
-        }));
-    } // for
-
-    matches.sort(function(itemA, itemB) {
-        return itemB.matchWeight - itemA.matchWeight;
-    });
-
-    return matches;
-} // rankGeocodeResponses
-
 /* internal functions */
-
-function findEngine(capability, preference) {
-    var matchingEngine = null;
-
-    for (var engineId in engines) {
-        if (preference) {
-            if ((engineId == preference) && engines[engineId][capability]) {
-                matchingEngine = engines[engineId];
-                break;
-            } // if
-        }
-        else if (engines[engineId][capability]) {
-            matchingEngine = engines[engineId];
-            break;
-        } // if..else
-    } // for
-
-    return matchingEngine;
-} // findEngine
 
 function findRadPhi(phi, t) {
     var eSinPhi = ECC * sin(phi);
@@ -5819,31 +6291,19 @@ var Position = (function() {
     ### init(initLat, initLon)
     */
     function init(initLat, initLon) {
-        return {
-            lat: parseFloat(initLat ? initLat : 0),
-            lon: parseFloat(initLon ? initLon : 0)
-        };
+        return new Pos(initLat, initLon);
     } // init
 
     /**
     ### offset(pos, latOffset, lonOffset)
+    __deprecated:__ will be replaced by direct access to `T5.Pos.offset()`
+
     Return a new T5.Geo.Position which is the original `pos` offset by
     the specified `latOffset` and `lonOffset` (which are specified in
     km distance)
     */
     function offset(pos, latOffset, lonOffset) {
-        var radOffsetLat = latOffset / KM_PER_RAD,
-            radOffsetLon = lonOffset / KM_PER_RAD,
-            radLat = pos.lat * DEGREES_TO_RADIANS,
-            radLon = pos.lon * DEGREES_TO_RADIANS,
-            newLat = radLat + radOffsetLat,
-            deltaLon = asin(sin(radOffsetLon) / cos(radLat)),
-            newLon = radLon + deltaLon;
-
-        newLat = ((newLat + HALF_PI) % Math.PI) - HALF_PI;
-        newLon = newLon % TWO_PI;
-
-        return init(newLat * RADIANS_TO_DEGREES, newLon * RADIANS_TO_DEGREES);
+        return pos.offset(latOffset, lonOffset);
     } // offset
 
     /**
@@ -5855,23 +6315,7 @@ var Position = (function() {
     returns a copy of the position.
     */
     function parse(pos) {
-        if (! pos) {
-            return init();
-        }
-        else if (isType(pos.lat, typeNumber)) {
-            return copy(pos);
-        }
-        else if (pos.split) {
-            var sepChars = [' ', ','];
-            for (var ii = 0; ii < sepChars.length; ii++) {
-                var coords = pos.split(sepChars[ii]);
-                if (coords.length === 2) {
-                    return init(coords[0], coords[1]);
-                } // if
-            } // for
-        } // if..else
-
-        return null;
+        return new Pos(pos);
     } // parse
 
     /**
@@ -5883,7 +6327,7 @@ var Position = (function() {
             positions = new Array(sourceLen);
 
         for (var ii = sourceLen; ii--; ) {
-            positions[ii] = parse(sourceData[ii]);
+            positions[ii] = new Pos(sourceData[ii]);
         } // for
 
         return positions;
@@ -5904,7 +6348,7 @@ var Position = (function() {
     Return a string representation of the Geo.Position object
     */
     function toString(pos) {
-        return pos ? pos.lat + " " + pos.lon : "";
+        return pos ? pos.toString() : "";
     } // toString
 
     /**
@@ -6014,7 +6458,7 @@ var BoundingBox = (function() {
     calculation in cases where the bounding box crosses the 360 degree boundary.
     */
     function calcSize(min, max, normalize) {
-        var size = T5.XY.init(0, max.lat - min.lat);
+        var size = new XY(0, max.lat - min.lat);
 
         if ((normalize || isType(normalize, typeUndefined)) && (min.lon > max.lon)) {
             size.x = 360 - min.lon + max.lon;
@@ -6058,8 +6502,8 @@ var BoundingBox = (function() {
         } // if..else
 
         return BoundingBox.init(
-            Position.init(minLat * RADIANS_TO_DEGREES, minLon * RADIANS_TO_DEGREES),
-            Position.init(maxLat * RADIANS_TO_DEGREES, maxLon * RADIANS_TO_DEGREES));
+            new Pos(minLat * RADIANS_TO_DEGREES, minLon * RADIANS_TO_DEGREES),
+            new Pos(maxLat * RADIANS_TO_DEGREES, maxLon * RADIANS_TO_DEGREES));
     } // createBoundsFromCenter
 
     /**
@@ -6069,8 +6513,8 @@ var BoundingBox = (function() {
     */
     function expand(bounds, amount) {
         return BoundingBox.init(
-            Position.init(bounds.min.lat - amount, bounds.min.lon - amount % 360),
-            Position.init(bounds.max.lat + amount, bounds.max.lon + amount % 360));
+            new Pos(bounds.min.lat - amount, bounds.min.lon - amount % 360),
+            new Pos(bounds.max.lat + amount, bounds.max.lon + amount % 360));
     } // expand
 
     /**
@@ -6125,23 +6569,11 @@ var BoundingBox = (function() {
     function getCenter(bounds) {
         var size = calcSize(bounds.min, bounds.max);
 
-        return Position.init(bounds.min.lat + (size.y >> 1), bounds.min.lon + (size.x >> 1));
+        return new Pos(bounds.min.lat + (size.y >> 1), bounds.min.lon + (size.x >> 1));
     } // getCenter
 
-
     /**
-    ### getGeohash(bounds)
-    To be completed
-    */
-    function getGeoHash(bounds) {
-        var minHash = T5.Geo.GeoHash.encode(bounds.min.lat, bounds.min.lon),
-            maxHash = T5.Geo.GeoHash.encode(bounds.max.lat, bounds.max.lon);
-
-        COG.info("min hash = " + minHash + ", max hash = " + maxHash);
-    } // getGeoHash
-
-    /**
-    ### getZoomLevel(bounds, displaySize)
+    ### getZoomLevel(bounds, viewport)
 
     This function is used to return the zoom level (seems consistent across
     mapping providers at this stage) that is required to properly display
@@ -6149,14 +6581,14 @@ var BoundingBox = (function() {
     a Dimensions object) of the map display. Adapted from
     [this code](http://groups.google.com/group/google-maps-js-api-v3/browse_thread/thread/43958790eafe037f/66e889029c555bee)
     */
-    function getZoomLevel(bounds, displaySize) {
+    function getZoomLevel(bounds, viewport) {
         var boundsCenter = getCenter(bounds),
             maxZoom = 1000,
             variabilityIndex = min(round(abs(boundsCenter.lat) * 0.05), LAT_VARIABILITIES.length),
             variability = LAT_VARIABILITIES[variabilityIndex],
             delta = calcSize(bounds.min, bounds.max),
-            bestZoomH = ceil(log(LAT_VARIABILITIES[3] * displaySize.height / delta.y) / log(2)),
-            bestZoomW = ceil(log(variability * displaySize.width / delta.x) / log(2));
+            bestZoomH = ceil(log(LAT_VARIABILITIES[3] * viewport.h / delta.y) / log(2)),
+            bestZoomW = ceil(log(variability * viewport.w / delta.x) / log(2));
 
 
         return min(isNaN(bestZoomH) ? maxZoom : bestZoomH, isNaN(bestZoomW) ? maxZoom : bestZoomW);
@@ -6164,8 +6596,8 @@ var BoundingBox = (function() {
 
     function init(initMin, initMax) {
         return {
-            min: Position.parse(initMin),
-            max: Position.parse(initMax)
+            min: new Pos(initMin),
+            max: new Pos(initMax)
         };
     } // init
 
@@ -6191,7 +6623,6 @@ var BoundingBox = (function() {
         expand: expand,
         forPositions: forPositions,
         getCenter: getCenter,
-        getGeoHash: getGeoHash,
         getZoomLevel: getZoomLevel,
         init: init,
         isEmpty: isEmpty,
@@ -6327,7 +6758,7 @@ var GeoXY = exports.GeoXY = (function() {
     ### init(pos, rpp)
     */
     function init(pos, rpp) {
-        var xy = XY.init();
+        var xy = new XY();
 
         updatePos(xy, pos, rpp);
 
@@ -6351,7 +6782,7 @@ var GeoXY = exports.GeoXY = (function() {
                 maxY = isType(maxY, typeUndefined) || xy.y > maxY ? xy.y : maxY;
             } // for
 
-            return XYRect.init(minX, minY, maxY, maxY);
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
         }
         else if (xy.mercXY) {
             var mercXY = xy.mercXY;
@@ -6360,10 +6791,7 @@ var GeoXY = exports.GeoXY = (function() {
             xy.y = (Math.PI - mercXY.y) / rpp | 0;
 
             xy.rpp = rpp;
-        }
-        else {
-            COG.warn('Attempted to sync an XY composite, not a GeoXY');
-        } // if..else
+        } // if
 
         return xy;
     } // setRadsPerPixel
@@ -6375,7 +6803,7 @@ var GeoXY = exports.GeoXY = (function() {
             } // for
         }
         else {
-            xy.mercXY = XY.init(xy.x * rpp - Math.PI, Math.PI - xy.y * rpp);
+            xy.mercXY = new XY(xy.x * rpp - Math.PI, Math.PI - xy.y * rpp);
             xy.pos = Position.fromMercatorPixels(xy.mercXY.x, xy.mercXY.y);
         } // if..else
 
@@ -6408,465 +6836,6 @@ var GeoXY = exports.GeoXY = (function() {
         toPos: toPos,
         updatePos: updatePos
     };
-})();
-
-var engines = {};
-
-/**
-# T5.Geo.Engine
-*/
-var GeoEngine = function(params) {
-    if (! params.id) {
-        throw new Error("A GEO.Engine cannot be registered without providing an id.");
-    } // if
-
-    var _self = COG.extend({
-        remove: function() {
-            delete engines[_self.id];
-        }
-    }, params);
-
-    engines[_self.id] = _self;
-    return _self;
-};
-
-/**
-# T5.Geo.Search
-_module_
-
-
-Define functions for geo search operations
-
-## Functions
-*/
-var Search = (function() {
-    var DEFAULT_MAXDIFF = 20;
-
-    var module = {
-        bestResults: function(searchResults, maxDifference) {
-            if (! maxDifference) {
-                maxDifference = DEFAULT_MAXDIFF;
-            }
-
-            var bestMatch = searchResults.length > 0 ? searchResults[0] : null,
-                fnresult = [];
-
-            for (var ii = 0; ii < searchResults.length; ii++) {
-                if (bestMatch && searchResults[ii] &&
-                    (bestMatch.matchWeight - searchResults[ii].matchWeight <= maxDifference)) {
-
-                    fnresult.push(searchResults[ii]);
-                }
-                else {
-                    break;
-                } // if..else
-            } // for
-
-            return fnresult;
-        }
-    };
-
-    return module;
-})();
-/**
-# T5.Geo.GeoSearchResult
-
-TODO
-*/
-var GeoSearchResult = function(params) {
-    params = COG.extend({
-        id: null,
-        caption: "",
-        resultType: "",
-        data: null,
-        pos: null,
-        matchWeight: 0
-    }, params);
-
-    return COG.extend(params, {
-        toString: function() {
-            return params.caption + (params.matchWeight ? " (" + params.matchWeight + ")" : "");
-        }
-    });
-};
-var LocationSearch = function(params) {
-    params = COG.extend({
-        name: "Geolocation Search",
-        requiredAccuracy: null,
-        searchTimeout: 5000,
-        watch: false
-    }, params);
-
-    var geoWatchId = 0,
-        locationTimeout = 0,
-        lastPosition = null;
-
-    /* tracking functions */
-
-    function parsePosition(position) {
-        var currentPos = Position.init(
-                position.coords.latitude,
-                position.coords.longitude);
-
-        return new GeoSearchResult({
-            id: 1,
-            caption: 'Current Location',
-            pos: currentPos,
-            accuracy: position.coords.accuracy / 1000,
-            matchWeight: 100
-        });
-    } // trackingUpdate
-
-    function sendPosition(searchResult, callback) {
-        navigator.geolocation.clearWatch(geoWatchId);
-        geoWatchId = 0;
-
-        if (locationTimeout) {
-            clearTimeout(locationTimeout);
-            locationTimeout = 0;
-        } // if
-
-        if (callback) {
-            callback([searchResult], params);
-        } // if
-    } // sendPosition
-
-    function trackingError(error) {
-        COG.info('caught location tracking error:', error);
-    } // trackingError
-
-    var _self = new T5.Geo.GeoSearchAgent(COG.extend({
-        execute: function(searchParams, callback) {
-            if (navigator.geolocation && (! geoWatchId)) {
-                geoWatchId = navigator.geolocation.watchPosition(
-                    function(position) {
-                        var newPosition = parsePosition(position);
-
-                        if ((! lastPosition) || (newPosition.accuracy < lastPosition.accuracy)) {
-                            lastPosition = newPosition;
-                        } // if
-
-                        if ((! params.requiredAccuracy) ||
-                            (lastPosition.accuracy < params.requiredAccuracy)) {
-                            sendPosition(lastPosition, callback);
-                        } // if
-                    },
-                    trackingError, {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 5000
-                    });
-
-                if (params.searchTimeout) {
-                    locationTimeout = setTimeout(function() {
-                        if (lastPosition) {
-                            sendPosition(lastPosition, callback);
-                        } // if
-                    }, params.searchTimeout);
-                } // if
-            } // if
-        }
-    }, params));
-
-    return _self;
-};
-
-/**
-# T5.Geo.Routing
-_module_
-
-
-Define functionality to enable routing for mapping
-
-## Module Functions
-*/
-var Routing = (function() {
-
-    var TurnType = {
-        Unknown: "turn-unknown",
-
-        Start: "turn-none-start",
-        Continue: "turn-none",
-        Arrive: "turn-none-arrive",
-
-        TurnLeft: "turn-left",
-        TurnLeftSlight: "turn-left-slight",
-        TurnLeftSharp: "turn-left-sharp",
-
-        TurnRight: "turn-right",
-        TurnRightSlight: "turn-right-slight",
-        TurnRightSharp: "turn-right-sharp",
-
-        Merge: "merge",
-
-        UTurnLeft:  "uturn-left",
-        UTurnRight: "uturn-right",
-
-        EnterRoundabout: "roundabout-enter",
-
-        Ramp: "ramp",
-        RampExit: "ramp-exit"
-    };
-
-var TurnTypeRules = (function() {
-    var rules = [];
-
-    rules.push({
-        regex: /continue/i,
-        turnType: TurnType.Continue
-    });
-
-    rules.push({
-        regex: /(take|bear|turn)(.*?)left/i,
-        customCheck: function(text, matches) {
-            var isSlight = (/bear/i).test(matches[1]);
-
-            return isSlight ? TurnType.TurnLeftSlight : TurnType.TurnLeft;
-        }
-    });
-
-    rules.push({
-        regex: /(take|bear|turn)(.*?)right/i,
-        customCheck: function(text, matches) {
-            var isSlight = (/bear/i).test(matches[1]);
-
-            return isSlight ? TurnType.TurnRightSlight : TurnType.TurnRight;
-        }
-    });
-
-    rules.push({
-        regex: /enter\s(roundabout|rotaty)/i,
-        turnType: TurnType.EnterRoundabout
-    });
-
-    rules.push({
-        regex: /take.*?ramp/i,
-        turnType: TurnType.Ramp
-    });
-
-    rules.push({
-        regex: /take.*?exit/i,
-        turnType: TurnType.RampExit
-    });
-
-    rules.push({
-        regex: /make(.*?)u\-turn/i,
-        customCheck: function(text, matches) {
-            return (/right/i).test(matches[1]) ? TurnType.UTurnRight : TurnType.UTurnLeft;
-        }
-    });
-
-    rules.push({
-        regex: /proceed/i,
-        turnType: TurnType.Start
-    });
-
-    rules.push({
-        regex: /arrive/i,
-        turnType: TurnType.Arrive
-    });
-
-    rules.push({
-        regex: /fell\sthrough/i,
-        turnType: TurnType.Merge
-    });
-
-    return rules;
-})();
-
-
-    /* internal functions */
-
-    /*
-    This function is used to cleanup a turn instruction that has been passed
-    back from a routing engine.  At present it has been optimized to work with
-    decarta instructions but will be modified to work with others in time
-    */
-    function markupInstruction(text) {
-        text = text.replace(/(\w)(\/)(\w)/g, '$1 $2 $3');
-
-        return text;
-    } // markupInstruction
-
-    /* exports */
-
-    /**
-    ### calculate(args)
-    To be completed
-    */
-    function calculate(args) {
-        args = COG.extend({
-            engineId: "",
-            waypoints: [],
-            map: null,
-            error: null,
-            autoFit: true,
-            success: null,
-            generalize: false
-        }, args);
-
-        var engine = getEngine("route");
-        if (engine) {
-            engine.route(args, function(routeData) {
-                if (args.generalize) {
-                    routeData.geometry = Position.generalize(routeData.geometry, routeData.getInstructionPositions());
-                } // if
-
-                if (args.map) {
-                    createMapOverlay(args.map, routeData);
-
-                    if (args.autoFit) {
-                        args.map.gotoBounds(routeData.boundingBox);
-                    } // if
-                } // if
-
-                if (args.success) {
-                    args.success(routeData);
-                } // if
-            });
-        } // if
-    } // calculate
-
-    /**
-    ### createMapOverlay(map, routeData)
-    To be completed
-    */
-    function createMapOverlay(map, routeData) {
-        var routeOverlay = new T5.ShapeLayer();
-
-        /*
-        TODO: put instruction markers back on the route - maybe markers
-        if (routeData.instructions) {
-            var instructions = routeData.instructions,
-                positions = new Array(instructions.length);
-
-            for (var ii = instructions.length; ii--; ) {
-                positions[ii] = instructions[ii].position;
-            } // for
-
-            Position.vectorize(positions, {
-                callback: function(coords) {
-                    routeOverlay.add(new T5.Points(coords, {
-                        zIndex: 1
-                    }));
-                }
-            });
-        } // if
-        */
-
-        if (routeData.geometry) {
-            Position.vectorize(routeData.geometry, {
-                callback: function(coords) {
-                    routeOverlay.add(new T5.Line(coords, {
-                        style: 'waypoints',
-                        simplify: true
-                    }));
-
-                    map.setLayer("route", routeOverlay);
-                }
-            });
-        } // if
-    } // createMapOverlay
-
-    /**
-    ### parseTurnType(text)
-    To be completed
-    */
-    function parseTurnType(text) {
-        var turnType = TurnType.Unknown,
-            rules = TurnTypeRules;
-
-        for (var ii = 0; ii < rules.length; ii++) {
-            rules[ii].regex.lastIndex = -1;
-
-            var matches = rules[ii].regex.exec(text);
-            if (matches) {
-                if (rules[ii].customCheck) {
-                    turnType = rules[ii].customCheck(text, matches);
-                }
-                else {
-                    turnType = rules[ii].turnType;
-                } // if..else
-
-                break;
-            } // if
-        } // for
-
-        return turnType;
-    } // parseTurnType
-
-    var module = {
-        /* module functions */
-
-        calculate: calculate,
-        createMapOverlay: createMapOverlay,
-        parseTurnType: parseTurnType,
-
-        /**
-        # T5.Geo.Routing.TurnType
-
-        */
-        TurnType: TurnType,
-
-        /**
-        # T5.Geo.Routing.Instruction
-
-        */
-        Instruction: function(params) {
-            params = COG.extend({
-                position: null,
-                description: "",
-                distance: 0,
-                distanceTotal: 0,
-                time: 0,
-                timeTotal: 0,
-                turnType: null
-            }, params);
-
-            params.description = markupInstruction(params.description);
-
-            if (! params.turnType) {
-                params.turnType = parseTurnType(params.description);
-            } // if
-
-            return params;
-        },
-
-
-        /**
-        # T5.Geo.Routing.RouteData
-
-        */
-        RouteData: function(params) {
-            params = COG.extend({
-                geometry: [],
-                instructions: [],
-                boundingBox: null
-            }, params);
-
-            if (! params.boundingBox) {
-                params.boundingBox = BoundingBox.forPositions(params.geometry);
-            } // if
-
-            var _self = COG.extend({
-                getInstructionPositions: function() {
-                    var positions = [];
-
-                    for (var ii = 0; ii < params.instructions.length; ii++) {
-                        if (params.instructions[ii].position) {
-                            positions.push(params.instructions[ii].position);
-                        } // if
-                    } // for
-
-                    return positions;
-                }
-            }, params);
-
-            return _self;
-        }
-    };
-
-    return module;
 })();
 
 var FEATURE_TYPE_COLLECTION = 'featurecollection',
@@ -6918,10 +6887,10 @@ function readVectors(coordinates) {
         positions = new Array(count);
 
     for (var ii = count; ii--; ) {
-        positions[ii] = Geo.Position.init(coordinates[ii][1], coordinates[ii][0]);
+        positions[ii] = new Pos(coordinates[ii][1], coordinates[ii][0]);
     } // for
 
-    return Geo.Position.vectorize(positions, VECTORIZE_OPTIONS);
+    return Position.vectorize(positions, VECTORIZE_OPTIONS);
 } // getLineStringVectors
 
 /* feature processor functions */
@@ -6980,7 +6949,6 @@ function processMultiPolygon(layer, featureData, options, builders) {
 
 var GeoJSONParser = function(data, callback, options, builders) {
     options = COG.extend({
-        vectorsPerCycle: Geo.VECTORIZE_PER_CYCLE,
         rowPreParse: null,
         simplify: false,
         layerPrefix: 'geojson-'
@@ -7004,7 +6972,7 @@ var GeoJSONParser = function(data, callback, options, builders) {
         }
     }, builders);
 
-    var vectorsPerCycle = options.vectorsPerCycle,
+    var VECTORS_PER_CYCLE = 500,
         rowPreParse = options.rowPreParse,
         layerPrefix = options.layerPrefix,
         featureIndex = 0,
@@ -7072,7 +7040,6 @@ var GeoJSONParser = function(data, callback, options, builders) {
             layers[layerId] = layer;
         } // if
 
-        globalLayers = layers;
         return layer;
     } // getLayer
 
@@ -7100,7 +7067,7 @@ var GeoJSONParser = function(data, callback, options, builders) {
             if (featureInfo.isCollection) {
                 childOpts.layerPrefix = layerPrefix + (childCount++) + '-';
 
-                childParser = parse(
+                childParser = new GeoJSONParser(
                     featureInfo.data.features,
                     function(childLayers) {
                         childParser = null;
@@ -7108,6 +7075,10 @@ var GeoJSONParser = function(data, callback, options, builders) {
                         for (var layerId in childLayers) {
                             layers[layerId] = childLayers[layerId];
                         } // for
+
+                        if (featureIndex >= totalFeatures) {
+                            parseComplete();
+                        } // if
                     }, childOpts);
 
                 processedCount += 1;
@@ -7118,7 +7089,7 @@ var GeoJSONParser = function(data, callback, options, builders) {
 
             cycleCount += processedCount ? processedCount : 1;
 
-            if (cycleCount >= vectorsPerCycle) {
+            if (cycleCount >= VECTORS_PER_CYCLE) {
                 break;
             } // if
         } // for
@@ -7139,416 +7110,12 @@ var GeoJSONParser = function(data, callback, options, builders) {
     animFrame(processData);
 };
 
-/* exports */
+var GeoJSON = exports.GeoJSON = {
+    parse: function(data, callback, options) {
+        return new GeoJSONParser(data, callback, options);
+    }
+};
 
-function parse(data, callback, options) {
-    return new GeoJSONParser(data, callback, options);
-} // parse
-
-var GeoJSON = exports.GeoJSON = (function() {
-    return {
-        parse: parse
-    };
-})();
-
-/**
-# T5.Map
-_extends:_ T5.Tiler
-
-
-The Map class is the entry point for creating a tiling map.  Creating a
-map is quite simple and requires two things to operate.  A containing HTML5 canvas
-that will be used to display the map and a T5.Geo.MapProvider that will populate
-the map.
-
-## Example Usage: Creating a Map
-
-<pre lang='javascript'>
-map = new T5.Map({
-    container: 'mapContainer'
-});
-</pre>
-
-Like all View descendants the map supports features such as intertial scrolling and
-the like and is configurable through implementing the COG.configurable interface. For
-more information on view level features check out the View documentation.
-
-## Events
-
-### zoomLevelChange
-This event is triggered when the zoom level has been updated
-
-<pre>
-map.bind('zoomLevelChange', function(evt, newZoomLevel) {
-});
-</pre>
-
-## Methods
-*/
-var Map = exports.Map = function(params) {
-    params = COG.extend({
-        tapExtent: 10, // TODO: remove and use the inherited value
-        crosshair: false,
-        zoomLevel: 0,
-        boundsChangeThreshold: 30,
-        minZoom: 1,
-        maxZoom: 18,
-        pannable: true,
-        scalable: true
-    }, params);
-
-    var LOCATE_MODE = {
-        NONE: 0,
-        SINGLE: 1,
-        WATCH: 2
-    };
-
-    var lastBoundsChangeOffset = XY.init(),
-        locationWatchId = 0,
-        locateMode = LOCATE_MODE.NONE,
-        initialized = false,
-        tappedPOIs = [],
-        annotations = null, // annotations layer
-        guideOffset = null,
-        locationOverlay = null,
-        geoWatchId = 0,
-        initialTrackingUpdate = true,
-        radsPerPixel = 0,
-        tapExtent = params.tapExtent;
-
-    /* internal functions */
-
-    /* tracking functions */
-
-    function trackingUpdate(position) {
-        try {
-            var currentPos = Geo.Position.init(
-                        position.coords.latitude,
-                        position.coords.longitude),
-                accuracy = position.coords.accuracy / 1000;
-
-            _self.trigger('locationUpdate', position, accuracy);
-
-            if (initialTrackingUpdate) {
-                if (! locationOverlay) {
-                    locationOverlay = new Geo.UI.LocationOverlay({
-                        pos: currentPos,
-                        accuracy: accuracy
-                    });
-
-                    locationOverlay.update(_self.getTileLayer());
-                    _self.setLayer('location', locationOverlay);
-                } // if
-
-                var targetBounds = Geo.BoundingBox.createBoundsFromCenter(
-                        currentPos,
-                        Math.max(accuracy, 1));
-
-                _self.gotoBounds(targetBounds);
-            }
-            else {
-                locationOverlay.pos = currentPos;
-                locationOverlay.accuracy = accuracy;
-
-                locationOverlay.update(_self.getTileLayer());
-
-                panToPosition(
-                    currentPos,
-                    null,
-                    COG.easing('sine.out'));
-            } // if..else
-
-            initialTrackingUpdate = false;
-        }
-        catch (e) {
-            COG.exception(e);
-        }
-    } // trackingUpdate
-
-    function trackingError(error) {
-        COG.info('caught location tracking error:', error);
-    } // trackingError
-
-    /* event handlers */
-
-    function handlePan(evt, x, y) {
-        if (locateMode === LOCATE_MODE.SINGLE) {
-            _self.trackCancel();
-        } // if
-    } // handlePan
-
-    function handleTap(evt, absXY, relXY, offsetXY) {
-        var tapPos = GeoXY.toPos(offsetXY, radsPerPixel),
-            minPos = GeoXY.toPos(
-                XY.offset(offsetXY, -tapExtent, tapExtent),
-                radsPerPixel),
-            maxPos = GeoXY.toPos(
-                XY.offset(offsetXY, tapExtent, -tapExtent),
-                radsPerPixel);
-
-        _self.trigger(
-            'geotap',
-            absXY,
-            relXY,
-            tapPos,
-            BoundingBox.init(minPos, maxPos)
-        );
-
-
-        /*
-        var grid = _self.getTileLayer();
-        var tapBounds = null;
-
-        if (grid) {
-            TODO: get the tap working again...
-            var gridPos = _self.viewPixToGridPix(
-                    XY.init(relXY.x, relXY.y)),
-                tapPos = grid.pixelsToPos(gridPos),
-                minPos = grid.pixelsToPos(
-                    XY.offset(
-                        gridPos,
-                        -params.tapExtent,
-                        params.tapExtent)),
-                maxPos = grid.pixelsToPos(
-                    XY.offset(
-                        gridPos,
-                         params.tapExtent,
-                         -params.tapExtent));
-
-            tapBounds = BoundingBox.init(minPos, maxPos);
-
-
-            _self.trigger('geotap', absXY, relXY, tapPos, tapBounds);
-        } // if
-        */
-    } // handleTap
-
-    function handleRefresh(evt) {
-        var changeDelta = XY.absSize(XY.diff(lastBoundsChangeOffset, _self.getOffset()));
-        if (changeDelta > params.boundsChangeThreshold) {
-            lastBoundsChangeOffset = XY.copy(_self.getOffset());
-            _self.trigger("boundsChange", _self.getBoundingBox());
-        } // if
-    } // handleWork
-
-    function handleProviderUpdate(name, value) {
-        _self.cleanup();
-        initialized = false;
-    } // handleProviderUpdate
-
-    function handleZoomLevelChange(evt, zoomLevel) {
-        var gridSize;
-
-        radsPerPixel = Geo.radsPerPixel(zoomLevel);
-
-        gridSize = TWO_PI / radsPerPixel | 0;
-        _self.setMaxOffset(gridSize, gridSize, true, false);
-
-
-        _self.resetScale();
-        _self.triggerAll('resync', _self);
-        _self.refresh();
-    } // handleZoomLevel
-
-    /* internal functions */
-
-    function getLayerScaling(oldZoom, newZoom) {
-        return Geo.radsPerPixel(oldZoom) /
-                    Geo.radsPerPixel(newZoom);
-    } // getLayerScaling
-
-    /* public methods */
-
-    /**
-    ### getBoundingBox()
-
-    Return a T5.Geo.BoundingBox for the current map view area
-    */
-    function getBoundingBox() {
-        var viewport = _self.getViewport();
-
-        return viewport ?
-            Geo.BoundingBox.init(
-                GeoXY.toPos(XY.init(viewport.x1, viewport.y2), radsPerPixel),
-                GeoXY.toPos(XY.init(viewport.x2, viewport.y1), radsPerPixel)) :
-            null;
-    } // getBoundingBox
-
-    /**
-    ### getCenterPosition()`
-    Return a T5.GeoXY composite for the center position of the map
-    */
-    function getCenterPosition() {
-        var viewport = _self.getViewport();
-        if (viewport) {
-            var xy = XY.init(viewport.x1 + (viewport.width >> 1), viewport.y1 + (viewport.height >> 1));
-            return GeoXY.toPos(xy, radsPerPixel);
-        } // if
-
-        return null;
-    } // getCenterPosition
-
-    /**
-    ### gotoBounds(bounds, callback)
-    Calculates the optimal display bounds for the specified T5.Geo.BoundingBox and
-    then goes to the center position and zoom level best suited.
-    */
-    function gotoBounds(bounds, callback) {
-        var zoomLevel = Geo.BoundingBox.getZoomLevel(
-                            bounds,
-                            _self.getViewport());
-
-        gotoPosition(
-            Geo.BoundingBox.getCenter(bounds),
-            zoomLevel,
-            callback);
-    } // gotoBounds
-
-    /**
-    ### gotoPosition(position, newZoomLevel, callback)
-    This function is used to tell the map to go to the specified position.  The
-    newZoomLevel parameter is optional and updates the map zoom level if supplied.
-    An optional callback argument is provided to receieve a notification once
-    the position of the map has been updated.
-    */
-    function gotoPosition(position, newZoomLevel, callback) {
-        _self.setZoomLevel(newZoomLevel);
-
-        panToPosition(position, callback);
-    } // gotoPosition
-
-    /**
-    ### panToPosition(position, callback, easingFn)
-    This method is used to tell the map to pan (not zoom) to the specified
-    T5.GeoXY.  An optional callback can be passed as the second
-    parameter to the function and this fires a notification once the map is
-    at the new specified position.  Additionally, an optional easingFn parameter
-    can be supplied if the pan operation should ease to the specified location
-    rather than just shift immediately.  An easingDuration can also be supplied.
-    */
-    function panToPosition(position, callback, easingFn, easingDuration) {
-        var centerXY = GeoXY.init(position, Geo.radsPerPixel(_self.getZoomLevel())),
-            offsetX = centerXY.x - (_self.width >> 1),
-            offsetY = centerXY.y - (_self.height >> 1);
-
-        _self.updateOffset(offsetX, offsetY, easingFn, easingDuration, function() {
-            _self.refresh();
-
-            _self.trigger("boundsChange", _self.getBoundingBox());
-
-            if (callback) {
-                callback(_self);
-            } // if
-        });
-    } // panToPosition
-
-    /**
-    ### syncXY(points)
-    This function iterates through the specified vectors and if they are
-    of type GeoXY composite they are provided the rads per pixel of the
-    grid so they can perform their calculations
-    */
-    function syncXY(points, reverse) {
-        return (reverse ? GeoXY.syncPos : GeoXY.sync)(points, radsPerPixel);
-    } // syncXY
-
-    /* public object definition */
-
-    params.adjustScaleFactor = function(scaleFactor) {
-        var roundFn = scaleFactor < 1 ? Math.floor : Math.ceil;
-        return Math.pow(2, roundFn(Math.log(scaleFactor)));
-    };
-
-    var _self = COG.extend(new View(params), {
-
-        getBoundingBox: getBoundingBox,
-        getCenterPosition: getCenterPosition,
-
-        gotoBounds: gotoBounds,
-        gotoPosition: gotoPosition,
-        panToPosition: panToPosition,
-
-        syncXY: syncXY,
-
-        /**
-        - `locate()`
-
-        TODO
-        */
-        locate: function() {
-            _self.trackStart(LOCATE_MODE.SINGLE);
-
-            setTimeout(_self.trackCancel, 10000);
-        },
-
-        /**
-        - `trackStart(mode)`
-
-        TODO
-        */
-        trackStart: function(mode) {
-            if (navigator.geolocation && (! geoWatchId)) {
-                locateMode = mode ? mode : LOCATE_MODE.WATCH;
-
-                initialTrackingUpdate = true;
-                geoWatchId = navigator.geolocation.watchPosition(
-                    trackingUpdate,
-                    trackingError, {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 5000
-                    });
-            } // if
-        },
-
-        /**
-        - `trackCancel()`
-
-        TODO
-        */
-        trackCancel: function() {
-            if (geoWatchId && navigator.geolocation) {
-                navigator.geolocation.clearWatch(geoWatchId);
-            } // if
-
-            _self.removeLayer('location');
-            locationOverlay = null;
-
-            locateMode = LOCATE_MODE.NONE;
-
-            geoWatchId = 0;
-        },
-
-        /**
-        - `animateRoute(easing, duration, callback, center)`
-
-        TODO
-        */
-        animateRoute: function(easing, duration, callback, center) {
-            var routeLayer = _self.getLayer('route');
-            if (routeLayer) {
-                var animationLayer = routeLayer.getAnimation(
-                                        easing,
-                                        duration,
-                                        callback,
-                                        center);
-
-                if (animationLayer) {
-                    animationLayer.addToView(_self);
-                }
-            } // if
-        }
-    });
-
-    _self.bind('pan', handlePan);
-    _self.bind('tap', handleTap);
-
-    _self.bind('refresh', handleRefresh);
-
-    _self.bind('zoomLevelChange', handleZoomLevelChange);
-
-    return _self;
-}; // T5.Map
 /**
 # T5.GeoShape
 _extends:_ T5.Shape
@@ -7587,101 +7154,10 @@ var GeoShape = exports.GeoShape = function(positions, params) {
 
     return new T5.Poly(vectors, params);
 };
-var LOCATOR_IMAGE =
-'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAA' +
-'BHNCSVQICAgIfAhkiAAAAAlwSFlzAAACIQAAAiEBPhEQkwAAABl0RVh0U29mdHdhcmUAd3' +
-'d3Lmlua3NjYXBlLm9yZ5vuPBoAAAG+SURBVCiRlZHNahNRAIW/O7mTTJPahLZBA1YUyriI' +
-'NRAE3bQIKm40m8K8gLj0CRQkO32ELHUlKbgoIu4EqeJPgtCaoBuNtjXt5LeTMZk0mbmuWi' +
-'uuPLsD3+HAOUIpxf9IHjWmaUbEyWv5ROrsVULhcHP761rUfnN3Y2Otc8CIg4YT85lzuVsP' +
-'P+Qupw1vpPjRCvhS9ymvV0e77x7nNj+uvADQAIQQ+uLyvdfLV9JGZi7EdEwQlqBpEJ019f' +
-'0z1mo2u5Q8DMydv25lshemmj1FueZTawbs7inarqLbV7Qjab1upB9YlhWSAHLavLHZCvg1' +
-'VEhN0PMU9W7At4bPVidg7CtkLLXkut+lBPD6/Ub155jJiADAHSpaLmx3ApyBQoYEUd0PBo' +
-'OBkAC6+3llvda/YxgGgYL+UNHf/zN3KiExGlsvTdP0NYDkhPdWrz35ZDsBzV5wCMuQwEyF' +
-'mXFeeadjzfuFQmGkAZRKpdGC/n7x+M6jqvA9Zo6FWDhlcHE+wqT93J1tP7vpOE7rrx8ALM' +
-'uasPf8S12St4WmJ6bYWTUC52k8Hm8Vi0X/nwBAPp/XKpWKdF1X2LYdlMvlsToC/QYTls7D' +
-'LFr/PAAAAABJRU5ErkJggg%3D%3D';
 
-/**
-# T5.Geo.LocationOverlay
-
-*/
-var LocationOverlay = exports.LocationOverlay = function(params) {
-    params = COG.extend({
-        pos: null,
-        accuracy: null,
-        zindex: 90
-    }, params);
-
-    var iconImage = new Image(),
-        iconOffset = T5.XY.init(),
-        centerXY = T5.XY.init(),
-        indicatorRadius = null;
-
-    iconImage.src = LOCATOR_IMAGE;
-    iconImage.onload = function() {
-        iconOffset = T5.XY.init(
-            iconImage.width >> 1,
-            iconImage.height >> 1);
-    };
-
-    var _self = COG.extend(new T5.ViewLayer(params), {
-        pos: params.pos,
-        accuracy: params.accuracy,
-        drawAccuracyIndicator: false,
-
-        draw: function(context, offset, dimensions, state, view) {
-            var centerX = centerXY.x - offset.x,
-                centerY = centerXY.y - offset.y;
-
-            if (indicatorRadius) {
-                context.fillStyle = 'rgba(30, 30, 30, 0.2)';
-
-                context.beginPath();
-                context.arc(
-                    centerX,
-                    centerY,
-                    indicatorRadius,
-                    0,
-                    Math.PI * 2,
-                    false);
-                context.fill();
-            } // if
-
-            if (iconImage.complete && iconImage.width > 0) {
-                context.drawImage(
-                    iconImage,
-                    centerX - iconOffset.x,
-                    centerY - iconOffset.y,
-                    iconImage.width,
-                    iconImage.height);
-            } // if
-        },
-
-        update: function(grid) {
-            if (grid) {
-                indicatorRadius = grid.getPixelDistance(_self.accuracy) >> 1;
-                centerXY = grid.getGridXYForPosition(_self.pos);
-            } // if
-        }
-    });
-
-    _self.bind('gridUpdate', function(evt, grid) {
-        _self.update(grid);
-    });
-
-    return _self;
-};
-
-    return {
+    exports.Geo = {
         distanceToString: distanceToString,
         dist2rad: dist2rad,
-        getEngine: getEngine,
-
-        lat2pix: lat2pix,
-        lon2pix: lon2pix,
-        pix2lat: pix2lat,
-        pix2lon: pix2lon,
-
         radsPerPixel: radsPerPixel,
 
         Position: Position,
@@ -7691,22 +7167,6 @@ var LocationOverlay = exports.LocationOverlay = function(params) {
         Address: Address,
         A: addrTools,
 
-
-        GeocodeFieldWeights: {
-            streetDetails: 50,
-            location: 50
-        },
-
-        AddressCompareFns: {
-        },
-
-        Engine: GeoEngine,
-
-        Search: Search,
-        GeoSearchResult: GeoSearchResult,
-        LocationSearch: LocationSearch,
-
-        Routing: Routing
+        GeoJSON: GeoJSON
     };
-})();
 })(T5);

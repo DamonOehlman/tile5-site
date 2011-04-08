@@ -28,7 +28,13 @@ $LAB
 	UseCachePreload: false
 })
 .script('/js/t5demos.js?v={{ site.time | date_to_xmlschema }}').wait(function() {
-	DEMO.run(demos[demoIndex], '#homedemo h3');
+	DEMO.init({ version: '{{ page.sampleversion }}' }, function(loader) {
+		loader
+			.script('/js/samples/' + demos[demoIndex] + '.js?v={{ site.time | date_to_xmlschema }}')
+			.wait(function() {
+				DEMO.run(true);
+			});
+	});
 	
 	$('a.navigator').fadeIn().click(function() {
 		var increment = $(this).hasClass('next') ? 1 : -1;

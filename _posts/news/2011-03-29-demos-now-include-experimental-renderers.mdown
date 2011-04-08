@@ -1,0 +1,21 @@
+---
+layout: article
+title:  Demos Now Include Experimental Renderers
+
+categories:
+ - news
+
+author: DamonOehlman
+---
+
+Just a quick note to say that I have uploaded the experimental (and very experimental) renderers to the Tile5 site and these can now be viewed in the various demos.
+
+If you would like to give the WebGL functionality a spin then you will either need Chrome or Firefox.  If you don't then you can have a look at the quick video demonstrating changing map providers and the current state of the WebGL renderer:
+
+<iframe src="http://player.vimeo.com/video/21631350" width="400" height="300" frameborder="0" style="margin-left: 10px;"> </iframe>
+
+I would point out that what has been done so far is very, very alpha but I do believe the implementation of renderers is now at a point that most things are possible, and the scope for including additional renderers is there.
+
+The DOM renderer is also available in the demo area but it still needs a bit of work, and given that I have a project that will be requiring it will be the primary focus. That said, I'm bound to get sucked into playing with WebGL again soon given my [distractable](http://distractable.net/) state ;)
+
+Have a play and I'll keep working towards having a stable release of Tile5 `0.9.5` soon.

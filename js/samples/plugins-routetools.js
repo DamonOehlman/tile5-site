@@ -5,11 +5,12 @@ DEMO.Sample = (function() {
 
     function addMarker(pos, markerType) {
         // update the start marker position
-        var marker = new T5.ImageMarker({
+        var marker = new T5.Marker({
             xy: T5.GeoXY.init(pos),
-            imageUrl: '/img/marker-arrow-' + markerType + '.png',
+            markerStyle: 'image',
+            size: 20,
+            imageUrl: '/img/square-marker-route-' + markerType + '.png',
             markerType: markerType,
-            imageAnchor: T5.XY.init(16, 26),
             draggable: true
         });
 
@@ -31,7 +32,7 @@ DEMO.Sample = (function() {
 
             // generate and display the route
             DEMO.status('Generating Route');
-            T5.Geo.Routing.calculate({
+            T5.RouteTools.calculate({
                 waypoints: [startPos, endPos],
                 map: map,
                 success: function() {
@@ -77,7 +78,7 @@ DEMO.Sample = (function() {
             DEMO.status('Rerouting');
 
             // generate and display the route
-            T5.Geo.Routing.calculate({
+            T5.RouteTools.calculate({
                 waypoints: [startPos, endPos],
                 map: map,
                 success: function() {
@@ -110,12 +111,14 @@ DEMO.Sample = (function() {
     
     return {
         generators: ['decarta'],
+        extraLibs: ['/js/tile5/dev/plugins/geo.routetools.js'],
         
         run: function(container, renderer, generator, generatorOpts) {
             // initialise the map
             map = new T5.Map({
                 container: 'mapContainer',
-                clipping: true
+                clipping: true,
+                renderer: renderer
             });
 
             map.setLayer('tiles', new T5.ImageLayer('decarta'));

@@ -6,29 +6,31 @@ layout: default
 
 <ul id="mapTools" style="display:block;">
 	<li>
+		<button id="btnRestart">Restart Demo</button>
+	</li>
+	<li>
 		<label for="generator">Map Engine:</label>
 		<select id="generator">
 			<option value="osm.cloudmade">Cloudmade</option>
 			<option value="decarta">deCarta</option>
 			<option value="osm.mapbox">MapBox</option>
 			<option value="osm.mapquest">MapQuest</option>
-			<!--
+			<!-- <option value="osm.wms">WMS (via demis.nl)</option> -->
 			<option value="bing">Bing</option>
-			-->
 		</select>
 	</li>
-	<!--
 	<li>
 		<label for="renderer">Renderer:</label>
 		<select id="renderer">
 			<option value="canvas">Canvas</option>
+			<option value="">-- Experimental --</option>
 			<option value="canvas/dom">Canvas + DOM</option>
+			<option value="raphael">Raphaël</option>
 			<option value="three:webgl">WebGL (via Three)</option>
-			<option value="webgl" disabled="disabled">WebGL</option>
-			<option value="raphael">RaphaëlJS</option>
+			<option value="">-- Really Experimental --</option>
+			<option value="webgl">WebGL</option>
 		</select>
 	</li>
-	-->
 </ul>
 <div id="demoStats" style="position: absolute; z-index: 10; margin-left: 10px;"></div>
 <div id="mapContainer">
